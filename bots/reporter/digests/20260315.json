@@ -1,0 +1,116 @@
+{
+  "date": "2026-03-15",
+  "digest": {
+    "date": "2026-03-15",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "NVIDIA Kicks Off the Next Generation of AI With Rubin — Six New Chips, One Incredible AI Supercomputer",
+            "summary": "NVIDIA가 GTC 2026에서 Vera Rubin 플랫폼을 공식 발표했다. 288GB HBM4 메모리와 22TB/s 대역폭을 갖추며 Blackwell 대비 최대 5배 FP4 처리 성능을 제공한다. NVL72 랙에 72개 Rubin SXM 모듈을 탑재하며, Vera CPU와 HBM4를 결합한 Vera Rubin Superchip은 2026년 하반기 출하 예정이다.",
+            "source": "NVIDIA Newsroom",
+            "source_url": "https://nvidianews.nvidia.com/news/rubin-platform-ai-supercomputer",
+            "published_date": "2026-03-16",
+            "credibility": "official"
+          },
+          {
+            "title": "NVIDIA and Intel Announce Jointly Developed Intel x86 RTX SoCs and Custom Data Center CPUs — NVIDIA Buys $5B Intel Stake",
+            "summary": "NVIDIA와 인텔이 데이터센터 및 PC용 반도체 공동 개발 협약을 체결하고, NVIDIA가 인텔 주식 50억 달러어치를 취득했다. 데이터센터용으로는 인텔 파운드리가 NVIDIA 전용 x86 CPU를 제조하고, PC용으로는 NVIDIA RTX GPU 칩렛이 통합된 x86 SoC를 인텔이 개발·공급한다. ARM 기반 경쟁이 심화되는 가운데 x86 생태계 강화를 위한 반도체 업계 최대 규모의 전략적 파트너십으로 평가된다.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/pc-components/cpus/nvidia-and-intel-announce-jointly-developed-intel-x86-rtx-socs-for-pcs-with-nvidia-graphics-also-custom-nvidia-data-center-x86-processors-nvidia-buys-usd5-billion-in-intel-stock-in-seismic-deal",
+            "published_date": "2026-03-16",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Nvidia's GTC Will Mark an AI Chip Pivot — Here's Why the CPU Is Taking Center Stage",
+            "summary": "젠슨 황 CEO가 GTC 2026에서 에이전틱 AI 워크로드에 최적화된 전용 CPU 전략을 공개했다. Meta 데이터센터에 이미 배포된 Vera CPU의 확장과 함께, Groq LPU 통합을 통해 초저지연 추론 처리 역량을 강화할 계획이다. NVIDIA는 GPU 중심 플랫폼에서 CPU·GPU·LPU를 아우르는 풀스택 AI 인프라 기업으로의 전환을 선언했다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/03/13/nvidia-gtc-ai-jensen-huang-cpu-gpu.html",
+            "published_date": "2026-03-14",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Ayar Labs Raises $500M Series E to Mass-Produce Co-Packaged Optics Chiplets",
+            "summary": "실리콘 포토닉스 스타트업 Ayar Labs가 NVIDIA·MediaTek 등이 참여한 5억 달러 시리즈 E 투자를 유치했다. TeraPHY CPO(Co-Packaged Optics) 칩렛은 구리 대비 더 높은 대역폭과 긴 전송 거리를 제공하며, Wiwynn과 협력해 단일 시스템에 GPU 1,024개를 광인터커넥트로 연결하는 실증도 진행 중이다. 이번 투자는 IPO 직전 라운드로 알려졌으며, 2028년 AI 시스템 대량 적용이 목표다.",
+            "source": "The Register",
+            "source_url": "https://www.theregister.com/2026/03/03/ayar_labs_500m/",
+            "published_date": "2026-03-03",
+            "credibility": "major_media"
+          },
+          {
+            "title": "AMD Gives Consumers and Businesses More AI PC Options with Expanded Ryzen AI 400 Series Portfolio",
+            "summary": "AMD가 MWC 2026에서 XDNA 2 아키텍처 NPU를 탑재한 Ryzen AI 400 시리즈 데스크톱 프로세서를 발표했다. NPU 성능은 최대 50 TOPS(PRO 400 모델은 60 TOPS)로, 마이크로소프트 Copilot+ PC를 지원하는 최초의 데스크톱 CPU다. HP·레노버 등 OEM 탑재 제품으로 2026년 2분기 출시 예정이며, AM5 소켓 기반 65W/35W TDP 모델로 제공된다.",
+            "source": "AMD Newsroom",
+            "source_url": "https://www.amd.com/en/newsroom/press-releases/2026-3-2-amd-gives-consumers-and-businesses-more-ai-pc-opti.html",
+            "published_date": "2026-03-02",
+            "credibility": "official"
+          },
+          {
+            "title": "Soitec and NSIG to Agree 10-Year Extension of SOI Manufacturing and Licensing Framework",
+            "summary": "프랑스 반도체 소재 기업 Soitec가 중국 파트너 NSIG와 SOI(실리콘-온-인슐레이터) 웨이퍼 제조·라이선스 계약을 10년 연장했다. 중국의 AI 및 전력 반도체 수요 증가에 따른 SOI 웨이퍼 수요 급증에 대응하기 위한 조치로, 글로벌 공급망 재편 속 장기 공급 안정성을 확보하는 데 의미가 있다. 양사는 이번 계약 연장으로 중국 내 첨단 반도체 소재 공급 기반을 더욱 공고히 할 것으로 기대된다.",
+            "source": "GlobeNewswire",
+            "source_url": "https://www.globenewswire.com/news-release/2026/03/13/3255706/0/en/Soitec-and-NSIG-to-agree-extension-of-licensing-framework.html",
+            "published_date": "2026-03-13",
+            "credibility": "official"
+          },
+          {
+            "title": "Edge AI Chips Markets, Technologies, and Forecasts Report 2026-2036: 54 Detailed Company Profiles",
+            "summary": "글로벌 시장조사기관이 에지 AI 칩 시장 분석 보고서(2026~2036)를 발간했다. 아키텍처·애플리케이션·경쟁 구도·지역별 전망과 54개 기업 프로파일을 포함하며, 온디바이스 AI·자율주행·산업 IoT 수요가 시장 성장을 주도한다고 분석한다. 2026년은 에지 NPU 아키텍처 다양화의 본격적인 분기점으로 평가되며, 10년 시계에서 시장 규모가 대폭 확대될 것으로 전망됐다.",
+            "source": "GlobeNewswire",
+            "source_url": "https://www.globenewswire.com/news-release/2026/03/11/3253565/0/en/Edge-AI-Chips-Markets-Technologies-and-Forecasts-Report-2026-2036-Architectures-Applications-Competitive-Dynamics-Geographic-Forecasts-and-54-Detailed-Company-Profiles.html",
+            "published_date": "2026-03-11",
+            "credibility": "blog"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Stocks Fall and Global Oil Reclaims $100 as Iran's New Supreme Leader Vows to Keep Strait of Hormuz Closed",
+            "summary": "이란의 새 최고지도자 모즈타바 하메네이가 호르무즈 해협 봉쇄 지속을 선언하면서 브렌트유가 2022년 8월 이후 처음으로 배럴당 100달러를 돌파했다. 글로벌 원유·LNG 물동량의 약 20%가 통과하는 해협 봉쇄로 월가 공포지수(VIX)가 10% 급등했으며, CNN 공포·탐욕 지수는 '극도의 공포' 수준에 진입했다. 에너지 가격 급등이 스태그플레이션으로 연결될 수 있다는 경고가 금융가를 중심으로 확산되고 있다.",
+            "source": "CNN Business",
+            "source_url": "https://www.cnn.com/2026/03/12/investing/us-stocks-oil-iran",
+            "published_date": "2026-03-12",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Goldman Sachs Resets 2026 Oil Forecast Amid Hormuz Disruption; US Recession Odds Rise to 25%",
+            "summary": "골드만삭스가 호르무즈 해협 봉쇄 장기화를 반영해 2026년 유가 전망치를 상향 조정하고 미국 경기침체 확률을 25%로 5%p 높였다. 옥스퍼드 이코노믹스는 유가가 배럴당 140달러에 2개월간 머무를 경우 유로존·영국·일본이 침체에 진입할 수 있다고 경고했다. 브렌트유는 이란전쟁 발발 이후 누적 38% 상승했으며, 에너지 수입 의존도가 높은 아시아·유럽 경제권이 직격탄을 맞고 있다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/investing/goldman-sachs-resets-oil-price-target-for-rest-of-2026",
+            "published_date": "2026-03-13",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Middle East Conflict Hits Shipping, Oil Prices, and International Trade — WEF March 2026 Briefing",
+            "summary": "세계경제포럼(WEF)이 이란 전쟁과 호르무즈 해협 봉쇄가 글로벌 해상 운송과 국제 무역에 미치는 파급 효과를 분석한 3월 브리핑을 발표했다. 에너지 수입 비용 상승과 공급망 혼란이 2026년 글로벌 성장률 전망(2.7%)에 추가 하방 압력을 가하고 있으며, 특히 에너지 수입 의존 국가들의 인플레이션 재점화 위험이 고조되고 있다. 트럼프 관세 정책과 맞물려 무역 불확실성이 기업 투자 심리를 빠르게 냉각시키고 있다는 분석도 담겼다.",
+            "source": "World Economic Forum",
+            "source_url": "https://www.weforum.org/stories/2026/03/us-trade-deficit-international-trade-stories-march-2026/",
+            "published_date": "2026-03-13",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "NVIDIA의 차세대 'Feynman' 아키텍처가 TSMC A16(1.6nm) 공정으로 제작되며 GTC 2026에서 첫 공개될 것이라는 보도가 나왔다. 단일 카드 전력이 1,000W를 초과하고, 2028년 데이터센터 납품이 목표라는 주장도 함께 제기됐다.",
+        "source": "TrendForce",
+        "source_url": "https://www.trendforce.com/news/2026/02/25/news-nvidia-gtc-2026-in-focus-feynman-reportedly-on-tsmc-a16-samsung-sk-hynix-to-showcase-hbm4/"
+      },
+      {
+        "snippet": "NVIDIA가 AI 서버에 스마트폰용 LPDDR 방식 메모리를 채택할 경우 2026년 말까지 서버 메모리 가격이 두 배로 급등할 수 있다는 카운터포인트리서치 분석이 X에서 확산되고 있다.",
+        "source": "@Jukanlosreve (X)",
+        "source_url": "https://x.com/Jukanlosreve/status/1991069731621912951"
+      },
+      {
+        "snippet": "NVIDIA가 H200 AI 칩 주문량이 200만 개를 초과해 TSMC에 증산을 지시하고 해외 고객에게 선불 결제를 요구하고 있다는 주장이 X에서 유포됐으나, NVIDIA는 공식 부인했다.",
+        "source": "@WindInfoUS (X)",
+        "source_url": "https://x.com/WindInfoUS/status/2009452943242875337"
+      }
+    ]
+  },
+  "published_at": "2026-03-15T02:50:55.674487+09:00"
+}

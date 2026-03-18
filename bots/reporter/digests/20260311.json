@@ -1,0 +1,124 @@
+{
+  "date": "2026-03-11",
+  "digest": {
+    "date": "2026-03-11",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Intel's Make-Or-Break 18A Process Node Debuts for Data Center with 288-Core Xeon 6+ CPU",
+            "summary": "인텔이 18A(2nm급) 공정으로 제조한 최대 288코어 Xeon 6+ 'Clearwater Forest' 서버 CPU를 공개했다. RibbonFET(게이트 올어라운드)와 PowerVia(후면 전력 공급)를 결합한 이 칩은 Foveros Direct 3D 패키징, 12채널 DDR5-8000을 지원하며 통신·클라우드·엣지 AI를 타깃으로 한다. 인텔은 이로써 TSMC·삼성과의 공정 경쟁력 회복에 성공했다고 주장하며 2026년 하반기 시스템 출하를 예고했다.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/pc-components/cpus/intels-make-or-break-18a-process-node-debuts-for-data-center-with-288-core-xeon-6-cpu",
+            "published_date": "2026-03-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Texas Instruments Expands MCU Portfolio with Integrated TinyEngine NPU at Embedded World 2026",
+            "summary": "TI가 임베디드 월드 2026(3월 10~12일, 뉘른베르크)에서 자체 TinyEngine NPU를 내장한 MCU 2종(MSPM0G5187, AM13Ex)을 발표했다. TinyEngine NPU는 NPU 미탑재 MCU 대비 추론 레이턴시 최대 90배 단축, 에너지 소모 120배 절감을 달성하며 1달러 미만 가격대로 초저가 엣지 AI 시장을 겨냥했다. AM13Ex는 업계 최초로 Cortex-M33 코어에 NPU와 실시간 제어 아키텍처를 단일 칩에 통합해 BOM 비용을 최대 30% 절감한다.",
+            "source": "Texas Instruments Newsroom",
+            "source_url": "https://www.ti.com/about-ti/newsroom/news-releases/2026/2026-03-10-ti-expands-microcontroller-portfolio-and-software-ecosystem-to-enable-edge-ai-in-every-device.html",
+            "published_date": "2026-03-10",
+            "credibility": "official"
+          },
+          {
+            "title": "Mira Murati's Thinking Machines Lab Secures NVIDIA Strategic Investment and 1 Gigawatt of AI Compute",
+            "summary": "전 OpenAI CTO 미라 무라티가 창업한 Thinking Machines Lab이 NVIDIA로부터 전략적 투자와 함께 1기가와트 규모의 AI 컴퓨팅 자원을 확보했다. 이 스타트업은 앞서 a16z 주도로 120억 달러 밸류에이션에 20억 달러 시드 라운드를 유치한 바 있다. NVIDIA의 이번 투자는 차세대 AI 인프라 생태계 주도권 확보 전략의 일환으로 해석된다.",
+            "source": "Tech Startups",
+            "source_url": "https://techstartups.com/2026/03/10/mira-muratis-ai-startup-thinking-machines-secures-nvidia-investment-1-gigawatt-of-ai-compute/",
+            "published_date": "2026-03-10",
+            "credibility": "major_media"
+          },
+          {
+            "title": "ISSCC 2026: Rebellions Details Industry's First Quad-Chiplet AI Accelerator with UCIe — Matches NVIDIA H200 at Lower Power",
+            "summary": "한국 AI 반도체 스타트업 Rebellions가 ISSCC 2026에서 4개 칩렛을 UCIe-Advanced(16Gbps) 인터커넥트로 연결한 Rebel100 AI 가속기 상세 구조를 공개했다. 600W에서 NVIDIA H200(700W)과 동등한 2 FP8 PFLOPS를 달성해 전력 효율이 앞선다고 주장하며, UCIe 기반 확장 아키텍처로 업계 표준화에 기여할 것으로 평가받고 있다. 인터페이스 지연은 약 11ns FDI-to-FDI로 단일 프로세서처럼 동작한다.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/tech-industry/semiconductors/isscc-2026-rebellions-ucie-rebel-100",
+            "published_date": "2026-03-03",
+            "credibility": "major_media"
+          },
+          {
+            "title": "ISSCC 2026: AMD Instinct MI355X Doubled Per-CU Throughput Despite Lower Compute Unit Count — 'Matches GB200'",
+            "summary": "AMD가 ISSCC 2026에서 Instinct MI355X의 내부 아키텍처를 공개했다. 컴퓨트 유닛 수를 줄이면서도 CU당 처리량을 2배로 끌어올려 NVIDIA GB200과 동등한 성능을 달성했다고 밝혔다. 행렬 연산 파이프라인 재설계와 메모리 서브시스템 개선이 핵심 요인으로 꼽히며, 비용 대비 성능 측면에서 경쟁 구도를 바꿀 수 있다는 분석이 나온다.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/tech-industry/semiconductors/inside-the-instinct-mi355x",
+            "published_date": "2026-03-03",
+            "credibility": "major_media"
+          },
+          {
+            "title": "MatX Raises $500M Series B to Build AI Training Chips Targeting 10x NVIDIA GPU Performance",
+            "summary": "전직 구글 하드웨어 엔지니어 출신이 창업한 MatX가 Jane Street·Situational Awareness 주도로 5억 달러 시리즈 B 투자를 유치했다. LLM 학습에서 NVIDIA GPU 대비 10배 높은 성능을 목표로 하며, TSMC를 통해 2027년 초도 출하를 계획하고 있다. Marvell과 Stripe 공동창업자도 투자에 참여하는 등 NVIDIA 대항마 칩 스타트업 경쟁이 본격화되는 양상이다.",
+            "source": "TechCrunch",
+            "source_url": "https://techcrunch.com/2026/02/24/nvidia-challenger-ai-chip-startup-matx-raised-500m/",
+            "published_date": "2026-02-24",
+            "credibility": "major_media"
+          },
+          {
+            "title": "NVIDIA GTC 2026 Confirmed March 16–19: Rubin Architecture Details and Feynman Roadmap Expected",
+            "summary": "NVIDIA 연례 개발자 컨퍼런스 GTC 2026이 3월 16~19일 캘리포니아 산호세에서 개최된다. Blackwell 후속 Rubin 플랫폼 상세 스펙과 차차세대 Feynman 로드맵 업데이트 공개가 예상된다. Rubin은 Blackwell 대비 추론 성능 5배·학습 GPU 사용량 1/4 감소·토큰 비용 1/10 달성을 목표로 2026년 하반기 출하 예정이다.",
+            "source": "Tweaktown",
+            "source_url": "https://www.tweaktown.com/news/107448/nvidia-gtc-2026-confirmed-for-march-16-19-expect-blackwell-rubin-feynman-gpus-but-no-geforce/index.html",
+            "published_date": "2026-03-07",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Semiconductor IP Market Surges: $1 Trillion Chip Spending Milestone Projected for 2026",
+            "summary": "반도체 지적재산권(IP) 시장이 AI, 5G, 자동차, IoT 수요 급증에 힘입어 큰 폭의 성장세를 이어가고 있다. 뱅크오브아메리카는 2026년을 '1990년대 붐과 유사한 슈퍼사이클'로 규정하며, DRAM 매출 51%·NAND 45% 연간 성장을 전망했다. 반도체 지출 총액은 2026년 사상 처음으로 1조 달러를 돌파할 것으로 예측된다.",
+            "source": "GlobeNewswire",
+            "source_url": "https://www.globenewswire.com/news-release/2026/03/04/3249534/0/en/Semiconductor-Intellectual-Property-Market-Outlook-2025-2034-Demand-Surges-in-AI-5G-Automotive-and-IoT-Sectors-Fabless-Companies-and-SoC-Designers.html",
+            "published_date": "2026-03-04",
+            "credibility": "official"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Trump Administration Raises Tariffs on China to 20%, Effective March 4",
+            "summary": "트럼프 행정부가 3월 4일부터 중국산 수입품 전반에 대한 관세를 기존 10%에서 20%로 추가 인상했다. 이번 조치로 미국의 실효 관세율은 대공황 이후 최고 수준인 14% 이상으로 치솟았다. 중국 제조업체들은 관세 발효 전 선제적으로 수출 물량을 늘린 것으로 나타났으며, 공급망 재편 압력이 더욱 가중되고 있다.",
+            "source": "Tax Foundation",
+            "source_url": "https://taxfoundation.org/research/all/federal/trump-tariffs-trade-war/",
+            "published_date": "2026-03-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Week Ahead Economic Preview: Global Growth to Slow to 2.7% Despite PMI Upswing",
+            "summary": "S&P 글로벌이 3월 9일 주간 프리뷰에서 2026년 글로벌 GDP 성장률이 2.7%로 둔화될 것으로 전망했다. 2월 글로벌 PMI는 팬데믹 이후 최고 수준에 근접했지만, 영국 건설업 PMI는 44.5로 이 사이클 최대 위축을 기록했다. 연준의 금리 인하 기대는 2026년 1회(9월 25bp)로 줄어들었고, 지정학적 긴장이 에너지 가격 불확실성을 높이고 있다.",
+            "source": "S&P Global Market Intelligence",
+            "source_url": "https://www.spglobal.com/marketintelligence/en/mi/research-analysis/week-ahead-economic-preview-week-of-9-march-2026.html",
+            "published_date": "2026-03-09",
+            "credibility": "official"
+          },
+          {
+            "title": "China Exports Surge 21.8% YoY as Manufacturers Rush Ahead of US Tariff Escalation; Japan GDP Beats Expectations",
+            "summary": "중국의 수출이 전년 동기 대비 21.8% 급증하며 컨센서스(7.1%)를 크게 상회했다. 미국의 추가 관세 부과를 앞두고 제조업체들이 물량을 선출하한 것이 주요 원인으로 분석된다. 일본은 4분기 GDP가 연율 +1.3%를 기록하며 예상치(+0.2%)를 대폭 웃돌아, 아시아 경제권이 단기적으로 강한 모멘텀을 유지하고 있음을 보여줬다.",
+            "source": "Format Research / Global Economy Weekly Outlook",
+            "source_url": "https://formatresearch.com/en/2026/03/10/un-nuovo-contesto-per-leconomia-globale-weekly-outlook-10-03-2026/",
+            "published_date": "2026-03-10",
+            "credibility": "blog"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "중국 연구진이 생성형 영상·이미지 합성에서 NVIDIA 최신 칩보다 속도 100배 이상, 에너지 효율도 크게 높은 전광(All-Optical) AI 칩 'LightGen'을 개발했다는 South China Morning Post 발 보도가 X에서 확산됐다. 공식 논문 검증 전 미확인 단계이며, 스케일업 가능성에 대한 회의적 시각도 존재한다.",
+        "source": "@Currentreport1 (X/Twitter)",
+        "source_url": "https://x.com/Currentreport1/status/2002032572675887312"
+      },
+      {
+        "snippet": "일론 머스크가 X에서 테슬라 AI5 칩이 TSMC·삼성 이중 파운드리 체제로 2026년 샘플 출하를 시작하며 AI6·AI7·AI8 로드맵까지 예고했다고 공개했다. AI5는 전작 대비 연산 8배·메모리 용량 9배·효율 3배 향상을 주장하지만, 고볼륨 양산은 2027년 이후로 미뤄진 상태다.",
+        "source": "@elonmusk / @MarioNawfal (X/Twitter)",
+        "source_url": "https://x.com/MarioNawfal/status/1984890722357559304"
+      },
+      {
+        "snippet": "iOS 26 내부 프로토타입 빌드 유출로 폴더블 아이폰 코드명과 미출시 기기 수십 종이 확인됐다는 주장이 제기됐다. 애플의 공식 확인은 없으며 단일 익명 소스 기반의 미검증 정보다.",
+        "source": "@AakashGourX (X/Twitter)",
+        "source_url": "https://x.com/AakashGourX/status/2000794703982379233"
+      }
+    ]
+  },
+  "published_at": "2026-03-11T16:23:02.149072+09:00"
+}

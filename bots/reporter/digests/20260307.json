@@ -1,0 +1,52 @@
+{
+  "date": "2026-03-07",
+  "digest": {
+    "date": "2026-03-07",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Samsung 2nm GAA Process Yield Reaches 70%",
+            "summary": "삼성전자 2nm GAA 공정 수율이 70%를 돌파했습니다. HPC 칩 파운드리 수주 본격화 예상.",
+            "source": "Samsung Newsroom",
+            "source_url": "https://news.samsung.com/2nm-gaa",
+            "published_date": "2026-03-06",
+            "credibility": "official"
+          },
+          {
+            "title": "AMD MI350X Achieves Record MLPerf Inference Score",
+            "summary": "AMD MI350X가 MLPerf 추론 벤치마크에서 신기록을 달성했습니다. LLM 추론에서 H200 대비 15% 우위.",
+            "source": "Tom's Hardware",
+            "source_url": "https://tomshardware.com/amd-mi350x-mlperf",
+            "published_date": "2026-03-07",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "US-Iran Tensions Push Oil Above $95",
+            "summary": "미-이란 긴장 고조로 국제유가가 배럴당 95달러를 돌파했습니다. 글로벌 공급망 불안 우려.",
+            "source": "Reuters",
+            "source_url": "https://reuters.com/oil-prices",
+            "published_date": "2026-03-07",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Japan Yen Falls to 160 Against Dollar",
+            "summary": "일본 엔화가 달러 대비 160엔까지 하락했습니다. BOJ 개입 가능성 대두.",
+            "source": "Financial Times",
+            "source_url": "https://ft.com/yen-drop",
+            "published_date": "2026-03-06",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": []
+  },
+  "published_at": "2026-03-07T02:45:00"
+}

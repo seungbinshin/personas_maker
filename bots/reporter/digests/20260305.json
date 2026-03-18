@@ -1,0 +1,50 @@
+{
+  "date": "2026-03-05",
+  "digest": {
+    "date": "2026-03-05",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "NVIDIA H200 Production Ramp Begins",
+            "summary": "NVIDIA가 H200 GPU의 본격 양산을 시작했습니다. HBM3e 탑재로 추론 성능 대폭 향상.",
+            "source": "Reuters",
+            "source_url": "https://reuters.com/nvidia-h200",
+            "published_date": "2026-03-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Qualcomm Cloud AI 200 Chip Announced",
+            "summary": "Qualcomm이 데이터센터용 AI 추론 칩 Cloud AI 200을 발표했습니다.",
+            "source": "AnandTech",
+            "source_url": "https://anandtech.com/qualcomm-cloud-ai",
+            "published_date": "2026-03-05",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Fed Holds Rates Steady at 4.75%",
+            "summary": "연준이 기준금리를 4.75%로 동결했습니다. 인플레이션 지표 개선에도 불구하고 신중한 태도 유지.",
+            "source": "Bloomberg",
+            "source_url": "https://bloomberg.com/fed-rates",
+            "published_date": "2026-03-05",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "Google TPU v6가 NVIDIA H200 대비 추론 2배 빠르다는 내부 벤치 유출",
+        "source": "@chipleaks",
+        "source_url": "https://x.com/chipleaks/123"
+      }
+    ]
+  },
+  "published_at": "2026-03-05T02:45:00"
+}

@@ -1,0 +1,63 @@
+{
+  "date": "2026-03-09",
+  "digest": {
+    "date": "2026-03-09",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "TSMC CoWoS-L Capacity Expansion 40% for 2026",
+            "summary": "TSMC가 2026년 CoWoS-L 패키징 생산능력을 40% 확대합니다. AI 가속기 수요 대응.",
+            "source": "SemiAnalysis",
+            "source_url": "https://semianalysis.com/tsmc-cowos",
+            "published_date": "2026-03-08",
+            "credibility": "blog"
+          },
+          {
+            "title": "Intel Gaudi 3 AI Accelerator Enters Mass Production",
+            "summary": "Intel Gaudi 3 AI 가속기가 양산에 돌입했습니다. AWS, Dell에 공급 시작.",
+            "source": "Intel Newsroom",
+            "source_url": "https://newsroom.intel.com/gaudi3",
+            "published_date": "2026-03-09",
+            "credibility": "official"
+          },
+          {
+            "title": "Cerebras WSE-3 Achieves 4T Transistor Milestone",
+            "summary": "Cerebras의 WSE-3 웨이퍼 스케일 엔진이 4조 트랜지스터를 달성했습니다.",
+            "source": "IEEE Spectrum",
+            "source_url": "https://spectrum.ieee.org/cerebras-wse3",
+            "published_date": "2026-03-09",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "ECB Cuts Interest Rate to 2.5%",
+            "summary": "ECB가 기준금리를 2.5%로 인하했습니다. 유럽 경기 둔화 우려에 대응.",
+            "source": "Bloomberg",
+            "source_url": "https://bloomberg.com/ecb-rate-cut",
+            "published_date": "2026-03-08",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "NVIDIA Rubin GPU가 HBM4 12-stack 탑재 예정이라는 소문. 대역폭 10TB/s 목표.",
+        "source": "@kopite7kimi",
+        "source_url": "https://x.com/kopite7kimi/456"
+      },
+      {
+        "snippet": "SK하이닉스가 삼성에 HBM4 수율에서 6개월 앞서있다는 업계 관계자 발언",
+        "source": "@semiwiki_anon",
+        "source_url": "https://x.com/semiwiki_anon/789"
+      }
+    ]
+  },
+  "published_at": "2026-03-09T02:45:00"
+}

@@ -1,0 +1,10 @@
+"""Backward-compatible researcher prompt shim."""
+
+from prompts.researcher import (
+    RESEARCHER_DISCOVERY_PROMPT,
+    RESEARCHER_FEEDBACK_PROMPT,
+    RESEARCHER_PAPER_BRIEF_PROMPT,
+    RESEARCHER_REPORT_PROMPT,
+    RESEARCHER_REVISION_PROMPT,
+    RESEARCHER_TOPIC_BRIEF_PROMPT,
+)

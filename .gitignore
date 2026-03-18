@@ -1,0 +1,54 @@
+# ── Secrets & credentials ──
+.env
+bots/*/.env
+claude-code-api/.env
+
+# ── Sensitive personas (excluded from public repo) ──
+bots/seungbin/
+bots/research/
+config.json
+bots/*/config.json
+
+# ── Personal data & analysis ──
+data/raw/
+output/
+
+# ── Sensitive modules ──
+skills/persona/
+skills/research/
+src/persona_rag.py
+src/parser.py
+src/analyzer.py
+src/humor_analyzer.py
+src/synthesizer.py
+src/paper_cache.py
+src/scope.py
+src/report_store.py
+src/pipelines/research_pipeline.py
+
+# ── Sensitive docs ──
+persona.spec.md
+agent-skills-spec.md
+docs/
+
+# ── Coder task logs ──
+bots/coder/task_log/
+
+# ── Build artifacts & runtime ──
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+
+# ── Process & log files ──
+.persona.*.pids
+.*-api.log
+.*-bot.log
+.claude-code-api.log
+.slack_bot.log
+
+# ── OS files ──
+.DS_Store
+
+# ── Claude Code ──
+.claude/

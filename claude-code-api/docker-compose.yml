@@ -1,0 +1,32 @@
+services:
+  api:
+    container_name: exitx-ccapi
+    build: .
+    ports:
+      - "${PORT:-8080}:8080"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - API_KEYS=${API_KEYS:-}
+      - POOL_SIZE=${POOL_SIZE:-1}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-6}
+    volumes:
+      - claude-auth:/home/node/.claude
+      - agent-home:/home/node/users
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - exitx
+
+volumes:
+  claude-auth:
+  agent-home:
+
+networks:
+  exitx:
+    name: exitx
+    driver: bridge

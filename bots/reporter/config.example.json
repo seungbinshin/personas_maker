@@ -1,0 +1,36 @@
+{
+  "name": "reporter",
+  "display_name": "뉴스봇",
+  "persona_type": "reporter",
+  "default_model": "claude-sonnet-4-6",
+  "api_keys": "reporter:YOUR_API_KEY_HERE",
+  "schedule": {
+    "digest_time": "02:45",
+    "digest_days": [
+      "mon",
+      "wed",
+      "fri",
+      "sun"
+    ],
+    "timezone": "Asia/Seoul"
+  },
+  "reporter": {
+    "publish_channel": "YOUR_SLACK_CHANNEL_ID",
+    "status_channel": "YOUR_SLACK_STATUS_CHANNEL_ID",
+    "search_queries": [
+      "AI chip architecture news",
+      "semiconductor industry news",
+      "NPU AI accelerator announcement",
+      "NVIDIA AMD Intel AI hardware",
+      "HBM chiplet packaging technology",
+      "AI startup funding hardware",
+      "semiconductor trade policy"
+    ]
+  },
+  "agents": {
+    "reporter": {
+      "display_name": "리포터",
+      "emoji": ":newspaper:"
+    }
+  }
+}

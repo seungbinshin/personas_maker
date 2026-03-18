@@ -1,0 +1,25 @@
+{
+  "name": "coder",
+  "display_name": "코더",
+  "persona_type": "coder",
+  "default_model": "claude-sonnet-4-6",
+  "api_keys": "coder:YOUR_API_KEY_HERE",
+  "coder": {
+    "command_channel": "YOUR_SLACK_CHANNEL_ID",
+    "team_channel": "YOUR_SLACK_TEAM_CHANNEL_ID"
+  },
+  "agents": {
+    "orchestrator": {
+      "display_name": "오케스트레이터",
+      "emoji": ":brain:"
+    },
+    "implementer": {
+      "display_name": "개발자",
+      "emoji": ":hammer_and_wrench:"
+    },
+    "reviewer": {
+      "display_name": "리뷰어",
+      "emoji": ":mag:"
+    }
+  }
+}
