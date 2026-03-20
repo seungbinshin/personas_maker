@@ -5,6 +5,7 @@ GATHER+CURATE (1 LLM call) → FORMAT (pure code) → PUBLISH (Slack upload)
 
 import json
 import logging
+import subprocess
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -71,6 +72,9 @@ class ReporterPipeline(BasePipeline):
             else:
                 logger.error(f"Generated HTML not found: {html_path}")
                 self._post_status(":warning: HTML 생성 실패.")
+
+            # Stage 4: PUSH to GitHub Pages
+            self._push_to_github(date_str)
 
             logger.info("=== Reporter Pipeline: Completed ===")
 
@@ -289,6 +293,49 @@ class ReporterPipeline(BasePipeline):
         digest["sections"] = [s for s in digest.get("sections", []) if s.get("articles")]
 
         return digest
+
+    def _push_to_github(self, date_str: str):
+        """Commit and push new digests to GitHub for Pages deployment."""
+        project_root = self.bot_dir.parent.parent
+        try:
+            # Check if this is a git repo with a remote
+            result = subprocess.run(
+                ["git", "remote", "get-url", "origin"],
+                cwd=project_root, capture_output=True, text=True,
+            )
+            if result.returncode != 0:
+                logger.debug("No git remote configured — skipping GitHub push")
+                return
+
+            subprocess.run(
+                ["git", "add", "bots/reporter/digests/"],
+                cwd=project_root, capture_output=True, text=True, check=True,
+            )
+
+            # Check if there are staged changes
+            diff = subprocess.run(
+                ["git", "diff", "--cached", "--quiet"],
+                cwd=project_root, capture_output=True,
+            )
+            if diff.returncode == 0:
+                logger.info("No new digest changes to push")
+                return
+
+            subprocess.run(
+                ["git", "commit", "-m", f"briefing: {date_str}"],
+                cwd=project_root, capture_output=True, text=True, check=True,
+            )
+            subprocess.run(
+                ["git", "push"],
+                cwd=project_root, capture_output=True, text=True, check=True,
+            )
+            logger.info("Pushed briefing %s to GitHub", date_str)
+            self._post_status(":globe_with_meridians: GitHub Pages 배포 완료", agent="reporter")
+
+        except subprocess.CalledProcessError as e:
+            logger.warning("GitHub push failed: %s", e.stderr or e.stdout or str(e))
+        except Exception as e:
+            logger.warning("GitHub push error: %s", e)
 
     # ── helpers ───────────────────────────────────────────────────
 

@@ -40,7 +40,7 @@ app: App | None = None
 
 # claude-code-api settings
 CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL", "http://localhost:8080")
-CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "change-me")
+CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-secondme-key-12345")
 API_DIR = Path(__file__).parent.parent / "claude-code-api"
 API_ENV_PATH = API_DIR / ".env"
 API_LOG_PATH = Path(__file__).parent.parent / ".claude-code-api.log"
