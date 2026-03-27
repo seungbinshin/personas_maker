@@ -1241,12 +1241,15 @@ class ResearchPipeline(BasePipeline):
         review = self._find_latest_artifact(artifacts, "review_v", ".json")
         review_section = f"=== Review Results ===\n{review}" if review else ""
 
-        prompt = RESEARCHER_CHAT_SYSTEM_PROMPT.format(
-            scope=scope_text,
-            idea_brief=idea_brief,
-            deep_dive=deep_dive,
-            report=report_text,
-            review_section=review_section,
+        # Use replace() instead of .format() because artifact content
+        # contains JSON with curly braces that would break str.format()
+        prompt = (
+            RESEARCHER_CHAT_SYSTEM_PROMPT
+            .replace("{scope}", scope_text)
+            .replace("{idea_brief}", idea_brief)
+            .replace("{deep_dive}", deep_dive)
+            .replace("{report}", report_text)
+            .replace("{review_section}", review_section)
         )
 
         # Create session via LLM call
@@ -1351,8 +1354,14 @@ class ResearchPipeline(BasePipeline):
     @staticmethod
     def _find_latest_artifact(artifacts: dict[str, str], prefix: str, suffix: str) -> str | None:
         """Find the latest versioned artifact (e.g., deep_dive_v2.json > deep_dive_v1.json)."""
-        matching = sorted(
-            [k for k in artifacts if k.startswith(prefix) and k.endswith(suffix)],
-            reverse=True,
-        )
-        return artifacts[matching[0]] if matching else None
+        import re
+
+        def _version_key(name: str) -> int:
+            m = re.search(r"(\d+)", name[len(prefix):])
+            return int(m[1]) if m else 0
+
+        matching = [k for k in artifacts if k.startswith(prefix) and k.endswith(suffix)]
+        if not matching:
+            return None
+        best = max(matching, key=_version_key)
+        return artifacts[best]
