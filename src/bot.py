@@ -1150,6 +1150,87 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
                 lines.append(f"• `{r.get('report_id', '')}` — {r.get('status', '?')} (리뷰 {r.get('review_count', 0)}회)")
             client.chat_postMessage(channel=channel_id, text="*리포트 목록*\n" + "\n".join(lines), thread_ts=thread_ts)
 
+    elif subcmd == "chat":
+        # !research chat <report_id> — start session
+        # !research chat end — end session (in thread)
+        # !research chat — list chattable reports
+        if len(parts) > 2 and parts[2] == "end":
+            # End session in current thread
+            if thread_ts and _pipeline.has_chat_session(thread_ts):
+                msg_count = _pipeline.end_chat_session(thread_ts)
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=f":wave: 리서치 대화를 종료합니다. (메시지 {msg_count}건)",
+                    thread_ts=thread_ts,
+                )
+            else:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=":warning: 이 스레드에 활성 대화 세션이 없습니다.",
+                    thread_ts=thread_ts,
+                )
+            return
+
+        if len(parts) < 3:
+            # List chattable reports
+            reports = _pipeline.list_chattable_reports()
+            if not reports:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text="대화 가능한 리포트가 없습니다. 리포트 작성이 완료된 후 사용하세요.",
+                    thread_ts=thread_ts,
+                )
+            else:
+                lines = [f"*대화 가능한 리포트 ({len(reports)}건)*\n"]
+                for r in reports:
+                    rid = r.get("report_id", "")
+                    status = r.get("status", "?")
+                    title = r.get("metadata", {}).get("title", rid)
+                    lines.append(f"• `{rid}` — {title} ({status})")
+                lines.append(f"\n:point_right: `!research chat <report_id>` 로 대화를 시작하세요.")
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text="\n".join(lines),
+                    thread_ts=thread_ts,
+                )
+            return
+
+        report_id = parts[2]
+        # Verify report exists
+        report = _pipeline.store.get_report(report_id)
+        if not report:
+            client.chat_postMessage(
+                channel=channel_id,
+                text=f":warning: 리포트 `{report_id}`를 찾을 수 없습니다. `!research list`로 확인하세요.",
+                thread_ts=thread_ts,
+            )
+            return
+
+        # Post initial message to create a thread
+        title = report.get("metadata", {}).get("title", report_id)
+        result = client.chat_postMessage(
+            channel=channel_id,
+            text=f":microscope: *{title}* 리포트 대화를 시작합니다...\n잠시만 기다려 주세요.",
+        )
+        chat_thread_ts = result["ts"]
+
+        def _start_chat():
+            response = _pipeline.start_chat_session(report_id, channel_id, chat_thread_ts)
+            if response:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=response,
+                    thread_ts=chat_thread_ts,
+                )
+            else:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=":warning: 대화 세션 시작에 실패했습니다. 리포트 아티팩트가 충분한지 확인하세요.",
+                    thread_ts=chat_thread_ts,
+                )
+
+        threading.Thread(target=_start_chat, daemon=True).start()
+
     else:
         client.chat_postMessage(
             channel=channel_id,
@@ -1162,7 +1243,10 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
                 "• `!research topic \"주제\" \"힌트\"` — 주제 기반 조사 → 딥다이브 → 리포트\n"
                 "• `!research resume [N]` — 대기 중인 아이디어 N개로 재개\n"
                 "• `!research status` — 현황 요약\n"
-                "• `!research list` — 리포트 목록"
+                "• `!research list` — 리포트 목록\n"
+                "• `!research chat <report_id>` — 리포트에 대해 연구원과 대화\n"
+                "• `!research chat` — 대화 가능한 리포트 목록\n"
+                "• `!research chat end` — (스레드 내) 대화 종료"
             ),
             thread_ts=thread_ts,
         )
@@ -1294,6 +1378,32 @@ def handle_message(event, client, logger):
             logger.info("  → Owner/developer message (will respond normally)")
 
     logger.info(f"  → Mode: {state.mode}, Channel tone: {get_channel_tone(channel_id)}, Memory: {len(memory.history.get(channel_id, []))}msgs")
+
+    # Research chat: route thread messages to active chat session
+    if (
+        PERSONA_TYPE == "research_pipeline"
+        and _pipeline
+        and not text.startswith("!")
+        and event.get("thread_ts")
+        and _pipeline.has_chat_session(event["thread_ts"])
+    ):
+        def _continue_chat():
+            response = _pipeline.continue_chat(event["thread_ts"], text)
+            if response:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=response,
+                    thread_ts=event["thread_ts"],
+                )
+            else:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=":warning: 응답 생성에 실패했습니다. 다시 시도해 주세요.",
+                    thread_ts=event["thread_ts"],
+                )
+
+        threading.Thread(target=_continue_chat, daemon=True).start()
+        return
 
     # Coder bot: if dev session is active, route to dev handler
     if PERSONA_TYPE == "coder" and channel_id in _dev_sessions and not text.startswith("!"):
