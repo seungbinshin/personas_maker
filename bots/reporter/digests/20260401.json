@@ -1,0 +1,52 @@
+{
+  "date": "2026-04-01",
+  "digest": {
+    "date": "2026-04-01",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "TSMC's Advanced Chip Capacity Is Fully Booked Through 2028",
+            "summary": "TSMC의 2nm 이하 첨단 공정 생산능력이 2028년까지 완전히 예약된 것으로 확인됐다. Nvidia·Apple·AMD·Qualcomm 등이 슬롯을 선점했으며, 2nm 웨이퍼 단가는 장당 3만 달러를 넘는다. 고객사들은 공급 부족 심화로 삼성 파운드리를 대안으로 검토 중이다.",
+            "source": "Dataconomy",
+            "source_url": "https://dataconomy.com/2026/03/31/tsmcs-advanced-chip-capacity-is-booked-out-through-2028/",
+            "published_date": "2026-03-31",
+            "credibility": "blog"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Middle East Conflict Disrupts Strait of Hormuz Shipping, Spikes Oil Prices",
+            "summary": "중동 분쟁으로 호르무즈 해협 물류가 차단되며 국제 유가 및 에너지 가격이 급등했다. 글로벌 공급망 전반에 인플레이션 압력이 가중되고 금융시장 변동성이 확대되고 있다. 미국 행정부는 3월 31일 예정된 중국 정상회담을 앞두고 출구 전략을 모색 중인 것으로 알려졌다.",
+            "source": "World Economic Forum / CNBC",
+            "source_url": "https://www.weforum.org/stories/2026/03/us-trade-deficit-international-trade-stories-march-2026/",
+            "published_date": "2026-03-31",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "NVIDIA GTC 2026에서 2028년 출시 예정 'Feynman' GPU 아키텍처 로드맵이 공개됐다는 루머가 X에서 확산. 공식 발표에는 없던 세부 스펙(HBM5 지원, 새 NVLink 버전)이 포함돼 내부 유출 가능성 제기.",
+        "source": "X/Twitter (반도체 커뮤니티 복수 계정)",
+        "source_url": "https://x.com/search?q=Feynman+GPU+NVIDIA+2028"
+      },
+      {
+        "snippet": "Tesla Terafab 프로젝트 관련, 머스크가 X에서 '예상보다 빨리 첫 칩을 테이프아웃할 것'이라고 암시. TSMC 오스틴 팹과의 협업 가능성도 비공식 채널에서 언급됨.",
+        "source": "@elonmusk (X) / Breitbart 보도 기반",
+        "source_url": "https://www.breitbart.com/tech/2026/03/17/elon-musk-announces-launch-date-for-teslas-in-house-ai-chip-manufacturing-project/"
+      },
+      {
+        "snippet": "Samsung 2nm 수율이 50%를 달성해 2026년 하반기 Nvidia 및 Tesla 물량 양산 돌입 임박이라는 업계 소식통 주장이 Digitimes발로 확산. 공식 확인 없음.",
+        "source": "Digitimes / 업계 소식통",
+        "source_url": "https://www.digitimes.com/news/a20260330VL203/digitimes-weekly-news-roundup-hbm4-fab-funding.html"
+      }
+    ]
+  },
+  "published_at": "2026-04-01T02:47:29.320125+09:00"
+}
