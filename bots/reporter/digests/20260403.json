@@ -1,0 +1,52 @@
+{
+  "date": "2026-04-03",
+  "digest": {
+    "date": "2026-04-03",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Intel Core 3 304 Wildcat Lake Specs Leak: Chiplet Design, 40 TOPS NPU for Budget AI PCs",
+            "summary": "인텔 엔트리급 Wildcat Lake 프로세서 'Core 3 304'의 상세 스펙과 벤치마크가 유출됐다. 모놀리식이 아닌 칩렛 설계를 채택했으며 CPU 4 TOPS + GPU 18 TOPS + NPU 18 TOPS = 합산 40 TOPS의 AI 연산 성능을 제공한다. Panther Lake 대비 NPU 성능은 절반 수준이나 BGA 1516 소형 패키지로 비용 효율을 극대화했다.",
+            "source": "CNX Software",
+            "source_url": "https://www.cnx-software.com/2026/04/02/entry-level-intel-core-3-304-wildcat-lake-processor-details-and-benchmarks-surface/",
+            "published_date": "2026-04-02",
+            "credibility": "blog"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Trump Tariff 'Liberation Day' Anniversary: Markets Brace as New Trade Measures Take Effect",
+            "summary": "트럼프 행정부의 '해방의 날' 관세 발표 1주년인 4월 2일을 맞아 미국의 평균 실효 관세율이 13.7%로 2차 세계대전 이후 최고 수준을 유지하고 있다. 연방대법원이 IEEPA 근거 관세를 위헌 판결한 이후 행정부는 무역법 제122조 기반의 대체 관세 체계를 적용 중이며, 가구당 연간 평균 1,500달러의 세금 부담 증가가 추산된다. 4월 중 예정된 시진핑-트럼프 정상회담에서 임시 무역 합의 도출 가능성이 거론되고 있다.",
+            "source": "Tax Foundation / Al Jazeera",
+            "source_url": "https://taxfoundation.org/research/all/federal/trump-tariffs-trade-war/",
+            "published_date": "2026-04-02",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "AMD Helios 랙 스케일 시스템이 Q3 2026 출하를 앞두고 메타를 핵심 고객으로 확보했다는 업계 소식이 확산 중. MI450 GPU 72개로 구성된 Helios가 Nvidia Blackwell의 실질적 대안으로 부상 중이라는 평가.",
+        "source": "CNBC / industry sources",
+        "source_url": "https://www.cnbc.com/2026/03/11/meta-ai-mtia-chip-data-center.html"
+      },
+      {
+        "snippet": "Cerebras의 4월 IPO 타이밍이 구체화되고 있다는 복수 소식통 발 보도. 시장 모멘텀을 활용한 '봄 윈도우' 전략이라는 분석과 함께, WSE-3 웨이퍼 스케일 칩이 Nvidia H100 대비 50배 코어를 탑재했다는 점이 부각되며 기관 투자자 관심 집중.",
+        "source": "Bloomberg / mlq.ai",
+        "source_url": "https://www.aicerts.ai/news/cerebras-targets-april-ai-chip-ipo-to-raise-2-billion/"
+      },
+      {
+        "snippet": "Enflame S60 칩 수출통제 위반 의혹 관련, X(트위터)에서 '텐센트 공급망 전반에 걸친 TSMC 제조 칩 사용 여부'에 대한 추가 조사 가능성이 거론되며 미중 반도체 공급망 리스크 우려가 확산 중.",
+        "source": "X/Twitter semiconductor community",
+        "source_url": "https://www.nbcnews.com/tech/tech-news/ai-chip-tsmc-enflame-techinsights-rcna259342"
+      }
+    ]
+  },
+  "published_at": "2026-04-03T02:47:49.675663+09:00"
+}
