@@ -1,0 +1,68 @@
+{
+  "date": "2026-04-05",
+  "digest": {
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "America's AI Chip Rules Keep Changing — and the Rest of the World Is Paying the Price",
+            "summary": "트럼프 행정부의 AI 반도체 수출 규제가 잦은 정책 변동으로 동맹국·파트너국 기업들에 심각한 불확실성을 야기 중. 4월 14일을 데드라인으로 상무부가 반도체 협상 결과를 대통령에게 보고해야 하며, 결과에 따라 추가 관세 또는 규제 강화 가능성이 높음. 중국 현지 AI 가속기 업체들이 2025년 기준 시장점유율 41%를 달성하며 NVIDIA의 중국 내 입지를 계속 압박.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/tech-industry/americas-ai-chip-rules-keep-changing-and-the-rest-of-the-world-is-paying-the-price",
+            "published_date": "2026-04-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Lapse of Key Digital Trade Measure Undermines Economic Growth, Innovation — SIA",
+            "summary": "WTO 각료회의에서 전자상거래 무관세 유예(모라토리엄) 연장 합의 실패로 디지털 무역에 대한 관세 부과 가능성이 열림. 미국 반도체산업협회(SIA)가 성명을 통해 반도체·소프트웨어 등 디지털 제품 국제 교역 비용 상승을 강력 경고. 'Liberation Day' 관세 충격과 맞물려 글로벌 반도체 무역 환경의 불확실성이 이중으로 가중되는 상황.",
+            "source": "Semiconductor Industry Association",
+            "source_url": "https://www.semiconductors.org/lapse-in-key-digital-trade-measure-undermines-economic-growth-innovation/",
+            "published_date": "2026-04-04",
+            "credibility": "official"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Global Markets Crash: Dow -5.5%, S&P 500 -6%, Nasdaq Enters Bear Market After China's 34% Retaliatory Tariff",
+            "summary": "4월 4일 중국이 미국산 전 품목에 34% 보복 관세를 발표하자 뉴욕 증시가 이틀간 역대 최대 손실 기록. 다우 2,231포인트(-5.5%), S&P 500 -5.97%, 나스닥 -5.8%로 이틀 합산 시가총액 6.6조 달러 소멸—나스닥은 공식 베어마켓 진입. 4월 2~4일 사흘간 S&P 500 누적 -10%, 나스닥 -11%로 코로나 팬데믹 이후 최대 낙폭.",
+            "source": "Wikipedia / Multiple Major Media",
+            "source_url": "https://en.wikipedia.org/wiki/Tariffs_in_the_second_Trump_administration",
+            "published_date": "2026-04-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Trump Shares Video Claiming Stock Market Crash Is Intentional to Force Fed Rate Cut",
+            "summary": "트럼프 대통령이 4월 4일 소셜미디어에 시장 폭락을 의도적으로 유도해 연준의 금리 인하를 압박하는 영상을 공유해 충격. 파월 연준 의장에 대한 노골적 압박 신호로 해석되며 달러·국채 시장 추가 변동성 우려 고조. 시장에서는 정책 불확실성이 NVIDIA·AMD 등 반도체·AI 섹터 전반의 하방 리스크로 직결된다는 분석.",
+            "source": "Market Intelligence Shot",
+            "source_url": "https://www.marketintelshot.com/2026/04/2026-04-03-april-why-gains-global.html",
+            "published_date": "2026-04-04",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "Meta MTIA 400 칩이 내부 벤치마크에서 NVIDIA 동급 제품과 대등한 추론 성능을 기록했다는 X 게시물 확산. MTIA 450/500은 2027년 대규모 배포 예정이며, 메타의 자체 칩 전략 가속화로 NVIDIA 의존도를 낮추려는 행보가 본격화됐다는 분석.",
+        "source": "@AILeaksNews",
+        "source_url": "https://x.com/AILeaksNews"
+      },
+      {
+        "snippet": "TSMC 3nm 캐파가 2028년까지 완전 매진 상태이며 아리조나 'GigaFab' 건설로 용량 확대에 나선다는 업계 소식통 발 X 게시물 다수 확산. NVIDIA·애플 등 대형 고객사 간 선주문 경쟁이 치열하다는 후문도 함께.",
+        "source": "Industry sources via @tomshardware / X",
+        "source_url": "https://x.com/tomshardware/status/2004558618663006404"
+      },
+      {
+        "snippet": "OpenAI 하드웨어 기기 5종 디자인이 유출됐다는 보도가 X와 테크 미디어에서 동시 확산. 공식 확인은 없으나 일부 디자인에 대한 반응은 엇갈리며 'AI 하드웨어 과잉'을 지적하는 커뮤니티 반응도 등장.",
+        "source": "Futurism / X",
+        "source_url": "https://futurism.com/artificial-intelligence/openai-hardware-device-leaked-cringe"
+      }
+    ]
+  },
+  "published_at": "2026-04-05T02:53:01.650915+09:00"
+}
