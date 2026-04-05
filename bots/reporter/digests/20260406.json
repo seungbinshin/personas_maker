@@ -1,0 +1,39 @@
+{
+  "date": "2026-04-06",
+  "digest": {
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Alibaba Unveils XuanTie C950 RISC-V CPU for Agentic AI — Investors Unmoved",
+            "summary": "알리바바가 RISC-V 아키텍처 기반 CPU 'XuanTie C950'을 공개했다. 에이전틱 AI 추론(인퍼런스) 전용으로 설계됐으며, 주류 제품 대비 30% 이상 성능 향상을 주장한다. 미국 수출 통제 속 자체 칩 생태계 구축을 가속화하는 행보이나, 발표 당일 주가 반응은 미미했다.",
+            "source": "247 Wall St. / CNBC",
+            "source_url": "https://247wallst.com/investing/2026/04/05/alibaba-has-a-new-agentic-ai-chip-too-but-investors-dont-seem-to-care/",
+            "published_date": "2026-04-05",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "AMD Ryzen AI Z2 Extreme 칩이 ROG Ally 2, Xbox 핸드헬드 등 게임 핸드헬드 신제품에 탑재될 예정이라는 X 유출이 확산 중. Z2 라인업 5종 중 최상위 AI 강화 SKU로 알려졌다.",
+        "source": "Windows Central / X leaker",
+        "source_url": "https://www.windowscentral.com/hardware/cpu-gpu-components/ryzen-ai-z2-extreme-chip-rumored-for-gaming-handhelds"
+      },
+      {
+        "snippet": "NVIDIA의 중국 AI 가속기 서버 시장 점유율이 2025년 55%로 하락한 반면, 중국 로컬 GPU·AI 칩 업체들이 41%를 차지했다는 업계 분석이 X와 테크 미디어에서 확산. 화웨이 Ascend 계열 성장이 핵심 배경으로 지목된다.",
+        "source": "Distill Intelligence / SiliconANGLE",
+        "source_url": "https://www.distillintelligence.com/briefings/semiconductors-ai-chips-2026-04-03"
+      },
+      {
+        "snippet": "한국 AI 칩 스타트업 Rebellions의 $400M 프리-IPO 라운드 완료 후, X 업계 소식통들 사이에서 2026년 하반기 한국 증시 상장 타이밍과 NVIDIA 대항마 포지셔닝 전략에 대한 구체적 추측이 활발히 공유되고 있다.",
+        "source": "TechCrunch / X industry sources",
+        "source_url": "https://techcrunch.com/2026/03/30/ai-chip-startup-rebellions-raises-400-million-at-2-3b-valuation-in-pre-ipo-round/"
+      }
+    ]
+  },
+  "published_at": "2026-04-06T02:50:30.854336+09:00"
+}
