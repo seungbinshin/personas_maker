@@ -1,0 +1,55 @@
+{
+  "date": "2026-04-10",
+  "digest": {
+    "date": "2026-04-10",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Global Semiconductor Sales Increase Substantially in February — SIA",
+            "summary": "SIA 발표에 따르면 2026년 2월 전 세계 반도체 매출이 888억 달러를 기록, 전월 대비 7.6%, 전년 동기 대비 61.8% 급증했다. 아시아태평양(+93.5%)과 미주(+59.2%), 중국(+57.4%)이 성장을 주도했으며 일본만 소폭 감소(-0.3%)했다. SIA는 AI 수요를 배경으로 연간 매출이 약 1조 달러에 달할 것으로 전망했다.",
+            "source": "Evertiq / Semiconductor Industry Association",
+            "source_url": "https://evertiq.com/news/2026-04-09-global-semiconductor-sales-increase-substantially-in-february",
+            "published_date": "2026-04-09",
+            "credibility": "official"
+          },
+          {
+            "title": "The Great Pivot: Intel's 2026 Resurgence Through 18A and the AI PC Era",
+            "summary": "인텔이 18A 공정(PowerVia + RibbonFET)과 AI PC 시장 강화를 통해 2022~2024년 부진에서 탈출하고 있다는 분석이 나왔다. AI PC 시장 점유율 56%를 확보했으며, 주가는 최근 1년 간 약 85% 반등해 46달러 수준에 도달했다. CHIPS Act 정부 지원을 포함해 연간 자본지출 250억 달러 이상을 유지하며 파운드리 경쟁력 회복에 박차를 가하고 있다.",
+            "source": "Finterra (via FinancialContent)",
+            "source_url": "https://markets.financialcontent.com/stocks/article/finterra-2026-4-9-the-great-pivot-intels-2026-resurgence-through-18a-and-the-ai-pc-era",
+            "published_date": "2026-04-09",
+            "credibility": "blog"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Stock Markets Rally 7th Straight Session — Dow +1,326pts on Iran Ceasefire",
+            "summary": "4월 9일 뉴욕 증시가 이란-이스라엘 휴전 합의 소식에 힘입어 다우 +1,326포인트(+2.9%), S&P 500 +2.5%를 기록하며 7연속 상승세를 이어갔다. 반도체주가 강세를 주도했으며 브로드컴은 5% 이상 뛰었고, 반면 WTI 원유는 호르무즈 해협 재개통 기대에 16% 이상 급락해 배럴당 94달러대로 내려앉았다. 이는 2025년 4월 이후 S&P 500 최장 연속 상승 기록이다.",
+            "source": "TheStreet / Zacks",
+            "source_url": "https://www.zacks.com/stock/news/2897221/stock-market-news-for-apr-9-2026",
+            "published_date": "2026-04-09",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "앤트로픽의 비공개 모델 'Claude Mythos' 유출 데이터가 확산 중 — 해당 모델이 '사이버 역량 면에서 타 AI 모델을 압도적으로 앞선다'는 내용. 앤트로픽은 공개 배포 계획 없음을 확인.",
+        "source": "Microcenter / RenovateQR (April 3-8, 2026)",
+        "source_url": "https://www.microcenter.com/site/mc-news/article/this-week-in-ai-april-3-2026.aspx"
+      },
+      {
+        "snippet": "삼성이 TSMC의 대안으로 NVIDIA의 제2 파운드리 파트너로 급부상 중이라는 TrendForce 업계 소식통 발 보도. Groq 라이선스 계약(2025년 12월)에 이어 NVIDIA 고급 패키징 이원화 논의가 내부적으로 진행되고 있다는 주장.",
+        "source": "TrendForce",
+        "source_url": "https://www.trendforce.com/news/2025/12/29/news-samsung-emerges-as-potential-second-foundry-for-nvidia-alongside-tsmc-after-groq-licensing-deal"
+      }
+    ]
+  },
+  "published_at": "2026-04-10T02:50:07.347455+09:00"
+}
