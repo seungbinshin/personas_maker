@@ -1,0 +1,42 @@
+{
+  "date": "2026-04-13",
+  "digest": {
+    "date": "2026-04-13",
+    "sections": [
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Could Trump Ignite a Stock Market Rally by Suspending Tariffs?",
+            "summary": "트럼프 행정부가 추가 관세를 일시 유예할 경우 증시 급등 가능성이 제기되고 있다. 현재 글로벌 기준선 관세 10%가 2026년 7월 24일까지 유지되며 이후 15% 상향이 예고된 가운데, 연방대법원이 IEEPA 관세를 위헌(6-3) 판결해 섹션 232 관세만 남은 상황이다. 관세 유예가 실현될 경우 정치적 협상 카드로서 시장 심리를 단기간에 끌어올릴 수 있다는 분석이 확산되고 있다.",
+            "source": "The Motley Fool",
+            "source_url": "https://www.fool.com/investing/2026/04/12/could-trump-ignite-a-stock-market-rally-by-suspend/",
+            "published_date": "2026-04-12",
+            "credibility": "major_media"
+          },
+          {
+            "title": "IMF World Economic Outlook April 2026 — Defense Spending Boom Heightens Fiscal Risks",
+            "summary": "IMF가 4월 14일 공개 예정인 '2026년 4월 세계경제전망(WEO)' 분석 챕터를 선공개해, 방위비 지출 붐이 단기 경기 부양 효과를 내지만 3년 내 재정적자 2.6%p 악화, 공공부채 7%p 증가를 초래할 수 있다고 경고했다. 국가별로는 미국이 2026년 GDP 2.4% 성장을 유지하는 가운데, 동아시아·태평양 지역은 중국 구조적 둔화로 4.4%로 하향 조정됐다. 피에르-올리비에 구랭샤 수석이코노미스트는 4월 14일 기자회견에서 2026년 전체 성장률 전망치를 발표할 예정이다.",
+            "source": "IMF",
+            "source_url": "https://www.imf.org/en/publications/weo/issues/2026/04/14/world-economic-outlook-april-2026",
+            "published_date": "2026-04-13",
+            "credibility": "official"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "일론 머스크가 테슬라 AI5 칩이 궁극적으로 '세계 최대 볼륨 AI 칩'이 될 것이라고 X에서 직접 언급. 단, AI5 양산은 2027년 중반까지 대규모 라인 전환 불가 수준이며, 삼성 텍사스 2nm 팹과 TSMC를 동시 활용하는 이중 파운드리 전략이 확인됐다.",
+        "source": "@elonmusk / @SawyerMerritt (X)",
+        "source_url": "https://x.com/SawyerMerritt/status/1989842391541629030"
+      },
+      {
+        "snippet": "중국 SMIC의 7nm 칩 수율이 현재 약 20% 수준에 불과하며, 중국 내 독자 개발 EUV 장비는 2030년 이전 양산이 불가하다는 분석이 X에서 확산. 미·중 칩 기술 격차는 향후 수년간 더 확대될 것이라는 전망이 제기됐다.",
+        "source": "@GS_CapSF (X)",
+        "source_url": "https://x.com/GS_CapSF/status/2002076447423483957"
+      }
+    ]
+  },
+  "published_at": "2026-04-13T02:52:14.586562+09:00"
+}
