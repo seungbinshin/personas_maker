@@ -1232,14 +1232,18 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
         threading.Thread(target=_start_chat, daemon=True).start()
 
     elif subcmd == "sync-discourse":
+        # !research sync-discourse       → incremental (default)
+        # !research sync-discourse full   → full rebuild
+        force_full = len(parts) > 2 and parts[2] == "full"
+        mode_label = "전체" if force_full else "증분"
         client.chat_postMessage(
             channel=channel_id,
-            text=":books: Discourse 지식 동기화를 시작합니다...",
+            text=f":books: Discourse 지식 {mode_label} 동기화를 시작합니다...",
             thread_ts=thread_ts,
         )
 
         def _run():
-            _pipeline.sync_discourse()
+            _pipeline.sync_discourse(full=force_full)
 
         threading.Thread(target=_run, daemon=True).start()
 

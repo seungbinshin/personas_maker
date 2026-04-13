@@ -102,8 +102,8 @@ class ResearchPipeline(BasePipeline):
         vault_rel = discourse_config.get("vault_path", "knowledge")
         self.discourse_knowledge = DiscourseKnowledge(bot_dir / vault_rel)
 
-    def sync_discourse(self) -> dict:
-        """Run a full Discourse sync — extract, summarize, write vault."""
+    def sync_discourse(self, full: bool = False) -> dict:
+        """Run a Discourse sync. Incremental by default, full if forced."""
         discourse_config = self.config.get("discourse", {})
         base_url = discourse_config.get("base_url", "")
         api_username = discourse_config.get("api_username", "system")
@@ -115,13 +115,18 @@ class ResearchPipeline(BasePipeline):
 
         client = DiscourseClient(base_url, api_key, api_username)
         vault_rel = discourse_config.get("vault_path", "knowledge")
-        sync = DiscourseSync(client, self.runtime, self.bot_dir / vault_rel)
+
+        def _progress(msg: str):
+            self._post_status(msg, agent="researcher")
+
+        sync = DiscourseSync(client, self.runtime, self.bot_dir / vault_rel, progress_callback=_progress)
 
         self._post_status(":books: Discourse 동기화를 시작합니다...", agent="researcher")
-        stats = sync.run_full_sync()
+        stats = sync.run_full_sync() if full else sync.run_incremental_sync()
         self._post_status(
-            f":white_check_mark: Discourse 동기화 완료: "
-            f"{stats['topic_count']}개 토픽, {stats['category_count']}개 카테고리, "
+            f":white_check_mark: Discourse 동기화 완료 ({stats.get('mode', 'full')}): "
+            f"{stats['topic_count']}개 요약, {stats['skipped_topics']}개 스킵, "
+            f"{stats['category_count']}개 카테고리, "
             f"{stats['failed_summaries']}건 실패, {stats['duration_seconds']}초",
             agent="researcher",
         )

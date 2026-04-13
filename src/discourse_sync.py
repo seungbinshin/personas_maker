@@ -88,15 +88,51 @@ class DiscourseSync:
         client: DiscourseClient,
         runtime: ClaudeRuntimeClient,
         vault_path: str | Path,
+        progress_callback: callable | None = None,
     ):
         self.client = client
         self.runtime = runtime
         self.vault_path = Path(vault_path)
+        self.progress_callback = progress_callback  # (message: str) -> None
+
+    def _report_progress(self, message: str):
+        logger.info(message)
+        if self.progress_callback:
+            self.progress_callback(message)
+
+    def _load_last_sync(self) -> str | None:
+        """Load last_sync timestamp from _index.json, or None if no previous sync."""
+        index_path = self.vault_path / "_index.json"
+        if not index_path.exists():
+            return None
+        try:
+            data = json.loads(index_path.read_text(encoding="utf-8"))
+            return data.get("last_sync")
+        except (json.JSONDecodeError, OSError):
+            return None
+
+    def _is_topic_updated(self, topic_detail: DiscourseTopicDetail, since: str) -> bool:
+        """Check if a topic has been updated since the given ISO timestamp."""
+        last_posted = topic_detail.topic.last_posted_at
+        if not last_posted or not since:
+            return True
+        return last_posted > since
 
     def run_full_sync(self) -> dict:
         """Run a complete snapshot sync. Returns sync stats."""
+        return self._run_sync(incremental=False)
+
+    def run_incremental_sync(self) -> dict:
+        """Run an incremental sync — only re-summarize topics updated since last sync."""
+        return self._run_sync(incremental=True)
+
+    def _run_sync(self, incremental: bool = False) -> dict:
         start = time.time()
+        last_sync = self._load_last_sync() if incremental else None
+        mode = "incremental" if last_sync else "full"
+
         stats = {
+            "mode": mode,
             "topic_count": 0,
             "skipped_topics": 0,
             "failed_summaries": 0,
@@ -104,9 +140,12 @@ class DiscourseSync:
         }
 
         # 1. Fetch everything from Discourse
-        logger.info("Fetching all Discourse content...")
+        self._report_progress(f":satellite: Discourse {mode} 동기화: 토픽 목록 가져오는 중...")
         categories = self.client.fetch_categories()
         all_data = self.client.fetch_all(categories)
+
+        total_topics = sum(len(d["topics"]) for d in all_data.values())
+        self._report_progress(f":satellite: {total_topics}개 토픽 발견, 요약 시작...")
 
         # 2. Prepare vault directories
         topics_dir = self.vault_path / "topics"
@@ -118,6 +157,8 @@ class DiscourseSync:
         # 3. Summarize and write topic notes
         all_topic_files: dict[int, str] = {}  # discourse_id -> relative vault path
         tag_index: dict[str, list[str]] = {}  # tag -> [topic paths]
+        processed = 0
+        categories_with_updates: set[str] = set()
 
         for cat_slug, cat_data in all_data.items():
             cat: DiscourseCategory = cat_data["category"]
@@ -131,23 +172,44 @@ class DiscourseSync:
                 rel_path = f"{cat_slug}/{filename}"
                 all_topic_files[topic.id] = rel_path
 
+                # Incremental: skip topics not updated since last sync
+                filepath = cat_topic_dir / f"{filename}.md"
+                if last_sync and not self._is_topic_updated(detail, last_sync) and filepath.exists():
+                    stats["skipped_topics"] += 1
+                    processed += 1
+                    for tag in topic.tags:
+                        tag_index.setdefault(tag, []).append(rel_path)
+                    continue
+
+                categories_with_updates.add(cat_slug)
                 md_content = self._summarize_topic(detail, cat.name)
                 if md_content is None:
                     md_content = self._raw_fallback(detail, cat.name)
                     stats["failed_summaries"] += 1
 
-                filepath = cat_topic_dir / f"{filename}.md"
                 filepath.write_text(md_content, encoding="utf-8")
                 stats["topic_count"] += 1
+                processed += 1
 
                 for tag in topic.tags:
                     tag_index.setdefault(tag, []).append(rel_path)
 
+                # Progress report every 10 topics
+                if processed % 10 == 0:
+                    elapsed = round(time.time() - start)
+                    self._report_progress(
+                        f":hourglass_flowing_sand: 진행: {processed}/{total_topics} "
+                        f"({stats['topic_count']} 요약, {stats['skipped_topics']} 스킵, {elapsed}초 경과)"
+                    )
+
         # 4. Post-process: add Related links via tag co-occurrence
         self._add_related_links(topics_dir, all_data, all_topic_files, tag_index)
 
-        # 5. Write category summaries
-        for cat_slug, cat_data in all_data.items():
+        # 5. Write category summaries (incremental: only categories with updated topics)
+        cats_to_summarize = all_data.items() if not last_sync else (
+            (slug, data) for slug, data in all_data.items() if slug in categories_with_updates
+        )
+        for cat_slug, cat_data in cats_to_summarize:
             cat = cat_data["category"]
             topic_details = cat_data["topics"]
             cat_summary = self._summarize_category(cat, topic_details, all_topic_files)
@@ -166,9 +228,9 @@ class DiscourseSync:
         index_path.write_text(json.dumps(stats, ensure_ascii=False, indent=2), encoding="utf-8")
 
         logger.info(
-            "Discourse sync complete: %d topics, %d categories, %d failed, %.1fs",
-            stats["topic_count"], stats["category_count"],
-            stats["failed_summaries"], stats["duration_seconds"],
+            "Discourse sync complete (%s): %d summarized, %d skipped, %d categories, %d failed, %.1fs",
+            mode, stats["topic_count"], stats["skipped_topics"],
+            stats["category_count"], stats["failed_summaries"], stats["duration_seconds"],
         )
         return stats
 
