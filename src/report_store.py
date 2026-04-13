@@ -18,10 +18,42 @@ Directory structure per report:
 
 import json
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_url(url: str) -> str:
+    """Normalize URL for dedup — collapses arXiv variants, strips query/fragment."""
+    if not url:
+        return ""
+    url = url.strip().rstrip("/").lower()
+    url = url.split("?")[0].split("#")[0].rstrip("/")
+    url = url.replace("http://", "https://")
+    # Normalize arXiv URL variants: abs, pdf, html all map to abs
+    m = re.search(r"arxiv\.org/(?:abs|pdf|html)/(\d+\.\d+)", url)
+    if m:
+        return f"https://arxiv.org/abs/{m.group(1)}"
+    return url
+
+
+def _titles_match(a: str, b: str) -> bool:
+    """Fuzzy title match — exact after cleanup, or substring containment for long titles."""
+    if not a or not b:
+        return False
+    a_clean = re.sub(r"[^a-z0-9\s]", "", a.lower()).strip()
+    b_clean = re.sub(r"[^a-z0-9\s]", "", b.lower()).strip()
+    if len(a_clean) < 15 or len(b_clean) < 15:
+        return False
+    if a_clean == b_clean:
+        return True
+    # Containment: shorter title fully inside longer one
+    shorter, longer = (a_clean, b_clean) if len(a_clean) <= len(b_clean) else (b_clean, a_clean)
+    if len(shorter) > 20 and shorter in longer:
+        return True
+    return False
 
 # Maps filename patterns to agent subdirectories
 _AGENT_ROUTING = {
@@ -79,9 +111,9 @@ class ReportStore:
         """Check if an idea already exists by idea_id, source_url, or source_paper title.
 
         Returns the existing report_id if duplicate found, None otherwise.
+        Uses normalized arXiv URLs and fuzzy title matching to catch variants.
         """
-        source_url_clean = source_url.strip().rstrip("/").lower() if source_url else ""
-        source_paper_clean = source_paper.strip().lower() if source_paper else ""
+        source_url_norm = _normalize_url(source_url)
 
         for r in self.list_reports():
             existing_id = r.get("idea_id", "")
@@ -92,25 +124,25 @@ class ReportStore:
             if existing_id and existing_id == idea_id:
                 return rid
 
-            # Check source_url match
-            if source_url_clean:
-                existing_url = (meta.get("source_url", "") or "").strip().rstrip("/").lower()
-                if existing_url and existing_url == source_url_clean:
+            # Check source_url match (normalized — handles arXiv abs/pdf/html)
+            if source_url_norm:
+                existing_url_norm = _normalize_url(meta.get("source_url", "") or "")
+                if existing_url_norm and existing_url_norm == source_url_norm:
                     return rid
 
-            # Check source_paper title match (fuzzy — lowercase strip)
-            if source_paper_clean and len(source_paper_clean) > 15:
-                existing_paper = (meta.get("source_paper", "") or "").strip().lower()
-                if existing_paper and existing_paper == source_paper_clean:
+            # Check source_paper title match (fuzzy — handles punctuation, containment)
+            if source_paper:
+                existing_paper = meta.get("source_paper", "") or ""
+                if _titles_match(source_paper, existing_paper):
                     return rid
 
         return None
 
     def get_all_source_urls(self) -> set[str]:
-        """Return all source URLs from existing reports."""
+        """Return all normalized source URLs from existing reports."""
         urls = set()
         for r in self.list_reports():
-            url = (r.get("metadata", {}).get("source_url", "") or "").strip().rstrip("/").lower()
+            url = _normalize_url(r.get("metadata", {}).get("source_url", "") or "")
             if url:
                 urls.add(url)
         return urls

@@ -190,8 +190,6 @@ do_stop_bot() {
     if [[ -n "$API_PID" && "$API_PID" != "shared" ]] && is_pid_alive "$API_PID"; then
         kill "$API_PID" 2>/dev/null && log_ok "[$name] Stopped claude-code-api (PID $API_PID)" || true
         stopped=true
-    elif [[ "$API_PID" == "shared" ]]; then
-        log_info "[$name] API is shared — not stopping"
     fi
 
     if [[ -n "$BOT_PID" ]] && is_pid_alive "$BOT_PID"; then
@@ -199,16 +197,22 @@ do_stop_bot() {
         stopped=true
     fi
 
-    # Fallback: kill any process still on the bot's API port
+    # Always kill any process on the bot's API port to free it
     if [[ -f "$bot_dir/.env" ]]; then
         local api_port
         api_port=$(grep '^API_PORT=' "$bot_dir/.env" | cut -d= -f2 || echo "")
         if [[ -n "$api_port" ]]; then
-            local port_pid
-            port_pid=$(lsof -ti ":$api_port" 2>/dev/null || true)
-            if [[ -n "$port_pid" ]]; then
-                kill $port_pid 2>/dev/null && log_warn "[$name] Killed orphan process on port $api_port (PID $port_pid)" || true
+            local port_pids
+            port_pids=$(lsof -ti ":$api_port" 2>/dev/null || true)
+            if [[ -n "$port_pids" ]]; then
+                kill $port_pids 2>/dev/null && log_ok "[$name] Killed API process on port $api_port (PID $port_pids)" || true
                 stopped=true
+                # Wait briefly and force-kill if still alive
+                sleep 1
+                port_pids=$(lsof -ti ":$api_port" 2>/dev/null || true)
+                if [[ -n "$port_pids" ]]; then
+                    kill -9 $port_pids 2>/dev/null && log_warn "[$name] Force-killed stubborn process on port $api_port (PID $port_pids)" || true
+                fi
             fi
         fi
     fi

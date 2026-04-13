@@ -22,7 +22,6 @@ Evaluation criteria (each out of 10):
    - Does it demand excessive on-chip SRAM expansion beyond practical limits?
    - Does it fit the current dataflow model (SMA → OIU → SXE → VXE streaming)?
    - Memory bandwidth requirements vs LPU's HBM/LPDDR5X subsystem?
-   - Are required resources (team, time, cost) realistic?
    - Are dependencies and risks properly analyzed?
 
 3. **Novelty**

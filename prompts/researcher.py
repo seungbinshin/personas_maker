@@ -17,10 +17,10 @@ SAFETY: Only process text-based content (HTML, article text). Do NOT open or pro
 
 IMPORTANT: Prioritize papers that have been accepted/published at the top-tier conferences listed above. arXiv-only preprints without conference acceptance should be marked as priority "low". Include the acceptance status (e.g., "MICRO 2025 accepted", "arXiv preprint") in the conference field.
 
-IMPORTANT: The following topics have ALREADY been researched or are in the paper cache. Do NOT propose ideas that overlap with these existing topics. Find genuinely NEW and DIFFERENT ideas.
+IMPORTANT: The following topics have ALREADY been researched or are in the paper cache. Do NOT propose ideas that overlap with these existing topics. Find genuinely NEW and DIFFERENT ideas. When checking for duplicates, consider that the same paper may have different titles or URL variants (e.g., arXiv abs/pdf/html). If the core paper is the same, it is a duplicate.
 {existing_topics}
 
-For each idea, you MUST also provide specific investigation hints for the research intern who will deep-dive into the topic. These hints should guide the intern on what to focus on, what questions to answer, and where to look.
+For each idea, provide concise investigation hints. Keep the summary and potential brief — focus on the core idea, not exhaustive analysis. The goal is to quickly identify promising research directions, not to do deep analysis at discovery stage.
 
 Return ONLY valid JSON.
 Do not include markdown headings, bullets, code fences, commentary, or prose before/after the JSON.
@@ -120,8 +120,10 @@ Intern's deep dive research (final version after feedback iterations):
 Write the report in Markdown format with the following structure.
 IMPORTANT: Write all content in Korean.
 IMPORTANT: Do NOT include long-term roadmaps or timeline-based plans (단기/중기/장기). HW architecture selection and development cycles are compact (under 1 year). Instead, focus on practical applicability, methodology, and trade-off analysis.
+IMPORTANT: Do NOT include personnel/staffing estimates (필요 인력, 투입 인원, 팀 구성 등). Focus on technical feasibility, not resource planning.
 IMPORTANT: Output the FULL report content directly in your response. Do NOT save it to a file. Do NOT output just a summary — output the complete Markdown report text.
 IMPORTANT: Do NOT use filesystem or shell tools to create files. The pipeline will save your returned markdown itself.
+IMPORTANT: Section 3 must be split into SW and HW subsections. The SW subsection should be written so that ML/SW engineers can understand it WITHOUT deep hardware knowledge — explain HW concepts in parentheses when referenced. The HW subsection can assume HW architecture familiarity.
 
 # {{Idea title}}
 
@@ -130,14 +132,24 @@ IMPORTANT: Do NOT use filesystem or shell tools to create files. The pipeline wi
 - Limitations of existing approaches
 
 ## 2. 핵심 기술 분석
-- Core algorithm/architecture explanation
+- Core algorithm/architecture explanation (keep concise — focus on the key idea, not exhaustive detail)
 - Performance numbers (from papers)
 - Improvements over existing methods
 
-## 3. HyperAccel 적용 방안
-- How to integrate into current LPU architecture (specific components: MPU, VPU, SMA, ESL, etc.)
-- Required hardware/software changes
-- Expected performance impact (throughput, latency, power, area)
+## 3. 적용 방안
+
+### 3-1. SW 관점 (ML/컴파일러 엔지니어용)
+- Algorithm-level changes: what the SW stack needs to do differently
+- Compiler/runtime integration approach
+- Model-level impact (accuracy, latency, throughput)
+- API/interface changes required
+- (Explain HW concepts in parentheses when referenced, e.g., "MAC 연산 유닛(행렬 곱셈을 수행하는 하드웨어 블록)")
+
+### 3-2. HW 관점 (HW 아키텍트용)
+- Which LPU components need modification (MPU, VPU, SMA, ESL, etc.)
+- Dataflow and microarchitecture changes
+- Area / power / timing impact estimates
+- Expected performance impact (throughput, latency, bandwidth utilization)
 
 ## 4. 장단점 및 오버헤드 분석
 - Advantages vs current approach (quantitative where possible)
@@ -147,7 +159,7 @@ IMPORTANT: Do NOT use filesystem or shell tools to create files. The pipeline wi
 
 ## 5. 실현 가능성 평가
 - Technical risks and mitigation strategies
-- Implementation difficulty and required effort
+- Implementation difficulty (technical complexity, NOT personnel)
 - Dependencies (IP, tool chain, fabrication process, etc.)
 - What must be validated first (simulation, FPGA prototype, etc.)
 
@@ -179,8 +191,10 @@ Instructions:
 4. Be MORE SPECIFIC about LPU integration where feasibility was criticized
 5. Add missing data, comparisons, or analysis as requested
 6. Do NOT add timeline-based roadmaps (단기/중기/장기). Focus on practical trade-offs and overhead analysis.
-7. Output the FULL revised report directly in your response. Do NOT save it to a file. Do NOT output just a summary.
-8. Do NOT use filesystem or shell tools to create files. The pipeline will save your returned markdown itself.
+7. Do NOT include personnel/staffing estimates (필요 인력, 투입 인원, 팀 구성 등). Focus on technical feasibility only.
+8. Section 3 must have separate SW and HW subsections. The SW subsection should be readable by ML/SW engineers without deep HW knowledge.
+9. Output the FULL revised report directly in your response. Do NOT save it to a file. Do NOT output just a summary.
+10. Do NOT use filesystem or shell tools to create files. The pipeline will save your returned markdown itself.
 
 Write the revised report in Markdown format with the same structure:
 
@@ -188,7 +202,9 @@ Write the revised report in Markdown format with the same structure:
 
 ## 1. 배경 및 동기
 ## 2. 핵심 기술 분석
-## 3. HyperAccel 적용 방안
+## 3. 적용 방안
+### 3-1. SW 관점 (ML/컴파일러 엔지니어용)
+### 3-2. HW 관점 (HW 아키텍트용)
 ## 4. 장단점 및 오버헤드 분석
 ## 5. 실현 가능성 평가
 ## 참고 문헌

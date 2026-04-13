@@ -767,8 +767,27 @@ class ResearchPipeline(BasePipeline):
 
     # ─── Full Pipeline Orchestration ─────────────────────────────
 
+    PENDING_THRESHOLD = 15
+
     def run_full_pipeline(self):
-        """Run discovery only — waits for human selection via !research select."""
+        """Run discovery — or auto-analyze top pending ideas if backlog >= PENDING_THRESHOLD."""
+        # Check pending backlog before discovery
+        all_reports = self.store.list_reports()
+        pending = [r for r in all_reports if r.get("status") == "pending_selection"]
+
+        if len(pending) >= self.PENDING_THRESHOLD:
+            logger.info(
+                f"Pending backlog ({len(pending)}) >= threshold ({self.PENDING_THRESHOLD}). "
+                "Skipping discovery — auto-analyzing top ideas."
+            )
+            self._post_status(
+                f":inbox_tray: *미처리 논문 {len(pending)}건 (>= {self.PENDING_THRESHOLD}건)* — "
+                f"신규 아카이빙을 건너뛰고 기존 대기 논문 중 유망 후보를 자동 분석합니다.",
+                agent="researcher",
+            )
+            self._auto_analyze_top_pending(pending)
+            return
+
         if not self._begin_run("discovery"):
             return
         logger.info("=== Research Pipeline: Discovery (awaiting human selection) ===")
@@ -777,6 +796,43 @@ class ResearchPipeline(BasePipeline):
         except Exception as e:
             logger.error(f"Research pipeline error: {e}", exc_info=True)
             self._post_status(f":x: 파이프라인 에러: {str(e)[:200]}")
+        finally:
+            self._end_run()
+
+    def _auto_analyze_top_pending(self, pending: list[dict]):
+        """Auto-select top-priority pending ideas and run the full analysis pipeline."""
+        if not self._begin_run("auto-analyze-pending"):
+            return
+        try:
+            # Sort by priority: high > medium > low
+            priority_order = {"high": 0, "medium": 1, "low": 2}
+            pending.sort(key=lambda r: priority_order.get(
+                r.get("metadata", {}).get("priority", "low"), 2
+            ))
+
+            # Select top ideas (up to num_ideas configured, default 5)
+            count = min(self.num_ideas, len(pending))
+            selected = pending[:count]
+            report_ids = [r["report_id"] for r in selected]
+
+            lines = []
+            for i, r in enumerate(selected, 1):
+                idea_id = r.get("idea_id", "?")
+                title = r.get("metadata", {}).get("title", idea_id)
+                priority = r.get("metadata", {}).get("priority", "?")
+                lines.append(f"  {i}. *{title}* (`{idea_id}`, {priority})")
+
+            self._post_status(
+                f":rocket: *상위 {count}개 유망 논문 자동 분석 시작*\n\n"
+                + "\n".join(lines),
+                agent="researcher",
+            )
+
+            self._run_stages_after_selection(report_ids)
+
+        except Exception as e:
+            logger.error(f"Auto-analyze pending error: {e}", exc_info=True)
+            self._post_status(f":x: 자동 분석 에러: {str(e)[:200]}")
         finally:
             self._end_run()
 
