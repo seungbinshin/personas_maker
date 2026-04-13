@@ -116,6 +116,14 @@ class ResearchPipeline(BasePipeline):
         self._post_status(":microscope: 연구원이 최신 논문을 스캔합니다...", agent="researcher")
 
         scope_text = self.fit_evaluator.scope_text() or "General AI hardware research"
+
+        # Inject Discourse team context
+        discourse_ctx = self.discourse_knowledge.build_context(
+            self.scope.keywords if self.scope else []
+        )
+        if discourse_ctx:
+            scope_text = f"{scope_text}\n\n{discourse_ctx}"
+
         existing_topics = self._collect_existing_topics()
         ideas = self.evidence_collector.discover_research_ideas(
             scope_text,
