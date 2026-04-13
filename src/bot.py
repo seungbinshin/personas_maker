@@ -1231,6 +1231,18 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
 
         threading.Thread(target=_start_chat, daemon=True).start()
 
+    elif subcmd == "sync-discourse":
+        client.chat_postMessage(
+            channel=channel_id,
+            text=":books: Discourse 지식 동기화를 시작합니다...",
+            thread_ts=thread_ts,
+        )
+
+        def _run():
+            _pipeline.sync_discourse()
+
+        threading.Thread(target=_run, daemon=True).start()
+
     else:
         client.chat_postMessage(
             channel=channel_id,

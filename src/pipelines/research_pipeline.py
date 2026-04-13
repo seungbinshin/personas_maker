@@ -18,6 +18,7 @@ All LLM calls run sequentially. Heartbeat messages post every 2 min so Slack sho
 
 import json
 import logging
+import os
 import threading
 import time
 from dataclasses import dataclass, field
@@ -34,7 +35,9 @@ from skills.research.external_evidence_collector import ExternalEvidenceCollecto
 from skills.research.structured_artifact_authoring import StructuredArtifactAuthoring
 from skills.types import LLMRunRequest
 from tools.md_to_html import convert_report
+from discourse_client import DiscourseClient
 from discourse_knowledge import DiscourseKnowledge
+from discourse_sync import DiscourseSync
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +101,31 @@ class ResearchPipeline(BasePipeline):
         discourse_config = bot_config.get("discourse", {})
         vault_rel = discourse_config.get("vault_path", "knowledge")
         self.discourse_knowledge = DiscourseKnowledge(bot_dir / vault_rel)
+
+    def sync_discourse(self) -> dict:
+        """Run a full Discourse sync — extract, summarize, write vault."""
+        discourse_config = self.config.get("discourse", {})
+        base_url = discourse_config.get("base_url", "")
+        api_username = discourse_config.get("api_username", "system")
+        api_key = os.environ.get("DISCOURSE_API_KEY", "")
+
+        if not base_url or not api_key:
+            logger.error("Discourse config missing: base_url or DISCOURSE_API_KEY")
+            return {"error": "missing config"}
+
+        client = DiscourseClient(base_url, api_key, api_username)
+        vault_rel = discourse_config.get("vault_path", "knowledge")
+        sync = DiscourseSync(client, self.runtime, self.bot_dir / vault_rel)
+
+        self._post_status(":books: Discourse 동기화를 시작합니다...", agent="researcher")
+        stats = sync.run_full_sync()
+        self._post_status(
+            f":white_check_mark: Discourse 동기화 완료: "
+            f"{stats['topic_count']}개 토픽, {stats['category_count']}개 카테고리, "
+            f"{stats['failed_summaries']}건 실패, {stats['duration_seconds']}초",
+            agent="researcher",
+        )
+        return stats
 
     def _llm(self, prompt: str, agent: str, label: str) -> str:
         """Call LLM with heartbeat. No explicit timeout — runs until done."""
