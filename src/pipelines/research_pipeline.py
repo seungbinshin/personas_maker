@@ -469,6 +469,16 @@ class ResearchPipeline(BasePipeline):
         self._post_status(f":microscope: *{title}* 리포트 작성 중 ({idx}/{total})", agent="researcher")
 
         scope_text = self.fit_evaluator.scope_text()
+
+        # Inject Discourse context relevant to this specific idea
+        idea_keywords = [
+            idea.get("idea_id", ""),
+            idea.get("title", ""),
+        ] + idea.get("keywords", [])
+        discourse_ctx = self.discourse_knowledge.build_context(idea_keywords)
+        if discourse_ctx:
+            scope_text = f"{scope_text}\n\n{discourse_ctx}"
+
         report = self.authoring_skill.write_research_report(
             scope_text=scope_text,
             idea_brief_json=idea_brief_json,
