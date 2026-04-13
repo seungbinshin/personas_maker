@@ -34,6 +34,7 @@ from skills.research.external_evidence_collector import ExternalEvidenceCollecto
 from skills.research.structured_artifact_authoring import StructuredArtifactAuthoring
 from skills.types import LLMRunRequest
 from tools.md_to_html import convert_report
+from discourse_knowledge import DiscourseKnowledge
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,11 @@ class ResearchPipeline(BasePipeline):
             slack=self.slack_facade,
             status_channel=self.status_channel,
         )
+
+        # Initialize Discourse knowledge
+        discourse_config = bot_config.get("discourse", {})
+        vault_rel = discourse_config.get("vault_path", "knowledge")
+        self.discourse_knowledge = DiscourseKnowledge(bot_dir / vault_rel)
 
     def _llm(self, prompt: str, agent: str, label: str) -> str:
         """Call LLM with heartbeat. No explicit timeout — runs until done."""
