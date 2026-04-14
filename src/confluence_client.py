@@ -52,9 +52,11 @@ class ConfluenceClient:
         """CQL search for pages matching keywords, optionally scoped to spaces."""
         cql_parts = ["type=page"]
         if spaces:
-            space_clauses = " OR ".join(f'space="{s}"' for s in spaces)
+            safe_spaces = [s.replace('"', '\\"') for s in spaces]
+            space_clauses = " OR ".join(f'space="{s}"' for s in safe_spaces)
             cql_parts.append(f"({space_clauses})")
-        cql_parts.append(f'text ~ "{keywords}"')
+        safe_keywords = keywords.replace('"', '\\"')
+        cql_parts.append(f'text ~ "{safe_keywords}"')
         cql = " AND ".join(cql_parts)
 
         expand = "body.storage,version,metadata.labels,ancestors"
@@ -69,7 +71,9 @@ class ConfluenceClient:
             )
             results = data.get("results", [])
             for item in results:
-                pages.append(self._parse_page(item))
+                page = self._parse_page(item)
+                if page:
+                    pages.append(page)
 
             if len(results) < limit:
                 break
@@ -93,18 +97,26 @@ class ConfluenceClient:
         limit = 25
 
         while True:
-            data = self._get(
-                f"/content/{page_id}/child/page",
-                params={"expand": expand, "start": start, "limit": limit},
-            )
+            try:
+                data = self._get(
+                    f"/content/{page_id}/child/page",
+                    params={"expand": expand, "start": start, "limit": limit},
+                )
+            except requests.HTTPError as exc:
+                logger.warning(
+                    "Failed to fetch children of page %s: %s", page_id, exc
+                )
+                return children
+
             results = data.get("results", [])
             for item in results:
                 child = self._parse_page(item)
-                children.append(child)
-                # Recursively fetch grandchildren
-                time.sleep(FETCH_DELAY)
-                grandchildren = self.fetch_children(child.id)
-                children.extend(grandchildren)
+                if child:
+                    children.append(child)
+                    # Recursively fetch grandchildren
+                    time.sleep(FETCH_DELAY)
+                    grandchildren = self.fetch_children(child.id)
+                    children.extend(grandchildren)
 
             if len(results) < limit:
                 break
@@ -113,34 +125,38 @@ class ConfluenceClient:
 
         return children
 
-    def _parse_page(self, data: dict) -> ConfluencePage:
+    def _parse_page(self, data: dict) -> ConfluencePage | None:
         """Parse Confluence API JSON response into a ConfluencePage."""
-        labels = [
-            lbl["name"]
-            for lbl in data.get("metadata", {})
-            .get("labels", {})
-            .get("results", [])
-        ]
+        try:
+            labels = [
+                lbl["name"]
+                for lbl in data.get("metadata", {})
+                .get("labels", {})
+                .get("results", [])
+            ]
 
-        ancestors = data.get("ancestors", [])
-        parent_id = str(ancestors[-1]["id"]) if ancestors else None
+            ancestors = data.get("ancestors", [])
+            parent_id = str(ancestors[-1]["id"]) if ancestors else None
 
-        version_info = data.get("version", {})
-        history = data.get("history", {})
+            version_info = data.get("version", {})
+            history = data.get("history", {})
 
-        return ConfluencePage(
-            id=str(data["id"]),
-            title=data.get("title", ""),
-            space_key=data.get("space", {}).get("key", ""),
-            body=data.get("body", {}).get("storage", {}).get("value", ""),
-            created=history.get("createdDate", ""),
-            last_modified=version_info.get("when", ""),
-            author=history.get("createdBy", {}).get("displayName", "")
-            or version_info.get("by", {}).get("displayName", "unknown"),
-            labels=labels,
-            parent_id=parent_id,
-            version=version_info.get("number", 1),
-        )
+            return ConfluencePage(
+                id=str(data["id"]),
+                title=data.get("title", ""),
+                space_key=data.get("space", {}).get("key", ""),
+                body=data.get("body", {}).get("storage", {}).get("value", ""),
+                created=history.get("createdDate", ""),
+                last_modified=version_info.get("when", ""),
+                author=history.get("createdBy", {}).get("displayName", "")
+                or version_info.get("by", {}).get("displayName", "unknown"),
+                labels=labels,
+                parent_id=parent_id,
+                version=version_info.get("number", 1),
+            )
+        except (KeyError, IndexError) as exc:
+            logger.warning("Failed to parse Confluence page data: %s", exc)
+            return None
 
 
 def _slugify(text: str) -> str:
