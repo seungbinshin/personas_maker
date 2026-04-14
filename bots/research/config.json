@@ -1,0 +1,47 @@
+{
+  "name": "research",
+  "display_name": "연구팀",
+  "persona_type": "research_pipeline",
+  "default_model": "claude-opus-4-6",
+  "api_keys": "research:sk-research-key-12345",
+  "schedule": {
+    "discovery_scan": "22:00",
+    "discovery_days": ["mon", "wed", "fri", "sun"],
+    "auto_report": "02:30",
+    "auto_report_days": ["tue", "thu", "sat", "mon"],
+    "timezone": "Asia/Seoul"
+  },
+  "research": {
+    "publish_channel": "C0AK1BCQHHP",
+    "status_channel": "C0AJLC3FS7Q",
+    "scope_file": "scopes/hyperaccel.json",
+    "num_ideas": 3,
+    "max_parallel": 3,
+    "max_intern_feedback_rounds": 3,
+    "reviewer_accept_threshold": 7
+  },
+  "discourse": {
+    "base_url": "https://hyperaccel.discourse.group",
+    "api_username": "SeungBin",
+    "vault_path": "knowledge"
+  },
+  "confluence": {
+    "base_url": "https://hyperaccel.atlassian.net/wiki",
+    "default_spaces": ["Bertha", "BerthaEdge"],
+    "vault_path": "knowledge"
+  },
+  "agents": {
+    "researcher": {
+      "display_name": "연구원",
+      "emoji": ":microscope:"
+    },
+    "intern": {
+      "display_name": "인턴",
+      "emoji": ":seedling:"
+    },
+    "reviewer": {
+      "display_name": "리뷰어",
+      "emoji": ":judge:"
+    }
+  }
+}
