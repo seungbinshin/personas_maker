@@ -272,6 +272,9 @@ class ConfluenceSync:
         body_text = _strip_html(page.body)
         body_text = body_text[:15000]
 
+        if not body_text.strip():
+            return self._raw_fallback(page)
+
         labels = ", ".join(page.labels) if page.labels else "none"
 
         prompt = PAGE_SUMMARY_PROMPT.format(
@@ -315,10 +318,14 @@ class ConfluenceSync:
         if not page_summaries_parts:
             return None
 
+        combined = "\n\n".join(page_summaries_parts)
+        if len(combined) > 30000:
+            combined = combined[:30000] + "\n\n[... truncated ...]"
+
         prompt = SPACE_SUMMARY_PROMPT.format(
             space_key=space_key,
             page_count=len(page_summaries_parts),
-            page_summaries="\n\n".join(page_summaries_parts),
+            page_summaries=combined,
         )
 
         result = self.runtime.run(LLMRunRequest(prompt=prompt, timeout_ms=180_000))
@@ -343,8 +350,8 @@ class ConfluenceSync:
             "---",
             f"confluence_id: {page.id}",
             f'title: "{page.title}"',
-            f"space: {page.space_key}",
-            f"author: {page.author}",
+            f'space: "{page.space_key}"',
+            f'author: "{page.author}"',
             f"created: {page.created[:10] if page.created else 'unknown'}",
             f"last_modified: {page.last_modified[:10] if page.last_modified else 'unknown'}",
             f"labels: {labels_str}",
