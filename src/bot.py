@@ -1247,6 +1247,33 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
 
         threading.Thread(target=_run, daemon=True).start()
 
+    elif subcmd == "sync-confluence":
+        # !research sync-confluence "EVT1"           → incremental
+        # !research sync-confluence "EVT1" full      → full rebuild
+        # !research sync-confluence "EVT1,power"     → multi-keyword
+        if len(parts) < 3:
+            client.chat_postMessage(
+                channel=channel_id,
+                text=":warning: 키워드를 입력하세요. 예: `!research sync-confluence \"EVT1\"`",
+                thread_ts=thread_ts,
+            )
+            return
+
+        # Extract keywords — handle quoted and unquoted
+        raw_keywords = parts[2].strip('"').strip("'")
+        force_full = len(parts) > 3 and parts[3] == "full"
+        mode_label = "전체" if force_full else "증분"
+        client.chat_postMessage(
+            channel=channel_id,
+            text=f":books: Confluence 지식 {mode_label} 동기화를 시작합니다... (키워드: {raw_keywords})",
+            thread_ts=thread_ts,
+        )
+
+        def _run():
+            _pipeline.sync_confluence(keywords=raw_keywords, full=force_full)
+
+        threading.Thread(target=_run, daemon=True).start()
+
     else:
         client.chat_postMessage(
             channel=channel_id,
@@ -1262,7 +1289,8 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
                 "• `!research list` — 리포트 목록\n"
                 "• `!research chat <report_id>` — 리포트에 대해 연구원과 대화\n"
                 "• `!research chat` — 대화 가능한 리포트 목록\n"
-                "• `!research chat end` — (스레드 내) 대화 종료"
+                "• `!research chat end` — (스레드 내) 대화 종료\n"
+                "• `!research sync-confluence \"키워드\"` — Confluence 문서 동기화"
             ),
             thread_ts=thread_ts,
         )
