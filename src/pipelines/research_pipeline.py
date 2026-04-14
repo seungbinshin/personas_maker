@@ -4,10 +4,11 @@ ResearchPipeline — Human-in-the-loop research orchestration.
 Flow:
   1. DISCOVERY: AI researcher proposes N ideas with investigation hints
   2. SELECTION: Human selects ideas + provides additional hints via Slack command
-  3. DEEP_DIVE: AI intern deep-dives selected ideas (with self-review, no feedback loop)
-  4. REPORT: AI researcher writes reports
-  5. BATCH REVIEW: AI reviewer evaluates and ranks reports
-  6. REVISION LOOP: For 'revise' decisions — researcher rewrites → reviewer re-evaluates
+  3. DEEP_DIVE: AI intern deep-dives selected ideas
+  4. FEEDBACK LOOP: Researcher reviews intern's work, intern revises (max 3 rounds)
+  5. REPORT: AI researcher writes reports
+  6. BATCH REVIEW: AI reviewer evaluates and ranks reports
+  7. REVISION LOOP: For 'revise' decisions — researcher rewrites → reviewer re-evaluates
      - Max 2 rounds. If still not accepted → marked as infeasible.
 
 Separate flow: !research dive <URL/PDF> — user-specified paper deep dive.
@@ -38,6 +39,9 @@ from tools.md_to_html import convert_report
 from discourse_client import DiscourseClient
 from discourse_knowledge import DiscourseKnowledge
 from discourse_sync import DiscourseSync
+from confluence_knowledge import ConfluenceKnowledge
+from confluence_client import ConfluenceClient
+from confluence_sync import ConfluenceSync
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +106,11 @@ class ResearchPipeline(BasePipeline):
         vault_rel = discourse_config.get("vault_path", "knowledge")
         self.discourse_knowledge = DiscourseKnowledge(bot_dir / vault_rel)
 
+        # Initialize Confluence knowledge
+        confluence_config = bot_config.get("confluence", {})
+        confluence_vault_rel = confluence_config.get("vault_path", "knowledge")
+        self.confluence_knowledge = ConfluenceKnowledge(bot_dir / confluence_vault_rel)
+
     def sync_discourse(self, full: bool = False) -> dict:
         """Run a Discourse sync. Incremental by default, full if forced."""
         discourse_config = self.config.get("discourse", {})
@@ -132,6 +141,37 @@ class ResearchPipeline(BasePipeline):
         )
         return stats
 
+    def sync_confluence(self, keywords: str, full: bool = False) -> dict:
+        """Run a Confluence sync for given keywords. Incremental by default, full if forced."""
+        confluence_config = self.config.get("confluence", {})
+        base_url = confluence_config.get("base_url", "")
+        api_token = os.environ.get("CONFLUENCE_API_TOKEN", "")
+        email = os.environ.get("CONFLUENCE_EMAIL", "")
+        default_spaces = confluence_config.get("default_spaces", [])
+
+        if not base_url or not api_token or not email:
+            logger.error("Confluence config missing: base_url, CONFLUENCE_API_TOKEN, or CONFLUENCE_EMAIL")
+            return {"error": "missing config"}
+
+        client = ConfluenceClient(base_url, email, api_token)
+        vault_rel = confluence_config.get("vault_path", "knowledge")
+
+        def _progress(msg: str):
+            self._post_status(msg, agent="researcher")
+
+        sync = ConfluenceSync(client, self.runtime, self.bot_dir / vault_rel, progress_callback=_progress)
+
+        self._post_status(f":books: Confluence 동기화를 시작합니다... (키워드: {keywords})", agent="researcher")
+        stats = sync.run_sync(keywords=keywords, spaces=default_spaces, full=full)
+        self._post_status(
+            f":white_check_mark: Confluence 동기화 완료 ({stats.get('mode', 'full')}): "
+            f"{stats['page_count']}개 요약, {stats['skipped_pages']}개 스킵, "
+            f"{stats['child_pages']}개 하위 페이지, "
+            f"{stats['failed_summaries']}건 실패, {stats['duration_seconds']}초",
+            agent="researcher",
+        )
+        return stats
+
     def _llm(self, prompt: str, agent: str, label: str) -> str:
         """Call LLM with heartbeat. No explicit timeout — runs until done."""
         return self.call_llm(
@@ -156,6 +196,13 @@ class ResearchPipeline(BasePipeline):
         )
         if discourse_ctx:
             scope_text = f"{scope_text}\n\n{discourse_ctx}"
+
+        # Inject Confluence context
+        confluence_ctx = self.confluence_knowledge.build_context(
+            self.scope.keywords if self.scope else []
+        )
+        if confluence_ctx:
+            scope_text = f"{scope_text}\n\n{confluence_ctx}"
 
         existing_topics = self._collect_existing_topics()
         ideas = self.evidence_collector.discover_research_ideas(
@@ -475,7 +522,7 @@ class ResearchPipeline(BasePipeline):
                 logger.error(f"Report writing failed for {rid}: {e}")
                 results[rid] = None
 
-        succeeded = sum(1 for v in results.values() if v is not None)
+        succeeded = sum(1 for v in results.values() if v)
         self._post_status(
             f":microscope: *리포트 작성 완료: {succeeded}/{len(active_ids)}건*",
             agent="researcher",
@@ -512,6 +559,10 @@ class ResearchPipeline(BasePipeline):
         if discourse_ctx:
             scope_text = f"{scope_text}\n\n{discourse_ctx}"
 
+        confluence_ctx = self.confluence_knowledge.build_context(idea_keywords)
+        if confluence_ctx:
+            scope_text = f"{scope_text}\n\n{confluence_ctx}"
+
         report = self.authoring_skill.write_research_report(
             scope_text=scope_text,
             idea_brief_json=idea_brief_json,
@@ -524,7 +575,10 @@ class ResearchPipeline(BasePipeline):
             self.store.save_artifact(report_id, "report_v1.md", report)
             self.store.update_state(report_id, "report_draft")
             self._post_status(f":white_check_mark: *{title}* 리포트 작성 완료 ({idx}/{total})", agent="researcher")
-        return report
+            return report
+
+        self._post_status(f":warning: *{title}* 리포트 생성 실패 — validation 통과 못함 ({idx}/{total})", agent="researcher")
+        return None
 
     # ─── Stage 5: Batch Review ───────────────────────────────────
 
@@ -998,8 +1052,19 @@ class ResearchPipeline(BasePipeline):
             if user_hint:
                 idea["user_hints"] = user_hint
 
-            # Create report and run pipeline
+            # Duplicate check
             idea_id = idea.get("idea_id", "unknown")
+            source_url = idea.get("source_url", "") or url
+            source_paper = idea.get("source_paper", "")
+            existing_rid = self.store.is_duplicate(idea_id, source_url, source_paper)
+            if existing_rid:
+                self._post_status(
+                    f":recycle: 이미 존재하는 논문입니다: `{existing_rid}`",
+                    agent="researcher",
+                )
+                return
+
+            # Create report and run pipeline
             report_id = self.store.create_report(idea_id, metadata=idea)
             self.store.save_artifact(report_id, "idea_brief.json", json.dumps(idea, ensure_ascii=False, indent=2))
 
@@ -1043,8 +1108,19 @@ class ResearchPipeline(BasePipeline):
             if user_hint:
                 idea["user_hints"] = user_hint
 
-            # Step 2: Save brief and report
+            # Duplicate check
             idea_id = idea.get("idea_id", "unknown")
+            source_url = idea.get("source_url", "")
+            source_paper = idea.get("source_paper", "")
+            existing_rid = self.store.is_duplicate(idea_id, source_url, source_paper)
+            if existing_rid:
+                self._post_status(
+                    f":recycle: 이미 존재하는 주제입니다: `{existing_rid}`",
+                    agent="researcher",
+                )
+                return
+
+            # Step 2: Save brief and report
             report_id = self.store.create_report(idea_id, metadata=idea)
             self.store.save_artifact(report_id, "idea_brief.json", json.dumps(idea, ensure_ascii=False, indent=2))
 
@@ -1141,8 +1217,9 @@ class ResearchPipeline(BasePipeline):
             self._end_run()
 
     def _run_stages_after_selection(self, report_ids: list[str]):
-        """Run deep dive → report → review (no feedback loop)."""
+        """Run deep dive → feedback → report → review."""
         self.run_deep_dives(report_ids)
+        self.run_feedback_loop(report_ids)
         self.run_reports(report_ids)
 
         batch_review = self.run_batch_review(report_ids)
