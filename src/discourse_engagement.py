@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from datetime import datetime
 from html import unescape
 
 from confluence_knowledge import ConfluenceKnowledge
@@ -16,13 +17,18 @@ from discourse_client import DiscourseClient, DiscoursePost
 from discourse_knowledge import DiscourseKnowledge
 from discourse_publisher import DiscoursePublisher
 from glossary import GlossaryManager
+from post_editor import EditRefused, PostEditor
 from prompts.discourse_engagement import (
+    CLASSIFY_EDIT_PROMPT,
     COMMENT_CLASSIFY_PROMPT,
+    EDIT_FACT_CHECK_PROMPT,
     EXTRACT_DRAFT_TERMS_PROMPT,
     FACT_CHECK_PROMPT,
+    GENERATE_EDIT_PROMPT,
     REVISE_DRAFT_PROMPT,
     SEARCH_AND_DRAFT_PROMPT,
 )
+from qa_archive import QAArchiver
 from skills.types import LLMRunRequest
 from tools.claude_runtime import ClaudeRuntimeClient
 from tools.json_utils import parse_json_response
@@ -48,6 +54,8 @@ class DiscourseEngagement:
         confluence_knowledge: ConfluenceKnowledge,
         discourse_knowledge: DiscourseKnowledge,
         glossary: GlossaryManager,
+        post_editor: PostEditor,
+        qa_archive: QAArchiver,
         scope_text: str = "",
         slack_callback: callable | None = None,
     ):
@@ -57,9 +65,13 @@ class DiscourseEngagement:
         self.confluence_knowledge = confluence_knowledge
         self.discourse_knowledge = discourse_knowledge
         self.glossary = glossary
+        self.post_editor = post_editor
+        self.qa_archive = qa_archive
         self.scope_text = scope_text
         self.slack_callback = slack_callback  # (message: str) -> None
         self._glossary_candidates: set[str] = set()
+        self._current_report_id: str = ""
+        self._current_topic_info: dict = {}
 
     def _notify(self, message: str):
         logger.info(message)
@@ -99,6 +111,10 @@ class DiscourseEngagement:
         topic_id = topic_info["topic_id"]
         report_id = topic_info["report_id"]
         last_checked = topic_info.get("last_checked_post_number", 1)
+
+        # Stash for helpers that need access during a comment's lifecycle
+        self._current_report_id = report_id
+        self._current_topic_info = topic_info
 
         new_posts = self.client.fetch_posts_since(topic_id, last_checked)
         if not new_posts:
@@ -186,7 +202,18 @@ class DiscourseEngagement:
         comment_keywords = [w for w in re.split(r"[\s,]+", key_topic) if len(w) > 1][:10]
         initial_context = self._gather_internal_context(comment_keywords)
 
-        # Step 2+3: Search external sources + draft response (using initial context)
+        # Edit sub-flow runs first for corrections, so the reply can mention it
+        edit_outcome = {"applied": False, "change_summary": "", "edit_type": "none"}
+        if comment_type == "correction":
+            full_report_md = self.publisher._load_latest_report(self._current_report_id) or ""
+            edit_outcome = self._attempt_post_edit(
+                post=post,
+                report_md=full_report_md,
+                report_excerpt=report_excerpt,
+                fact_check_context=initial_context,
+            )
+
+        # Draft reply (knows about the edit outcome)
         draft = self._search_and_draft(
             report_title=report_title,
             report_excerpt=report_excerpt,
@@ -194,6 +221,7 @@ class DiscourseEngagement:
             comment_text=comment_text,
             comment_type=comment_type,
             internal_context=initial_context,
+            edit_outcome=edit_outcome,
         )
         if not draft:
             self._notify(
@@ -201,7 +229,7 @@ class DiscourseEngagement:
             )
             return
 
-        # Step 3.5: Extract draft terms, re-gather context, merge
+        # Extract draft terms, re-gather context, merge
         draft_terms = self._extract_draft_terms(draft)
         if draft_terms - set(comment_keywords):
             merged_keywords = list({*comment_keywords, *draft_terms})
@@ -210,10 +238,9 @@ class DiscourseEngagement:
         else:
             fact_check_context = initial_context
 
-        # Remember candidates for end-of-poll glossary refresh
         self._accumulate_glossary_candidates(draft_terms | set(comment_keywords))
 
-        # Step 4: Fact check (+ revise loop)
+        # Fact check + revise loop
         final_response = self._fact_check_loop(
             comment_author=post.username,
             comment_text=comment_text,
@@ -228,9 +255,9 @@ class DiscourseEngagement:
             )
             return
 
-        # Step 5: Publish reply
+        # Publish reply
         try:
-            self.client.create_reply(
+            reply_result = self.client.create_reply(
                 topic_id=topic_id,
                 raw=final_response,
                 reply_to_post_number=post.post_number,
@@ -238,6 +265,15 @@ class DiscourseEngagement:
             self._notify(
                 f":speech_balloon: Discourse 답변 게시 완료 "
                 f"(topic={topic_id}, post=#{post.post_number} by {post.username})"
+            )
+            self._archive_qa_if_possible(
+                topic_id=topic_id,
+                post=post,
+                report_title=report_title,
+                comment_text=comment_text,
+                comment_type=comment_type,
+                reply_text=final_response,
+                published_at=reply_result.get("created_at", ""),
             )
         except Exception as e:
             logger.error("Failed to post reply: %s", e)
@@ -251,7 +287,15 @@ class DiscourseEngagement:
         comment_text: str,
         comment_type: str,
         internal_context: str,
+        edit_outcome: dict | None = None,
     ) -> str | None:
+        if edit_outcome and edit_outcome.get("applied"):
+            edit_outcome_str = (
+                f"편집 적용됨 — type={edit_outcome.get('edit_type')}, "
+                f"change_summary=\"{edit_outcome.get('change_summary', '')}\""
+            )
+        else:
+            edit_outcome_str = "(편집 없음)"
         prompt = SEARCH_AND_DRAFT_PROMPT.format(
             scope=self.scope_text,
             report_title=report_title,
@@ -260,6 +304,7 @@ class DiscourseEngagement:
             comment_text=comment_text,
             comment_type=comment_type,
             internal_context=internal_context or "(내부 문서 없음)",
+            edit_outcome=edit_outcome_str,
         )
         result = self.runtime.run(
             LLMRunRequest(prompt=prompt, timeout_ms=300_000)
@@ -349,6 +394,125 @@ class DiscourseEngagement:
             return result.output.strip()
         return None
 
+    # ── Edit sub-flow ─────────────────────────────────────────────
+
+    def _classify_edit(
+        self, report_excerpt: str, comment_author: str, comment_text: str,
+    ) -> dict | None:
+        prompt = CLASSIFY_EDIT_PROMPT.format(
+            report_excerpt=report_excerpt,
+            comment_author=comment_author,
+            comment_text=comment_text,
+        )
+        result = self.runtime.run(LLMRunRequest(prompt=prompt, timeout_ms=60_000))
+        if not result.success:
+            return None
+        parsed = parse_json_response(result.output)
+        return parsed if isinstance(parsed, dict) else None
+
+    def _generate_edit(
+        self, report_md: str, change_summary: str, target_section: str,
+    ) -> str | None:
+        prompt = GENERATE_EDIT_PROMPT.format(
+            report_md=report_md,
+            change_summary=change_summary,
+            target_section=target_section,
+        )
+        result = self.runtime.run(LLMRunRequest(prompt=prompt, timeout_ms=300_000))
+        if result.success and result.output.strip():
+            return result.output.strip()
+        return None
+
+    def _fact_check_edit(
+        self,
+        target_section: str,
+        new_section: str,
+        change_summary: str,
+        internal_context: str,
+    ) -> dict | None:
+        prompt = EDIT_FACT_CHECK_PROMPT.format(
+            target_section=target_section,
+            new_section=new_section,
+            change_summary=change_summary,
+            internal_context=internal_context or "(내부 문서 없음)",
+            glossary=self._load_glossary_text(),
+        )
+        result = self.runtime.run(LLMRunRequest(prompt=prompt, timeout_ms=120_000))
+        if not result.success:
+            return None
+        parsed = parse_json_response(result.output)
+        return parsed if isinstance(parsed, dict) else None
+
+    def _attempt_post_edit(
+        self,
+        post: DiscoursePost,
+        report_md: str,
+        report_excerpt: str,
+        fact_check_context: str,
+    ) -> dict:
+        """Try to edit the published post in response to a correction.
+
+        Returns: {"applied": bool, "change_summary": str, "edit_type": str}.
+        """
+        if not report_md:
+            return {"applied": False, "change_summary": "", "edit_type": "none"}
+
+        decision = self._classify_edit(
+            report_excerpt, post.username, _strip_html(post.cooked),
+        )
+        if not decision or not decision.get("edit_needed"):
+            return {"applied": False, "change_summary": "", "edit_type": "none"}
+
+        edit_type = decision.get("edit_type", "format")
+        target_section = decision.get("target_section", "") or ""
+        change_summary = decision.get("change_summary", "") or ""
+
+        new_raw = self._generate_edit(report_md, change_summary, target_section)
+        if not new_raw:
+            self._notify(
+                f":warning: 편집 초안 생성 실패 (post=#{post.post_number})"
+            )
+            return {"applied": False, "change_summary": change_summary, "edit_type": edit_type}
+
+        fc = self._fact_check_edit(
+            target_section=target_section or report_excerpt[:1500],
+            new_section=new_raw[:4000],
+            change_summary=change_summary,
+            internal_context=fact_check_context,
+        )
+        if not fc or fc.get("decision") != "approve":
+            reason = (fc or {}).get("reason", "fact-check 실패")
+            self._notify(
+                f":warning: 편집 적용 중단 — fact-check reject "
+                f"(post=#{post.post_number}) reason: {reason}"
+            )
+            return {"applied": False, "change_summary": change_summary, "edit_type": edit_type}
+
+        post_id = self._current_topic_info.get("discourse_post_id") or 0
+        try:
+            self.post_editor.apply_edit(
+                post_id=post_id,
+                new_raw=new_raw,
+                edit_reason=f"댓글 #{post.post_number} 지적 반영: {change_summary}",
+                current_raw=report_md,
+                edit_type=edit_type,
+                change_summary=change_summary,
+                triggered_by_post=post.post_number,
+            )
+            self._notify(
+                f":pencil2: 본문 편집 적용됨 "
+                f"(post_id={post_id}, triggered_by=#{post.post_number}, type={edit_type})\n"
+                f"변경 요약: {change_summary}"
+            )
+            return {"applied": True, "change_summary": change_summary, "edit_type": edit_type}
+        except EditRefused as e:
+            self._notify(f":warning: 편집 safety gate 차단: {e}")
+            return {"applied": False, "change_summary": change_summary, "edit_type": edit_type}
+        except Exception as e:
+            logger.error("apply_edit failed: %s", e, exc_info=True)
+            self._notify(f":x: 편집 적용 실패: {e}")
+            return {"applied": False, "change_summary": change_summary, "edit_type": edit_type}
+
     # ── Helpers ───────────────────────────────────────────────────
 
     def _load_glossary_text(self) -> str:
@@ -410,6 +574,40 @@ class DiscourseEngagement:
 
     def _accumulate_glossary_candidates(self, terms: set[str]) -> None:
         self._glossary_candidates.update(terms)
+
+    def _archive_qa_if_possible(
+        self,
+        topic_id: int,
+        post: DiscoursePost,
+        report_title: str,
+        comment_text: str,
+        comment_type: str,
+        reply_text: str,
+        published_at: str,
+    ) -> None:
+        try:
+            sources = self._extract_urls(reply_text)
+            self.qa_archive.archive(
+                topic_info={
+                    "topic_id": topic_id,
+                    "topic_url": self._current_topic_info.get("topic_url", ""),
+                    "report_id": self._current_report_id,
+                    "report_title": report_title or self._current_report_id,
+                },
+                post_number=post.post_number,
+                commenter=post.username,
+                comment_type=comment_type,
+                comment_text=comment_text,
+                reply_text=reply_text,
+                sources=sources,
+                published_at_iso=(published_at or datetime.now().isoformat(timespec="seconds")),
+            )
+        except Exception as e:
+            logger.warning("QA archive failed (non-fatal): %s", e)
+
+    @staticmethod
+    def _extract_urls(text: str) -> list[str]:
+        return re.findall(r"https?://[^\s)]+", text)
 
     def _gather_internal_context(self, keywords: list[str]) -> str:
         parts = []

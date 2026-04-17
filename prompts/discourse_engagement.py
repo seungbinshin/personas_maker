@@ -45,7 +45,11 @@ Comment type: {comment_type} (question or correction)
 Internal knowledge (Confluence + Discourse):
 {internal_context}
 
+Edit outcome for this comment:
+{edit_outcome}
+
 Instructions:
+0. If an edit was applied, acknowledge it explicitly at the top of the response: "본문을 수정했습니다 (변경: ...)." Then continue with a direct answer or explanation.
 1. Use WebSearch to find 2-3 relevant external sources (papers, docs, benchmarks) related to the comment's topic.
 2. Cross-reference the comment against the internal knowledge provided above.
 3. Write a response in Korean that:
