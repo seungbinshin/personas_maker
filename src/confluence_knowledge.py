@@ -91,14 +91,13 @@ class ConfluenceKnowledge:
                 parts.append(f"### [{space_key}]\n{content}\n")
 
         # Layer 2: Relevant page details
-        pages = self.search_pages(keywords, top_k=5)
+        pages = self.search_pages(keywords, top_k=8)
         if pages:
             parts.append("\n=== 관련 내부 문서 상세 ===\n")
             for p in pages:
-                # Truncate long page content to ~500 chars
                 body = p["content"]
-                if len(body) > 500:
-                    body = body[:500] + "..."
+                if len(body) > 1500:
+                    body = body[:1500] + "..."
                 parts.append(f"### {p['title']}\n{body}\n")
 
         return "\n".join(parts)

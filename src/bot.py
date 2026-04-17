@@ -60,9 +60,9 @@ API_ENV_PATH = API_DIR / ".env"
 RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY)
 
 VALID_MODELS = {
-    "sonnet": "claude-sonnet-4-6",
-    "opus": "claude-opus-4-6",
-    "haiku": "claude-haiku-4-5-20251001",
+    "sonnet": os.environ.get("CLAUDE_SONNET_MODEL", "claude-sonnet-4-6"),
+    "opus": os.environ.get("CLAUDE_OPUS_MODEL", "claude-opus-4-7"),
+    "haiku": os.environ.get("CLAUDE_HAIKU_MODEL", "claude-haiku-4-5-20251001"),
 }
 
 OWNER_USER_ID = os.environ["SLACK_USER_ID"]
@@ -1270,7 +1270,60 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
         )
 
         def _run():
-            _pipeline.sync_confluence(keywords=raw_keywords, full=force_full)
+            try:
+                _pipeline.sync_confluence(keywords=raw_keywords, full=force_full)
+            except Exception:
+                logger.exception("Confluence sync failed")
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=":x: Confluence 동기화 실패 — 로그를 확인하세요.",
+                    thread_ts=thread_ts,
+                )
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    elif subcmd == "publish":
+        # !research publish <report_id>
+        if len(parts) < 3:
+            client.chat_postMessage(
+                channel=channel_id,
+                text="사용법: `!research publish <report_id>` — 예: `!research publish 010_turboquant-kv-cache-compression`",
+                thread_ts=thread_ts,
+            )
+            return
+        report_id = parts[2]
+        client.chat_postMessage(
+            channel=channel_id,
+            text=f"Discourse에 리포트를 게재합니다... (report_id: {report_id})",
+            thread_ts=thread_ts,
+        )
+
+        def _run():
+            try:
+                result = _pipeline.publish_report_to_discourse(report_id)
+                if result:
+                    topic_id = result.get("topic_id")
+                    slug = result.get("topic_slug", "")
+                    base_url = _pipeline._discourse_client.base_url
+                    url = f"{base_url}/t/{slug}/{topic_id}"
+                    client.chat_postMessage(
+                        channel=channel_id,
+                        text=f"Discourse 게재 완료: {url}",
+                        thread_ts=thread_ts,
+                    )
+                else:
+                    client.chat_postMessage(
+                        channel=channel_id,
+                        text="게재 실패 — 리포트가 없거나 이미 게재되었습니다.",
+                        thread_ts=thread_ts,
+                    )
+            except Exception as e:
+                logger.exception("Discourse publish failed")
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=f"Discourse 게재 실패: {str(e)[:200]}",
+                    thread_ts=thread_ts,
+                )
 
         threading.Thread(target=_run, daemon=True).start()
 
@@ -1290,7 +1343,8 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
                 "• `!research chat <report_id>` — 리포트에 대해 연구원과 대화\n"
                 "• `!research chat` — 대화 가능한 리포트 목록\n"
                 "• `!research chat end` — (스레드 내) 대화 종료\n"
-                "• `!research sync-confluence \"키워드\"` — Confluence 문서 동기화"
+                "• `!research sync-confluence \"키워드\"` — Confluence 문서 동기화\n"
+                "• `!research publish <report_id>` — Discourse에 리포트 게재"
             ),
             thread_ts=thread_ts,
         )
@@ -1649,6 +1703,12 @@ if __name__ == "__main__":
                 _bot_scheduler.add_weekdays(auto_report_days, auto_report_time, _pipeline.auto_report_top_idea, tz=tz)
             else:
                 _bot_scheduler.add_daily(auto_report_time, _pipeline.auto_report_top_idea, tz=tz)
+        # Discourse comment polling (30-minute interval)
+        discourse_config = BOT_CONFIG.get("discourse", {})
+        if discourse_config.get("publish_category_id") and _pipeline.discourse_engagement:
+            _bot_scheduler.add_interval(30, _pipeline.poll_discourse_comments)
+            logger.info("Discourse engagement polling scheduled: every 30 minutes")
+
         _bot_scheduler.start()
         logger.info(
             f"Research pipeline scheduled: discovery={discovery_time} days={discovery_days or 'daily'}, "

@@ -9,10 +9,14 @@ import time
 from dataclasses import dataclass, field
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 logger = logging.getLogger(__name__)
 
 FETCH_DELAY = 0.5  # seconds between API calls
+CONNECT_TIMEOUT = 30   # seconds for TCP + SSL handshake
+READ_TIMEOUT = 120     # seconds for response body
 
 
 @dataclass
@@ -35,14 +39,24 @@ class ConfluenceClient:
     def __init__(self, base_url: str, email: str, api_token: str):
         self.base_url = base_url.rstrip("/")
         credentials = base64.b64encode(f"{email}:{api_token}".encode()).decode()
-        self.headers = {
+        self.session = requests.Session()
+        self.session.headers.update({
             "Authorization": f"Basic {credentials}",
             "Accept": "application/json",
-        }
+        })
+        retry = Retry(
+            total=3,
+            backoff_factor=2,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"],
+        )
+        self.session.mount("https://", HTTPAdapter(max_retries=retry))
 
     def _get(self, path: str, params: dict | None = None) -> dict:
         url = f"{self.base_url}/rest/api{path}"
-        resp = requests.get(url, headers=self.headers, params=params, timeout=30)
+        resp = self.session.get(
+            url, params=params, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+        )
         resp.raise_for_status()
         return resp.json()
 
@@ -64,18 +78,34 @@ class ConfluenceClient:
         start = 0
         limit = 25
 
+        seen_ids: set[str] = set()
         while True:
-            data = self._get(
-                "/content/search",
-                params={"cql": cql, "expand": expand, "start": start, "limit": limit},
-            )
+            try:
+                data = self._get(
+                    "/content/search",
+                    params={"cql": cql, "expand": expand, "start": start, "limit": limit},
+                )
+            except requests.RequestException as exc:
+                logger.warning(
+                    "Search pagination failed at start=%d (returning %d pages so far): %s",
+                    start, len(pages), exc,
+                )
+                break
+
             results = data.get("results", [])
+            new_in_batch = 0
             for item in results:
+                item_id = str(item.get("id", ""))
+                if item_id in seen_ids:
+                    continue
+                seen_ids.add(item_id)
+                new_in_batch += 1
                 page = self._parse_page(item)
                 if page:
                     pages.append(page)
 
-            if len(results) < limit:
+            # Stop if: fewer results than limit, no new pages (API ignoring start), or no next link
+            if len(results) < limit or new_in_batch == 0 or "_links" not in data or "next" not in data.get("_links", {}):
                 break
             start += limit
             time.sleep(FETCH_DELAY)
@@ -89,12 +119,17 @@ class ConfluenceClient:
         data = self._get(f"/content/{page_id}", params={"expand": expand})
         return self._parse_page(data)
 
-    def fetch_children(self, page_id: str) -> list[ConfluencePage]:
+    def fetch_children(self, page_id: str, _depth: int = 0) -> list[ConfluencePage]:
         """Recursively fetch ALL child pages under a given page."""
+        if _depth > 5:
+            logger.warning("Recursion depth limit reached for page %s", page_id)
+            return []
+
         expand = "body.storage,version,metadata.labels,ancestors"
         children: list[ConfluencePage] = []
         start = 0
         limit = 25
+        seen_ids: set[str] = set()
 
         while True:
             try:
@@ -102,23 +137,25 @@ class ConfluenceClient:
                     f"/content/{page_id}/child/page",
                     params={"expand": expand, "start": start, "limit": limit},
                 )
-            except requests.HTTPError as exc:
+            except requests.RequestException as exc:
                 logger.warning(
                     "Failed to fetch children of page %s: %s", page_id, exc
                 )
                 return children
 
             results = data.get("results", [])
+            new_in_batch = 0
             for item in results:
                 child = self._parse_page(item)
-                if child:
+                if child and child.id not in seen_ids:
+                    seen_ids.add(child.id)
+                    new_in_batch += 1
                     children.append(child)
-                    # Recursively fetch grandchildren
                     time.sleep(FETCH_DELAY)
-                    grandchildren = self.fetch_children(child.id)
+                    grandchildren = self.fetch_children(child.id, _depth=_depth + 1)
                     children.extend(grandchildren)
 
-            if len(results) < limit:
+            if len(results) < limit or new_in_batch == 0:
                 break
             start += limit
             time.sleep(FETCH_DELAY)

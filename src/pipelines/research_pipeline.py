@@ -477,11 +477,30 @@ class ResearchPipeline(BasePipeline):
         self._post_status(f":microscope: 연구원이 *{title}* 검토 중 ({idx}/{total})", agent="researcher")
 
         scope_text = self.fit_evaluator.scope_text()
+
+        # Inject internal knowledge for feasibility cross-reference
+        idea_keywords = [
+            idea.get("idea_id", ""),
+            idea.get("title", ""),
+        ] + idea.get("keywords", [])
+        discourse_ctx = self.discourse_knowledge.build_context(idea_keywords)
+        if discourse_ctx:
+            scope_text = f"{scope_text}\n\n{discourse_ctx}"
+        confluence_ctx = self.confluence_knowledge.build_context(idea_keywords)
+        if confluence_ctx:
+            scope_text = f"{scope_text}\n\n{confluence_ctx}"
+
+        # Load previous round's feedback so researcher can verify fixes
+        previous_feedback_json = None
+        if round_num > 1:
+            previous_feedback_json = self.store.load_artifact(report_id, f"feedback_v{round_num - 1}.json")
+
         feedback = self.critique_skill.review_intern_deep_dive(
             scope_text=scope_text,
             idea_brief_json=idea_brief_json,
             investigation_hints=hints_text,
             deep_dive_json=deep_dive_json,
+            previous_feedback_json=previous_feedback_json,
             heartbeat_channel=self.status_channel,
             heartbeat_agent="researcher",
             heartbeat_label=f"{title} 검토 ({idx}/{total})",
@@ -527,6 +546,19 @@ class ResearchPipeline(BasePipeline):
         )
 
         scope_text = self.fit_evaluator.scope_text()
+
+        # Inject internal knowledge so intern can address feasibility concerns
+        idea_keywords = [
+            idea.get("idea_id", ""),
+            idea.get("title", ""),
+        ] + idea.get("keywords", [])
+        discourse_ctx = self.discourse_knowledge.build_context(idea_keywords)
+        if discourse_ctx:
+            scope_text = f"{scope_text}\n\n{discourse_ctx}"
+        confluence_ctx = self.confluence_knowledge.build_context(idea_keywords)
+        if confluence_ctx:
+            scope_text = f"{scope_text}\n\n{confluence_ctx}"
+
         revised = self.critique_skill.revise_deep_dive(
             scope_text=scope_text,
             idea_brief_json=idea_brief_json,
@@ -615,10 +647,21 @@ class ResearchPipeline(BasePipeline):
         if confluence_ctx:
             scope_text = f"{scope_text}\n\n{confluence_ctx}"
 
+        # Collect feedback history for the researcher to reference in the report
+        feedback_parts = []
+        for v in range(1, 10):
+            fb = self.store.load_artifact(report_id, f"feedback_v{v}.json")
+            if fb:
+                feedback_parts.append(f"--- Feedback Round {v} ---\n{fb}")
+            else:
+                break
+        feedback_history = "\n\n".join(feedback_parts)
+
         report = self.authoring_skill.write_research_report(
             scope_text=scope_text,
             idea_brief_json=idea_brief_json,
             deep_dive_json=deep_dive_json,
+            feedback_history=feedback_history,
             heartbeat_channel=self.status_channel,
             heartbeat_agent="researcher",
             heartbeat_label=f"{title} 리포트 작성 ({idx}/{total})",
@@ -1353,6 +1396,7 @@ class ResearchPipeline(BasePipeline):
                     text=f":microscope: *연구 리포트: {title}*\n\n{report[:3000]}",
                     agent_name="researcher",
                 )
+
 
     # ─── Status & Utility ────────────────────────────────────────
 

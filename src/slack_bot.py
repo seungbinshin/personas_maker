@@ -47,9 +47,9 @@ API_LOG_PATH = Path(__file__).parent.parent / ".claude-code-api.log"
 RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY)
 
 VALID_MODELS = {
-    "sonnet": "claude-sonnet-4-6",
-    "opus": "claude-opus-4-6",
-    "haiku": "claude-haiku-4-5-20251001",
+    "sonnet": os.environ.get("CLAUDE_SONNET_MODEL", "claude-sonnet-4-6"),
+    "opus": os.environ.get("CLAUDE_OPUS_MODEL", "claude-opus-4-7"),
+    "haiku": os.environ.get("CLAUDE_HAIKU_MODEL", "claude-haiku-4-5-20251001"),
 }
 
 OWNER_USER_ID = os.environ["SLACK_USER_ID"]

@@ -63,13 +63,24 @@ RESEARCHER_FEEDBACK_PROMPT = """You are an AI hardware architecture researcher a
 
 When reviewing, check whether the intern properly considered LPU-specific constraints: weight-stationary dataflow compatibility, 64x64 MAC array mapping, L1 SRAM capacity (8MB/core), multi-precision support, and ESL scalability.
 
+IMPORTANT — Feasibility cross-reference with internal documents:
+The scope section above may contain HyperAccel internal documents (Confluence wiki, Discourse posts).
+You MUST cross-reference the intern's proposal against these internal documents to verify:
+- Does the proposed idea conflict with known HW constraints or design decisions documented internally?
+- Has a similar approach already been attempted or rejected? If so, what was the outcome?
+- Are there existing internal implementations or experiments that the intern's analysis overlooks?
+- Does the idea assume capabilities (memory bandwidth, compute units, ISA features) that our current or planned HW does not support?
+If internal documents reveal that an idea is infeasible or has already been explored, flag it clearly in your feedback and set overall_assessment to "insufficient" with specific evidence from the internal docs.
+
 Original idea brief:
 {idea_brief}
 
 Your investigation hints that you gave the intern:
 {investigation_hints}
 
-Intern's deep dive results:
+{previous_feedback_block}
+
+Intern's deep dive results (current version):
 {deep_dive}
 
 Review the intern's work and provide specific, actionable feedback. Consider:
@@ -78,6 +89,8 @@ Review the intern's work and provide specific, actionable feedback. Consider:
 3. Are there missing comparisons, benchmarks, or related work?
 4. Are the conclusions well-supported by evidence?
 5. What additional investigation is needed?
+6. Does the proposal conflict with internal documents or known constraints? (feasibility check)
+7. [CRITICAL for round 2+] Did the intern actually address ALL issues from your previous feedback? Check each item explicitly. Any unresolved critical issue must be re-flagged with stronger emphasis.
 
 Return ONLY valid JSON.
 Do not include markdown headings, bullets, code fences, commentary, or prose before/after the JSON.
@@ -88,6 +101,12 @@ Return your feedback as JSON:
   "score": N,
   "addressed_questions": ["Which of your key questions were properly answered"],
   "missing_items": ["What's still missing or needs more depth"],
+  "feasibility_flags": [
+    "Any conflicts with internal docs, known constraints, or prior attempts (empty array if none found)"
+  ],
+  "unresolved_from_previous": [
+    "Issues from YOUR PREVIOUS FEEDBACK that the intern still did not fix (empty array on first round or if all resolved)"
+  ],
   "specific_feedback": [
     "Concrete feedback item 1 (e.g., 'The power comparison with Groq is missing. Search for Groq LPU TOPS/W numbers.')",
     "Concrete feedback item 2"
@@ -97,11 +116,13 @@ Return your feedback as JSON:
     "Another search query"
   ],
   "ready_for_report": false,
-  "researcher_notes": "Your overall assessment in Korean (2-3 lines)"
+  "researcher_notes": "Your overall assessment in Korean (2-3 lines, including feasibility concerns if any)"
 }}
 
 Be rigorous but constructive. The intern should know exactly what to do next.
 If the investigation is thorough enough, set ready_for_report to true.
+If feasibility_flags are critical (idea is fundamentally incompatible with our HW), set ready_for_report to false regardless of other quality.
+CRITICAL: If unresolved_from_previous is non-empty, you MUST set ready_for_report to false. The intern must address ALL previous critical feedback before proceeding.
 """
 
 RESEARCHER_REPORT_PROMPT = """You are an AI hardware architecture researcher at HyperAccel.
@@ -116,6 +137,10 @@ Idea brief:
 
 Intern's deep dive research (final version after feedback iterations):
 {deep_dive}
+
+Your feedback history from reviewing the intern's work (feasibility flags and critical issues you identified):
+{feedback_history}
+IMPORTANT: Your report MUST reflect the findings from your own feedback. If you flagged feasibility issues (e.g., HW constraints, unsupported features), the report must explicitly address them — do NOT write the report as if those issues don't exist.
 
 Write the report in Markdown format with the following structure.
 IMPORTANT: Write all content in Korean.
