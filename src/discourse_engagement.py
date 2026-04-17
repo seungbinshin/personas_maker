@@ -18,6 +18,7 @@ from discourse_publisher import DiscoursePublisher
 from glossary import GlossaryManager
 from prompts.discourse_engagement import (
     COMMENT_CLASSIFY_PROMPT,
+    EXTRACT_DRAFT_TERMS_PROMPT,
     FACT_CHECK_PROMPT,
     REVISE_DRAFT_PROMPT,
     SEARCH_AND_DRAFT_PROMPT,
@@ -58,6 +59,7 @@ class DiscourseEngagement:
         self.glossary = glossary
         self.scope_text = scope_text
         self.slack_callback = slack_callback  # (message: str) -> None
+        self._glossary_candidates: set[str] = set()
 
     def _notify(self, message: str):
         logger.info(message)
@@ -82,6 +84,15 @@ class DiscourseEngagement:
                     "Engagement error for topic %s: %s",
                     topic_info.get("topic_id"), e, exc_info=True,
                 )
+
+        # Refresh glossary once per poll cycle (non-fatal if it fails)
+        if self._glossary_candidates:
+            try:
+                self.glossary.refresh_candidates(self._glossary_candidates)
+            except Exception as e:
+                logger.warning("Glossary refresh failed: %s", e)
+            finally:
+                self._glossary_candidates.clear()
 
     def _process_topic(self, topic_info: dict):
         """Process a single published topic — check for new comments and respond."""
@@ -171,18 +182,18 @@ class DiscourseEngagement:
         comment_text = _strip_html(post.cooked)
         key_topic = classification.get("key_topic", "")
 
-        # Build internal knowledge context
-        keywords = [w for w in re.split(r"[\s,]+", key_topic) if len(w) > 1][:10]
-        internal_context = self._gather_internal_context(keywords)
+        # Initial context from comment keywords
+        comment_keywords = [w for w in re.split(r"[\s,]+", key_topic) if len(w) > 1][:10]
+        initial_context = self._gather_internal_context(comment_keywords)
 
-        # Step 2+3: Search external sources + draft response
+        # Step 2+3: Search external sources + draft response (using initial context)
         draft = self._search_and_draft(
             report_title=report_title,
             report_excerpt=report_excerpt,
             comment_author=post.username,
             comment_text=comment_text,
             comment_type=comment_type,
-            internal_context=internal_context,
+            internal_context=initial_context,
         )
         if not draft:
             self._notify(
@@ -190,12 +201,24 @@ class DiscourseEngagement:
             )
             return
 
+        # Step 3.5: Extract draft terms, re-gather context, merge
+        draft_terms = self._extract_draft_terms(draft)
+        if draft_terms - set(comment_keywords):
+            merged_keywords = list({*comment_keywords, *draft_terms})
+            draft_context = self._gather_internal_context(merged_keywords)
+            fact_check_context = self._merge_contexts(initial_context, draft_context)
+        else:
+            fact_check_context = initial_context
+
+        # Remember candidates for end-of-poll glossary refresh
+        self._accumulate_glossary_candidates(draft_terms | set(comment_keywords))
+
         # Step 4: Fact check (+ revise loop)
         final_response = self._fact_check_loop(
             comment_author=post.username,
             comment_text=comment_text,
             draft=draft,
-            internal_context=internal_context,
+            internal_context=fact_check_context,
         )
         if not final_response:
             self._notify(
@@ -332,6 +355,61 @@ class DiscourseEngagement:
         """Return auto-block of the glossary, capped at top 50 entries."""
         text = self.glossary.load_auto_text(max_entries=50)
         return text if text else "(아직 수집된 내부 용어 glossary가 없음)"
+
+    def _extract_draft_terms(self, draft: str) -> set[str]:
+        """Ask the LLM for technical terms worth verifying against the vault."""
+        try:
+            result = self.runtime.run(
+                LLMRunRequest(
+                    prompt=EXTRACT_DRAFT_TERMS_PROMPT.format(draft=draft[:4000]),
+                    timeout_ms=60_000,
+                )
+            )
+            if not result.success:
+                return set()
+            parsed = parse_json_response(result.output)
+            if not isinstance(parsed, list):
+                return set()
+            return {
+                str(t).strip()
+                for t in parsed
+                if isinstance(t, (str, int, float)) and str(t).strip()
+            }
+        except Exception as e:
+            logger.warning("extract_draft_terms failed: %s", e)
+            return set()
+
+    def _merge_contexts(self, a: str, b: str) -> str:
+        """Merge two context strings, dedup by '### <title>' headings; cap to 30KB."""
+        if not a:
+            return b
+        if not b:
+            return a
+        merged = a + "\n\n" + b
+        seen_headings: set[str] = set()
+        out_lines: list[str] = []
+        current_heading: str | None = None
+        for line in merged.splitlines():
+            m = re.match(r"^###\s+(.+)$", line)
+            if m:
+                heading = m.group(1).strip()
+                if heading in seen_headings:
+                    current_heading = "__SKIP__"
+                    continue
+                seen_headings.add(heading)
+                current_heading = heading
+                out_lines.append(line)
+                continue
+            if current_heading == "__SKIP__":
+                continue
+            out_lines.append(line)
+        result = "\n".join(out_lines)
+        if len(result) > 30_000:
+            result = result[:30_000] + "\n\n...(truncated)"
+        return result
+
+    def _accumulate_glossary_candidates(self, terms: set[str]) -> None:
+        self._glossary_candidates.update(terms)
 
     def _gather_internal_context(self, keywords: list[str]) -> str:
         parts = []

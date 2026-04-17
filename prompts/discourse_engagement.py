@@ -99,6 +99,25 @@ Return ONLY valid JSON:
 }}
 """
 
+EXTRACT_DRAFT_TERMS_PROMPT = """You are extracting verification-worthy technical terms from a draft response.
+
+Draft:
+{draft}
+
+Return 8–12 terms that could benefit from cross-referencing against internal documents or the glossary. Prefer:
+- Proper nouns (internal or external product/tool names, HW/SW component names, model family names)
+- Technical acronyms (≥2 uppercase letters)
+- Korean compound technical terms (복합 기술 용어)
+
+Exclude:
+- Generic English words (article, preposition, verb, pronoun)
+- Common, obviously-global terms (API, GPU, CPU are OK to include only if they are the draft's subject)
+- Words longer than 30 characters
+
+Return ONLY a JSON array of strings, no explanation:
+["term1", "term2", ...]
+"""
+
 REVISE_DRAFT_PROMPT = """You are revising a draft response based on fact-checker feedback.
 
 Original comment by {comment_author}:
