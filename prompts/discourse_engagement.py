@@ -72,12 +72,21 @@ Draft response:
 Internal knowledge (Confluence + Discourse):
 {internal_context}
 
+Verified internal-term glossary (HyperAccel-specific nouns known to be real):
+{glossary}
+
 Check the draft for:
 1. **Factual accuracy**: Are the claims supported by the cited sources? Does anything contradict internal documents?
 2. **Source quality**: Are the cited URLs real and relevant? Are any sources fabricated or questionable?
 3. **Tone**: Is the response professional, helpful, and not dismissive of the commenter's point?
 4. **Completeness**: Does it actually answer the question / address the correction?
 5. **Overconfidence**: Does it claim certainty where uncertainty exists?
+
+Guardrails when judging:
+- Proper nouns that look like HyperAccel-specific internal components (HyperDex, LPU, SMA, MPU, VPU, LMU, ESL, BERTHA, HyperAccel, etc.) are likely REAL even if missing from internal_context. Do NOT declare them fabricated. If you still suspect misuse, use decision="revise" with guidance "cite or clarify this term" — never reject on this basis alone.
+- External URLs that you cannot personally verify are "unverified", not "fabricated". If questionable, use decision="revise" with guidance "replace with a verifiable source (arXiv ID or DOI preferred) or remove".
+- Claims of conference acceptance ("accepted at ICLR 2026" etc.) that you cannot confirm must be softened, not rejected outright. Use decision="revise" with guidance "describe as arXiv preprint unless acceptance is confirmed".
+- Reserve decision="reject" for drafts that are unsafe to post even after revision — factually dangerous, clearly hostile, or off-topic. Everything else should be "approve" or "revise".
 
 Return ONLY valid JSON:
 {{

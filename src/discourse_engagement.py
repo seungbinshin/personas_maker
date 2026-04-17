@@ -293,6 +293,7 @@ class DiscourseEngagement:
             comment_text=comment_text,
             draft_response=draft,
             internal_context=internal_context or "(내부 문서 없음)",
+            glossary=self._load_glossary_text(),
         )
         result = self.runtime.run(LLMRunRequest(prompt=prompt, timeout_ms=120_000))
         if not result.success:
@@ -323,6 +324,14 @@ class DiscourseEngagement:
         return None
 
     # ── Helpers ───────────────────────────────────────────────────
+
+    def _load_glossary_text(self) -> str:
+        """Return auto-block of the glossary, or an empty placeholder if absent.
+
+        Wired in T4 (glossary module). Returning a placeholder keeps
+        fact-check functional before the glossary file exists.
+        """
+        return "(아직 수집된 내부 용어 glossary가 없음)"
 
     def _gather_internal_context(self, keywords: list[str]) -> str:
         parts = []
