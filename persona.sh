@@ -5,6 +5,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 API_DIR="$SCRIPT_DIR/claude-code-api"
 BOTS_DIR="$SCRIPT_DIR/bots"
 
+# Load shared model pins (single source of truth for model versions).
+if [[ -f "$SCRIPT_DIR/.env.models" ]]; then
+    set -a
+    source "$SCRIPT_DIR/.env.models"
+    set +a
+fi
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -93,11 +100,13 @@ do_start_bot() {
         return 1
     fi
 
-    # Read bot .env for port and model info
+    # Read bot .env for port and model info. Source in a subshell so that
+    # shell interpolation works (e.g. CLAUDE_MODEL=$CLAUDE_OPUS_MODEL) and the
+    # bot's other env vars do not leak into the caller.
     local api_port api_keys claude_model
     api_port=$(grep '^API_PORT=' "$bot_dir/.env" | cut -d= -f2 || echo "8080")
     api_keys=$(python3 -c "import json; print(json.load(open('$bot_dir/config.json')).get('api_keys',''))" 2>/dev/null || echo "")
-    claude_model=$(grep '^CLAUDE_MODEL=' "$bot_dir/.env" | cut -d= -f2 || echo "claude-sonnet-4-6")
+    claude_model=$(bash -c "set -a; source '$SCRIPT_DIR/.env.models' 2>/dev/null; source '$bot_dir/.env'; echo \"\${CLAUDE_MODEL:-\$DEFAULT_CLAUDE_MODEL}\"")
 
     local health_url="http://localhost:${api_port}/health"
     local a_log b_log

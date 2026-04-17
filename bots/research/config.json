@@ -2,13 +2,23 @@
   "name": "research",
   "display_name": "연구팀",
   "persona_type": "research_pipeline",
-  "default_model": "claude-opus-4-6",
+  "default_model": "claude-opus-4-7",
   "api_keys": "research:sk-research-key-12345",
   "schedule": {
     "discovery_scan": "22:00",
-    "discovery_days": ["mon", "wed", "fri", "sun"],
+    "discovery_days": [
+      "mon",
+      "wed",
+      "fri",
+      "sun"
+    ],
     "auto_report": "02:30",
-    "auto_report_days": ["tue", "thu", "sat", "mon"],
+    "auto_report_days": [
+      "tue",
+      "thu",
+      "sat",
+      "mon"
+    ],
     "timezone": "Asia/Seoul"
   },
   "research": {
@@ -23,11 +33,18 @@
   "discourse": {
     "base_url": "https://hyperaccel.discourse.group",
     "api_username": "SeungBin",
-    "vault_path": "knowledge"
+    "vault_path": "knowledge",
+    "publish_category_id": 4,
+    "default_tags": [
+      "research-bot"
+    ]
   },
   "confluence": {
     "base_url": "https://hyperaccel.atlassian.net/wiki",
-    "default_spaces": ["Bertha", "BerthaEdge"],
+    "default_spaces": [
+      "Bertha",
+      "BerthaEdge"
+    ],
     "vault_path": "knowledge"
   },
   "agents": {

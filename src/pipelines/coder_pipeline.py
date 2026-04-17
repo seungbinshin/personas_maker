@@ -8,6 +8,7 @@ observe the team working. The user only interacts with the orchestrator.
 
 import json
 import logging
+import os
 import subprocess
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -23,8 +24,8 @@ from tools.json_utils import parse_json_response
 
 logger = logging.getLogger(__name__)
 
-OPUS_MODEL = "claude-opus-4-6"
-SONNET_MODEL = "claude-sonnet-4-6"
+OPUS_MODEL = os.environ.get("CLAUDE_OPUS_MODEL", "claude-opus-4-7")
+SONNET_MODEL = os.environ.get("CLAUDE_SONNET_MODEL", "claude-sonnet-4-6")
 
 
 class TeamThread:
