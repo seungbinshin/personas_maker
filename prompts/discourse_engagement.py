@@ -140,3 +140,78 @@ Instructions:
 
 Return ONLY the revised response text in markdown format.
 """
+
+
+CLASSIFY_EDIT_PROMPT = """You are deciding whether a comment on a published research report warrants EDITING the report itself (not just replying).
+
+Published report (markdown, first 3000 chars):
+{report_excerpt}
+
+Comment by {comment_author}:
+{comment_text}
+
+Decide:
+- edit_needed=true when the comment identifies (a) a rendering/formatting/typo problem in the report, or (b) a clear factual error that has a high-confidence fix (wrong number, wrong citation, wrong date, broken link). Interpretive disagreements, alternate opinions, or stylistic suggestions are NOT edits — those get reply-only.
+- edit_needed=false otherwise.
+
+Return ONLY valid JSON:
+{{
+  "edit_needed": true,
+  "edit_type": "format",
+  "target_section": "short anchor text or regex fragment identifying the passage to modify (empty if none)",
+  "change_summary": "One-line Korean summary of the intended change (empty if none)"
+}}
+
+edit_type must be one of: "format", "factual", "none".
+"""
+
+
+GENERATE_EDIT_PROMPT = """You are producing an edited version of a published report.
+
+Original report (markdown):
+{report_md}
+
+Reviewer-identified issue:
+{change_summary}
+
+Target section (approximate):
+{target_section}
+
+Instructions:
+1. Modify ONLY the passage identified by `target_section`. Leave everything else byte-identical.
+2. Do NOT add new sections or delete existing ones.
+3. Return the FULL edited report markdown — not a diff.
+4. Make no semantic changes beyond what `change_summary` requires.
+"""
+
+
+EDIT_FACT_CHECK_PROMPT = """You are fact-checking a proposed edit to a published report.
+
+Original report (relevant passage):
+{target_section}
+
+Proposed new passage (extracted from the edited report):
+{new_section}
+
+Change summary:
+{change_summary}
+
+Internal knowledge:
+{internal_context}
+
+Verified internal-term glossary:
+{glossary}
+
+Guardrails:
+- Approve if the change is limited to the stated intent, factually sound given the context, and does not introduce hallucinated terms or sources.
+- Reject if the change introduces new claims not supported by context, rewrites unrelated content, or replaces factual text with less accurate text.
+- There is NO "revise" option for edits — editing should be decisive.
+
+Return ONLY valid JSON:
+{{
+  "decision": "approve",
+  "reason": "Short Korean explanation"
+}}
+
+decision must be one of: "approve", "reject".
+"""
