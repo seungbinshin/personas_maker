@@ -106,10 +106,56 @@ class ResearchPipeline(BasePipeline):
         vault_rel = discourse_config.get("vault_path", "knowledge")
         self.discourse_knowledge = DiscourseKnowledge(bot_dir / vault_rel)
 
+        # Initialize Discourse publisher + engagement
+        self.discourse_publisher = None
+        self.discourse_engagement = None
+        discourse_api_key = os.environ.get("DISCOURSE_API_KEY", "")
+        discourse_base_url = discourse_config.get("base_url", "")
+        discourse_username = discourse_config.get("api_username", "")
+        discourse_category_id = discourse_config.get("publish_category_id", 0)
+        if discourse_base_url and discourse_api_key and discourse_category_id:
+            from discourse_client import DiscourseClient as DiscClient
+            from discourse_publisher import DiscoursePublisher
+
+            dc = DiscClient(discourse_base_url, discourse_api_key, discourse_username)
+            self.discourse_publisher = DiscoursePublisher(
+                dc, self.store, discourse_category_id,
+                default_tags=discourse_config.get("default_tags", ["research-bot"]),
+            )
+            self._discourse_client = dc
+
         # Initialize Confluence knowledge
         confluence_config = bot_config.get("confluence", {})
         confluence_vault_rel = confluence_config.get("vault_path", "knowledge")
         self.confluence_knowledge = ConfluenceKnowledge(bot_dir / confluence_vault_rel)
+
+        # Initialize discourse engagement (needs knowledge objects + glossary)
+        if self.discourse_publisher:
+            from discourse_engagement import DiscourseEngagement
+            from glossary import GlossaryManager
+            glossary_mgr = GlossaryManager(bot_dir)
+            self.discourse_engagement = DiscourseEngagement(
+                discourse_client=self._discourse_client,
+                publisher=self.discourse_publisher,
+                runtime=self.runtime,
+                confluence_knowledge=self.confluence_knowledge,
+                discourse_knowledge=self.discourse_knowledge,
+                glossary=glossary_mgr,
+                scope_text=self.fit_evaluator.scope_text() if self.fit_evaluator else "",
+                slack_callback=lambda msg: self._post_status(msg, agent="discourse-bot"),
+            )
+
+    def poll_discourse_comments(self):
+        """Entry point for the scheduler — polls and responds to Discourse comments."""
+        if self.discourse_engagement:
+            self.discourse_engagement.poll_and_respond()
+
+    def publish_report_to_discourse(self, report_id: str) -> dict | None:
+        """Publish a single report to Discourse."""
+        if not self.discourse_publisher:
+            logger.warning("Discourse publisher not configured — skipping publish")
+            return None
+        return self.discourse_publisher.publish_report(report_id)
 
     def sync_discourse(self, full: bool = False) -> dict:
         """Run a Discourse sync. Incremental by default, full if forced."""

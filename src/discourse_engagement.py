@@ -15,6 +15,7 @@ from confluence_knowledge import ConfluenceKnowledge
 from discourse_client import DiscourseClient, DiscoursePost
 from discourse_knowledge import DiscourseKnowledge
 from discourse_publisher import DiscoursePublisher
+from glossary import GlossaryManager
 from prompts.discourse_engagement import (
     COMMENT_CLASSIFY_PROMPT,
     FACT_CHECK_PROMPT,
@@ -45,6 +46,7 @@ class DiscourseEngagement:
         runtime: ClaudeRuntimeClient,
         confluence_knowledge: ConfluenceKnowledge,
         discourse_knowledge: DiscourseKnowledge,
+        glossary: GlossaryManager,
         scope_text: str = "",
         slack_callback: callable | None = None,
     ):
@@ -53,6 +55,7 @@ class DiscourseEngagement:
         self.runtime = runtime
         self.confluence_knowledge = confluence_knowledge
         self.discourse_knowledge = discourse_knowledge
+        self.glossary = glossary
         self.scope_text = scope_text
         self.slack_callback = slack_callback  # (message: str) -> None
 
@@ -326,12 +329,9 @@ class DiscourseEngagement:
     # ── Helpers ───────────────────────────────────────────────────
 
     def _load_glossary_text(self) -> str:
-        """Return auto-block of the glossary, or an empty placeholder if absent.
-
-        Wired in T4 (glossary module). Returning a placeholder keeps
-        fact-check functional before the glossary file exists.
-        """
-        return "(아직 수집된 내부 용어 glossary가 없음)"
+        """Return auto-block of the glossary, capped at top 50 entries."""
+        text = self.glossary.load_auto_text(max_entries=50)
+        return text if text else "(아직 수집된 내부 용어 glossary가 없음)"
 
     def _gather_internal_context(self, keywords: list[str]) -> str:
         parts = []
