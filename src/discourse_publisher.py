@@ -118,6 +118,18 @@ class DiscoursePublisher:
                 })
         return published
 
+    def get_report_for_post(self, discourse_post_id: int) -> dict | None:
+        """Return {report_id, discourse_post_id, discourse_topic_id} for the post, or None."""
+        for state in self.store.list_reports():
+            metadata = state.get("metadata", {})
+            if metadata.get("discourse_post_id") == discourse_post_id:
+                return {
+                    "report_id": state.get("report_id"),
+                    "discourse_post_id": discourse_post_id,
+                    "discourse_topic_id": metadata.get("discourse_topic_id"),
+                }
+        return None
+
     def update_last_checked(self, report_id: str, post_number: int):
         """Update the last checked post number for a published topic."""
         state = self.store.get_report(report_id)
