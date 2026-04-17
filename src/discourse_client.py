@@ -71,6 +71,89 @@ class DiscourseClient:
         resp.raise_for_status()
         return resp.json()
 
+    def _post(self, path: str, data: dict) -> dict:
+        url = f"{self.base_url}/{path.lstrip('/')}"
+        resp = requests.post(url, headers=self.headers, json=data, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+
+    # ── Write operations ───────────────────────────────────────
+
+    def create_topic(
+        self,
+        title: str,
+        raw: str,
+        category_id: int,
+        tags: list[str] | None = None,
+    ) -> dict:
+        """Create a new Discourse topic. Returns the created post data including topic_id."""
+        data: dict = {
+            "title": title,
+            "raw": raw,
+            "category": category_id,
+        }
+        if tags:
+            data["tags"] = tags
+        result = self._post("/posts.json", data)
+        logger.info(
+            "Created topic: id=%s title='%s' url=%s/t/%s/%s",
+            result.get("topic_id"), title, self.base_url,
+            result.get("topic_slug", ""), result.get("topic_id", ""),
+        )
+        return result
+
+    def create_reply(
+        self,
+        topic_id: int,
+        raw: str,
+        reply_to_post_number: int | None = None,
+    ) -> dict:
+        """Reply to a topic, optionally to a specific post number."""
+        data: dict = {
+            "topic_id": topic_id,
+            "raw": raw,
+        }
+        if reply_to_post_number is not None:
+            data["reply_to_post_number"] = reply_to_post_number
+        result = self._post("/posts.json", data)
+        logger.info(
+            "Created reply: post_id=%s topic=%s reply_to=%s",
+            result.get("id"), topic_id, reply_to_post_number,
+        )
+        return result
+
+    def fetch_posts_since(
+        self, topic_id: int, since_post_number: int = 0,
+    ) -> list[DiscoursePost]:
+        """Fetch posts in a topic newer than since_post_number."""
+        try:
+            data = self._get(f"/t/{topic_id}.json")
+        except requests.HTTPError as e:
+            logger.warning("Failed to fetch topic %d: %s", topic_id, e)
+            return []
+
+        raw_posts = data.get("post_stream", {}).get("posts", [])
+        posts = []
+        for p in raw_posts:
+            if p.get("hidden") or p.get("deleted_at"):
+                continue
+            pn = p.get("post_number", 0)
+            if pn <= since_post_number:
+                continue
+            # Skip posts by the API user (our bot)
+            if p.get("username", "") == self.headers.get("Api-Username", ""):
+                continue
+            posts.append(DiscoursePost(
+                id=p["id"],
+                post_number=pn,
+                username=p.get("username", "unknown"),
+                created_at=p.get("created_at", ""),
+                cooked=p.get("cooked", ""),
+                reply_count=p.get("reply_count", 0),
+                score=p.get("score", 0.0),
+            ))
+        return posts
+
     def fetch_categories(self) -> list[DiscourseCategory]:
         data = self._get("/categories.json")
         cats = []
