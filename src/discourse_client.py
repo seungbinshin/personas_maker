@@ -77,6 +77,12 @@ class DiscourseClient:
         resp.raise_for_status()
         return resp.json()
 
+    def _put(self, path: str, data: dict) -> dict:
+        url = f"{self.base_url}/{path.lstrip('/')}"
+        resp = requests.put(url, headers=self.headers, json=data, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+
     # ── Write operations ───────────────────────────────────────
 
     def create_topic(
@@ -120,6 +126,17 @@ class DiscourseClient:
             "Created reply: post_id=%s topic=%s reply_to=%s",
             result.get("id"), topic_id, reply_to_post_number,
         )
+        return result
+
+    def edit_post(self, post_id: int, raw: str, edit_reason: str) -> dict:
+        """Edit an existing post. edit_reason is shown in Discourse's edit history."""
+        if not edit_reason.strip():
+            raise ValueError("edit_reason is required by Discourse and by the audit trail")
+        result = self._put(
+            f"/posts/{post_id}.json",
+            {"post": {"raw": raw, "edit_reason": edit_reason}},
+        )
+        logger.info("Edited post: post_id=%s reason='%s'", post_id, edit_reason)
         return result
 
     def fetch_posts_since(
