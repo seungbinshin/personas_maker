@@ -129,11 +129,15 @@ class ResearchPipeline(BasePipeline):
         confluence_vault_rel = confluence_config.get("vault_path", "knowledge")
         self.confluence_knowledge = ConfluenceKnowledge(bot_dir / confluence_vault_rel)
 
-        # Initialize discourse engagement (needs knowledge objects + glossary)
+        # Initialize discourse engagement (needs knowledge objects + glossary + editor + archiver)
         if self.discourse_publisher:
             from discourse_engagement import DiscourseEngagement
             from glossary import GlossaryManager
+            from post_editor import PostEditor
+            from qa_archive import QAArchiver
             glossary_mgr = GlossaryManager(bot_dir)
+            post_editor = PostEditor(bot_dir, self._discourse_client, self.discourse_publisher)
+            qa_archiver = QAArchiver(bot_dir)
             self.discourse_engagement = DiscourseEngagement(
                 discourse_client=self._discourse_client,
                 publisher=self.discourse_publisher,
@@ -141,6 +145,8 @@ class ResearchPipeline(BasePipeline):
                 confluence_knowledge=self.confluence_knowledge,
                 discourse_knowledge=self.discourse_knowledge,
                 glossary=glossary_mgr,
+                post_editor=post_editor,
+                qa_archive=qa_archiver,
                 scope_text=self.fit_evaluator.scope_text() if self.fit_evaluator else "",
                 slack_callback=lambda msg: self._post_status(msg, agent="discourse-bot"),
             )
