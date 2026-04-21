@@ -1,0 +1,34 @@
+{
+  "date": "2026-04-22",
+  "digest": {
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "ASML's Earnings Prove the Artificial Intelligence (AI) Supercycle Isn't Slowing Down",
+            "summary": "ASML이 2026년 1분기 매출 88억 유로, 순이익 28억 유로를 기록하며 연간 매출 가이던스를 360억~400억 유로로 상향 조정했다. EUV 시스템이 전체 시스템 매출의 66%를 차지하며 AI 칩 수요가 성장을 주도하고 있다. CEO는 AI 인프라 투자로 반도체 산업 성장 모멘텀이 계속 강화되고 있다고 밝혔다.",
+            "source": "Motley Fool",
+            "source_url": "https://www.fool.com/investing/2026/04/21/asml-earnings-artificial-intelligence-supercycle/",
+            "published_date": "2026-04-21",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "NVIDIA가 RTX 5090을 뛰어넘는 'RTX 5090 Ti' 또는 'TITAN Blackwell'을 2026년 3분기 출시할 수 있다는 루머가 확산 중. 풀스펙 GB202 칩 탑재로 게이밍보다 AI 연산에 초점을 맞춘 최상위급 Blackwell GPU가 될 것으로 거론되고 있다.",
+        "source": "@TweakTown",
+        "source_url": "https://x.com/TweakTown/status/2020696464947810402"
+      },
+      {
+        "snippet": "인텔과 NVIDIA가 협업 개발 중인 'Serpent Lake' 칩이 유출됐다. TSMC 3나노 공정 기반으로 인텔 CPU 아키텍처와 NVIDIA Rubin 그래픽을 결합한 고성능 노트북용 SoC로, AMD Strix Halo에 대항하기 위한 첫 공동 칩으로 알려졌다.",
+        "source": "PC Gamer",
+        "source_url": "https://www.pcgamer.com/hardware/processors/intels-serpent-lake-is-rumoured-to-be-its-first-chip-developed-in-collaboration-with-nvidia/"
+      }
+    ]
+  },
+  "published_at": "2026-04-22T02:49:42.894260+09:00"
+}
