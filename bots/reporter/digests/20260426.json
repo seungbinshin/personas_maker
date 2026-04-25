@@ -1,0 +1,25 @@
+{
+  "date": "2026-04-26",
+  "digest": {
+    "date": "2026-04-26",
+    "sections": [],
+    "rumors": [
+      {
+        "snippet": "구글 TPU 8세대 제조 파트너가 학습용(8t)은 Broadcom, 추론용(8i)은 MediaTek인 것으로 파악됐다는 단독 보도. 구글 공식 발표에는 파운더리 파트너 정보가 명시되지 않았었다.",
+        "source": "wccftech.com",
+        "source_url": "https://wccftech.com/google-splits-tpuv8-strategy-two-chips-broadcom-training-mediatek-inference-duties/"
+      },
+      {
+        "snippet": "인텔 차세대 'Nova Lake' 플랫폼의 NPU 6가 74 TOPS 성능을 달성한다는 스펙이 유출. 현 AI PC 시장 경쟁 제품 대비 크게 향상된 수치로 데스크톱 AI PC 생태계의 게임체인저가 될 수 있다는 분석이 나온다.",
+        "source": "TechPowerUp",
+        "source_url": "https://www.techpowerup.com/343227/intel-nova-lake-npu-6-delivers-74-tops-for-desktop-ai-pcs"
+      },
+      {
+        "snippet": "AI 데이터센터 건설 지연이 심화되고 있으며, 전력 인프라 병목이 칩 생산보다 더 큰 제약 요인으로 부상 중. 일부 초대형 AI 데이터센터 프로젝트의 가동 시작이 수개월 이상 지연될 수 있다는 업계 분석이 제기됐다.",
+        "source": "Manufacturing Dive / Omdia",
+        "source_url": "https://www.manufacturingdive.com/news/opinion-omdia-ai-semiconductor-chip-scarcity/817172/"
+      }
+    ]
+  },
+  "published_at": "2026-04-26T02:50:46.653472+09:00"
+}
