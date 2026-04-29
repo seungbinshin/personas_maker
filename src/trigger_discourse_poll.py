@@ -29,7 +29,8 @@ from slack_sdk import WebClient  # noqa: E402
 
 from pipelines.research_pipeline import ResearchPipeline  # noqa: E402
 
-CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL", "http://localhost:8083")
+from claude_api_client import base_url as _ccapi_base_url
+CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL") or _ccapi_base_url()
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-research-key-12345")
 
 slack = WebClient(token=os.environ["SLACK_BOT_TOKEN"])

@@ -39,7 +39,8 @@ logger = logging.getLogger("secondme")
 app: App | None = None
 
 # claude-code-api settings
-CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL", "http://localhost:8080")
+from claude_api_client import base_url as _ccapi_base_url
+CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL") or _ccapi_base_url()
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-secondme-key-12345")
 API_DIR = Path(__file__).parent.parent / "claude-code-api"
 API_ENV_PATH = API_DIR / ".env"

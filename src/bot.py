@@ -52,7 +52,8 @@ logger = logging.getLogger(f"bot-{BOT_NAME}")
 app: App | None = None
 
 # claude-code-api settings
-CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL", "http://localhost:8080")
+from claude_api_client import base_url as _ccapi_base_url
+CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL") or _ccapi_base_url()
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-secondme-key-12345")
 API_PORT = os.environ.get("API_PORT", "8080")
 API_DIR = PROJECT_ROOT / "claude-code-api"
