@@ -82,83 +82,28 @@ do_start_bot() {
 
     read_bot_pids "$name"
 
-    # If PID file has an API_PID that's alive, check if it's actually our API
-    # or a shared API from another bot. If the port is healthy, treat as shared.
-    if [[ -n "$API_PID" && "$API_PID" != "shared" ]] && is_pid_alive "$API_PID"; then
-        local check_port
-        check_port=$(grep '^API_PORT=' "$bot_dir/.env" 2>/dev/null | cut -d= -f2 || echo "8080")
-        if curl -sf "http://localhost:${check_port}/health" > /dev/null 2>&1; then
-            log_info "[$name] API PID $API_PID is alive and port $check_port healthy — treating as shared"
-            API_PID="shared"
-        else
-            log_err "[$name] claude-code-api already running (PID $API_PID). Use 'restart' or 'stop' first."
-            return 1
-        fi
-    fi
     if [[ -n "$BOT_PID" ]] && is_pid_alive "$BOT_PID"; then
         log_err "[$name] bot already running (PID $BOT_PID). Use 'restart' or 'stop' first."
         return 1
     fi
 
-    # Read bot .env for port and model info. Source in a subshell so that
-    # shell interpolation works (e.g. CLAUDE_MODEL=$CLAUDE_OPUS_MODEL) and the
-    # bot's other env vars do not leak into the caller.
-    local api_port api_keys claude_model
-    api_port=$(grep '^API_PORT=' "$bot_dir/.env" | cut -d= -f2 || echo "8080")
-    api_keys=$(python3 -c "import json; print(json.load(open('$bot_dir/config.json')).get('api_keys',''))" 2>/dev/null || echo "")
-    claude_model=$(bash -c "set -a; source '$SCRIPT_DIR/.env.models' 2>/dev/null; source '$bot_dir/.env'; echo \"\${CLAUDE_MODEL:-\$DEFAULT_CLAUDE_MODEL}\"")
-
-    local health_url="http://localhost:${api_port}/health"
-    local a_log b_log
-    a_log=$(api_log "$name")
+    local b_log
     b_log=$(bot_log "$name")
 
-    # ─ Start claude-code-api (or reuse existing) ─
-    # Check if API is already running on this port
-    if curl -sf "$health_url" > /dev/null 2>&1; then
-        log_ok "[$name] API already running on port $api_port — reusing"
-        API_PID="shared"
-    else
-        echo "[$name] Starting claude-code-api on port $api_port..."
-        cd "$API_DIR"
-
-        # Build env: base API .env + bot overrides
-        set -a
-        source "$API_DIR/.env"
-        set +a
-        export PORT="$api_port"
-        if [[ -n "$api_keys" ]]; then
-            export API_KEYS="$api_keys"
-        fi
-        if [[ -n "$claude_model" ]]; then
-            export CLAUDE_MODEL="$claude_model"
-        fi
-
-        echo -e "\n=== [$name] API start $(date) ===" >> "$a_log"
-        nohup pnpm start >> "$a_log" 2>&1 &
-        API_PID=$!
-        cd "$SCRIPT_DIR"
-
-        # Wait for health
-        echo "[$name] Waiting for API health check (port $api_port)..."
-        local retries=0 max_retries=15
-        while (( retries < max_retries )); do
-            if curl -sf "$health_url" > /dev/null 2>&1; then
-                log_ok "[$name] claude-code-api healthy (PID $API_PID, port $api_port)"
-                break
-            fi
-            if ! is_pid_alive "$API_PID"; then
-                log_err "[$name] claude-code-api exited unexpectedly. Check $a_log"
-                return 1
-            fi
-            sleep 1
-            (( retries++ ))
-        done
-
-        if (( retries >= max_retries )); then
-            log_warn "[$name] Health check timed out — API may still be starting (PID $API_PID)"
-        fi
+    # ─ Ensure global claude-code-api server is healthy (managed by launchd) ─
+    if ! command -v ccapi >/dev/null 2>&1; then
+        log_err "[$name] 'ccapi' not in PATH. Install: ln -sf ~/.local/share/claude-code-api/bin/ccapi ~/.local/bin/ccapi"
+        return 1
     fi
+    local ccapi_url
+    if ! ccapi_url=$(ccapi ensure 2>&1); then
+        log_err "[$name] ccapi ensure failed:"
+        echo "$ccapi_url"
+        log_err "[$name] If not yet installed, run: ccapi install"
+        return 1
+    fi
+    log_ok "[$name] claude-code-api healthy at $ccapi_url"
+    API_PID="global"
 
     # ─ Start bot ─
     echo "[$name] Starting bot..."
@@ -184,7 +129,7 @@ EOF
 
     echo ""
     log_ok "[$name] All services started"
-    echo "  API log: $a_log"
+    echo "  API: global (managed by launchd; logs: ccapi logs)"
     echo "  Bot log: $b_log"
 }
 
@@ -192,38 +137,15 @@ EOF
 
 do_stop_bot() {
     local name="$1"
-    local bot_dir="$BOTS_DIR/$name"
     read_bot_pids "$name"
     local stopped=false
 
-    if [[ -n "$API_PID" && "$API_PID" != "shared" ]] && is_pid_alive "$API_PID"; then
-        kill "$API_PID" 2>/dev/null && log_ok "[$name] Stopped claude-code-api (PID $API_PID)" || true
-        stopped=true
-    fi
-
+    # Note: claude-code-api is now managed globally by launchd (com.claudecodeapi).
+    # We never kill it from here. Use 'launchctl unload ~/Library/LaunchAgents/com.claudecodeapi.plist'
+    # if you really need to stop the API.
     if [[ -n "$BOT_PID" ]] && is_pid_alive "$BOT_PID"; then
         kill "$BOT_PID" 2>/dev/null && log_ok "[$name] Stopped bot (PID $BOT_PID)" || true
         stopped=true
-    fi
-
-    # Always kill any process on the bot's API port to free it
-    if [[ -f "$bot_dir/.env" ]]; then
-        local api_port
-        api_port=$(grep '^API_PORT=' "$bot_dir/.env" | cut -d= -f2 || echo "")
-        if [[ -n "$api_port" ]]; then
-            local port_pids
-            port_pids=$(lsof -ti ":$api_port" 2>/dev/null || true)
-            if [[ -n "$port_pids" ]]; then
-                kill $port_pids 2>/dev/null && log_ok "[$name] Killed API process on port $api_port (PID $port_pids)" || true
-                stopped=true
-                # Wait briefly and force-kill if still alive
-                sleep 1
-                port_pids=$(lsof -ti ":$api_port" 2>/dev/null || true)
-                if [[ -n "$port_pids" ]]; then
-                    kill -9 $port_pids 2>/dev/null && log_warn "[$name] Force-killed stubborn process on port $api_port (PID $port_pids)" || true
-                fi
-            fi
-        fi
     fi
 
     rm -f "$(pid_file "$name")"
@@ -250,27 +172,18 @@ do_status_bot() {
 
     echo -e "  ${CYAN}$name${NC} ($display_name, $persona_type)"
 
-    # API — check health endpoint directly (handles shared API)
-    local api_port
-    api_port=$(grep '^API_PORT=' "$bot_dir/.env" 2>/dev/null | cut -d= -f2 || echo "8080")
-    local health_url="http://localhost:${api_port}/health"
-    local http_code
-    http_code=$(curl -s -o /dev/null -w "%{http_code}" "$health_url" 2>/dev/null || echo "000")
-
-    if [[ "$http_code" == "200" ]]; then
-        if [[ "$API_PID" == "shared" ]]; then
-            log_ok "    API: running (shared, port $api_port, healthy)"
-        elif [[ -n "$API_PID" ]] && is_pid_alive "$API_PID"; then
-            log_ok "    API: running (PID $API_PID, port $api_port, healthy)"
-        else
-            log_ok "    API: running (shared, port $api_port, healthy)"
-        fi
-    elif [[ "$http_code" == "503" ]]; then
-        log_warn "    API: running (port $api_port, warming up)"
-    elif [[ "$http_code" != "000" ]]; then
-        log_warn "    API: running (port $api_port, status $http_code)"
+    # API — global ccapi server (managed by launchd)
+    local ccapi_url http_code
+    if command -v ccapi >/dev/null 2>&1 && ccapi_url=$(ccapi url 2>/dev/null); then
+        http_code=$(curl -s -o /dev/null -w "%{http_code}" "$ccapi_url/health" 2>/dev/null || echo "000")
+        case "$http_code" in
+            200) log_ok    "    API: running ($ccapi_url, healthy)" ;;
+            503) log_warn  "    API: running ($ccapi_url, warming up)" ;;
+            000) log_err   "    API: not reachable at $ccapi_url" ;;
+            *)   log_warn  "    API: running ($ccapi_url, status $http_code)" ;;
+        esac
     else
-        log_err "    API: not running"
+        log_err "    API: ccapi not installed (run: ccapi install)"
     fi
 
     # Bot

@@ -10,7 +10,6 @@ import time
 import logging
 import threading
 import subprocess
-import signal
 import requests
 import random
 import sys
@@ -55,9 +54,9 @@ app: App | None = None
 from claude_api_client import base_url as _ccapi_base_url
 CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL") or _ccapi_base_url()
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-secondme-key-12345")
-API_PORT = os.environ.get("API_PORT", "8080")
-API_DIR = PROJECT_ROOT / "claude-code-api"
-API_ENV_PATH = API_DIR / ".env"
+API_ENV_PATH = Path(
+    os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+) / "claude-code-api" / ".env"
 RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY)
 
 VALID_MODELS = {
@@ -91,9 +90,6 @@ _bot_scheduler = None
 
 if PERSONA_TYPE in ("reporter", "research_pipeline"):
     from scheduler import BotScheduler
-
-# Track API server process for model switching
-_api_process: subprocess.Popen | None = None
 
 # ─── Conversation Memory ────────────────────────────────────────
 
@@ -196,7 +192,7 @@ def get_model_short_name(full_name: str) -> str:
     return full_name
 
 def switch_model(new_model_id: str) -> bool:
-    global _api_process
+    """Update CLAUDE_MODEL in the global ccapi .env and kickstart the launchd service."""
     env_content = API_ENV_PATH.read_text()
     lines = env_content.splitlines()
     updated = False
@@ -210,52 +206,36 @@ def switch_model(new_model_id: str) -> bool:
     API_ENV_PATH.write_text("\n".join(lines) + "\n")
 
     try:
-        result = subprocess.run(
-            ["pgrep", "-f", "tsx server/agent-server.ts"],
-            capture_output=True, text=True
+        subprocess.run(
+            ["launchctl", "kickstart", "-k", f"gui/{os.getuid()}/com.claudecodeapi"],
+            check=False, capture_output=True,
         )
-        for pid in result.stdout.strip().split("\n"):
-            if pid:
-                os.kill(int(pid), signal.SIGTERM)
-        time.sleep(2)
     except Exception as e:
-        logger.error(f"Failed to stop API server: {e}")
-
-    try:
-        env = os.environ.copy()
-        for line in API_ENV_PATH.read_text().splitlines():
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                env[k] = v
-
-        log_path = PROJECT_ROOT / f".{BOT_NAME}-api.log"
-        log_file = open(log_path, "w")
-        _api_process = subprocess.Popen(
-            ["pnpm", "start"],
-            cwd=str(API_DIR),
-            env=env,
-            stdout=log_file,
-            stderr=log_file,
-        )
-        logger.info(f"API server restarting with model={new_model_id} (PID {_api_process.pid})")
-
-        for _ in range(20):
-            time.sleep(1)
-            try:
-                r = requests.get(f"{CLAUDE_API_URL}/health", timeout=2)
-                if r.status_code == 200:
-                    logger.info("API server healthy after model switch")
-                    return True
-            except Exception:
-                continue
-
-        logger.warning("API health check timed out after model switch")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to start API server: {e}")
+        logger.error(f"Failed to kickstart com.claudecodeapi: {e}")
         return False
+
+    global CLAUDE_API_URL
+    old_url = CLAUDE_API_URL
+    for _ in range(20):
+        time.sleep(1)
+        try:
+            new_url = _ccapi_base_url()
+            r = requests.get(f"{new_url}/health", timeout=2)
+            if r.status_code == 200:
+                CLAUDE_API_URL = new_url
+                if new_url != old_url:
+                    logger.warning(
+                        f"API URL changed: {old_url} -> {new_url}. "
+                        "Pipelines initialized at import time still hold the old URL — "
+                        "restart the bot if calls fail."
+                    )
+                logger.info(f"API server healthy after switching to model={new_model_id}")
+                return True
+        except Exception:
+            continue
+
+    logger.warning("API health check timed out after model switch")
+    return True
 
 # ─── Question Classification ─────────────────────────────────────
 
