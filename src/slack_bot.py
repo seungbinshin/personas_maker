@@ -45,7 +45,7 @@ CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-secondme-key-12345")
 API_DIR = Path(__file__).parent.parent / "claude-code-api"
 API_ENV_PATH = API_DIR / ".env"
 API_LOG_PATH = Path(__file__).parent.parent / ".claude-code-api.log"
-RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY)
+RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY, url_resolver=_ccapi_base_url)
 
 VALID_MODELS = {
     "sonnet": os.environ.get("CLAUDE_SONNET_MODEL", "claude-sonnet-4-6"),

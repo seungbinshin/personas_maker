@@ -47,8 +47,8 @@ class DualChannel:
 class CoderPipeline(BasePipeline):
     """Orchestrates parallel coding agents with git worktree isolation."""
 
-    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path):
-        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir)
+    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path, url_resolver=None):
+        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver)
         self.coder_config = bot_config.get("coder", {})
         self.command_channel = self.coder_config.get("command_channel", "")
         self.team_channel = self.coder_config.get("team_channel", "")

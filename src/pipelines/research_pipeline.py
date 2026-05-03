@@ -64,8 +64,8 @@ class ChatSession:
 class ResearchPipeline(BasePipeline):
     """Orchestrates sequential research with researcher-intern feedback loop."""
 
-    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path):
-        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir)
+    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path, url_resolver=None):
+        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver)
         self.research_config = bot_config.get("research", {})
         self.publish_channel = self.research_config.get("publish_channel", "")
         self.status_channel = self.research_config.get("status_channel", "")

@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 class ReporterPipeline(BasePipeline):
     """Orchestrates news collection and HTML newspaper publication."""
 
-    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path):
-        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir)
+    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path, url_resolver=None):
+        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver)
         self.reporter_config = bot_config.get("reporter", {})
         self.publish_channel = self.reporter_config.get("publish_channel", "")
         self.status_channel = self.reporter_config.get("status_channel", "")

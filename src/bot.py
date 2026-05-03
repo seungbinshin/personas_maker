@@ -57,7 +57,7 @@ CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-secondme-key-12345")
 API_ENV_PATH = Path(
     os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
 ) / "claude-code-api" / ".env"
-RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY)
+RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY, url_resolver=_ccapi_base_url)
 
 VALID_MODELS = {
     "sonnet": os.environ.get("CLAUDE_SONNET_MODEL", "claude-sonnet-4-6"),
@@ -1642,11 +1642,11 @@ if __name__ == "__main__":
     elif PERSONA_TYPE == "coder":
         logger.info(f"Coder mode: dev sessions + team pipeline enabled")
         from pipelines.coder_pipeline import CoderPipeline
-        _pipeline = CoderPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR)
+        _pipeline = CoderPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
     elif PERSONA_TYPE == "reporter":
         logger.info(f"Reporter mode: initializing pipeline + scheduler")
         from pipelines.reporter_pipeline import ReporterPipeline
-        _pipeline = ReporterPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR)
+        _pipeline = ReporterPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
 
         schedule_config = BOT_CONFIG.get("schedule", {})
         digest_time = schedule_config.get("digest_time", "02:45")
@@ -1665,7 +1665,7 @@ if __name__ == "__main__":
     elif PERSONA_TYPE == "research_pipeline":
         logger.info(f"Research pipeline mode: initializing pipeline + scheduler")
         from pipelines.research_pipeline import ResearchPipeline
-        _pipeline = ResearchPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR)
+        _pipeline = ResearchPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
 
         schedule_config = BOT_CONFIG.get("schedule", {})
         discovery_time = schedule_config.get("discovery_scan", "22:00")

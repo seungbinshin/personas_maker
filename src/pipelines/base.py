@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Callable
 
 from skills.types import LLMRunRequest, MessagePayload
 from tools.claude_runtime import ClaudeRuntimeClient, DEFAULT_TIMEOUT_MS
@@ -21,6 +22,7 @@ class BasePipeline:
         api_url: str,
         api_key: str,
         bot_dir: Path,
+        url_resolver: Callable[[], str] | None = None,
     ):
         self.config = bot_config
         self.slack = slack_client
@@ -34,6 +36,7 @@ class BasePipeline:
             api_url=api_url,
             api_key=api_key,
             heartbeat_callback=self._post_heartbeat,
+            url_resolver=url_resolver,
         )
         self._status_channel = bot_config.get(
             bot_config.get("persona_type", ""), {}

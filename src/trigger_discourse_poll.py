@@ -34,7 +34,7 @@ CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL") or _ccapi_base_url()
 CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-research-key-12345")
 
 slack = WebClient(token=os.environ["SLACK_BOT_TOKEN"])
-pipeline = ResearchPipeline(BOT_CONFIG, slack, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR)
+pipeline = ResearchPipeline(BOT_CONFIG, slack, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
 
 print(f"discourse_engagement initialized: {pipeline.discourse_engagement is not None}")
 pipeline.poll_discourse_comments()

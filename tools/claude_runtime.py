@@ -25,11 +25,43 @@ class ClaudeRuntimeClient:
         api_url: str,
         api_key: str,
         heartbeat_callback: Callable[[str, str | None, str], None] | None = None,
+        url_resolver: Callable[[], str] | None = None,
     ):
         self.api_url = api_url.rstrip("/")
         self.api_key = api_key
         self.heartbeat_callback = heartbeat_callback
+        self.url_resolver = url_resolver
         self.last_session_id: str | None = None
+
+    def _post_run(self, body: dict, http_timeout: int) -> requests.Response:
+        return requests.post(
+            f"{self.api_url}/run",
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": self.api_key,
+            },
+            json=body,
+            timeout=http_timeout,
+        )
+
+    def _post_run_with_refresh(self, body: dict, http_timeout: int) -> requests.Response:
+        # Refresh api_url from the resolver (e.g. ccapi registry) on a single
+        # ConnectionError. Handles ccapi being restarted on a different port
+        # while a long-running bot process holds a stale URL.
+        try:
+            return self._post_run(body, http_timeout)
+        except requests.exceptions.ConnectionError:
+            if not self.url_resolver:
+                raise
+            new_url = self.url_resolver().rstrip("/")
+            if new_url == self.api_url:
+                raise
+            logger.warning(
+                "ccapi at %s unreachable; refreshed to %s and retrying",
+                self.api_url, new_url,
+            )
+            self.api_url = new_url
+            return self._post_run(body, http_timeout)
 
     def run(self, request: LLMRunRequest) -> LLMRunResult:
         timeout_ms = request.timeout_ms or DEFAULT_TIMEOUT_MS
@@ -68,15 +100,7 @@ class ClaudeRuntimeClient:
             if request.allow_file_write:
                 body["allowFileWrite"] = True
 
-            resp = requests.post(
-                f"{self.api_url}/run",
-                headers={
-                    "Content-Type": "application/json",
-                    "x-api-key": self.api_key,
-                },
-                json=body,
-                timeout=http_timeout,
-            )
+            resp = self._post_run_with_refresh(body, http_timeout)
             resp.raise_for_status()
             data = resp.json()
             self.last_session_id = data.get("sessionId") or request.session_id
