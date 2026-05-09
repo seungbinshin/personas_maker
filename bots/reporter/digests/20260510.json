@@ -1,0 +1,71 @@
+{
+  "date": "2026-05-10",
+  "digest": {
+    "date": "2026-05-10",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "US Said to Suspect Nvidia Chips Smuggled to Alibaba Via Thailand",
+            "summary": "블룸버그 보도에 따르면 美 당국은 태국 AI 정책의 핵심 기업 OBON Corp.이 Supermicro 서버에 탑재된 NVIDIA 첨단 AI 칩 25억 달러어치를 중국으로 우회 반출했고, 알리바바가 다수 최종 고객 중 하나라고 의심하고 있다. 알리바바는 OBON·Supermicro와의 거래 관계를 부인했다.",
+            "source": "Bloomberg",
+            "source_url": "https://www.bloomberg.com/news/articles/2026-05-08/us-said-to-suspect-nvidia-chips-smuggled-to-alibaba-via-thailand",
+            "published_date": "2026-05-09",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Stock Market Today (May 8, 2026): Nasdaq, S&P 500 jump as strong April jobs report overshadows fresh military exchange in Middle East",
+            "summary": "美 4월 비농업 고용이 11만 5천 명으로 컨센서스(6만 5천 명)를 크게 상회하며 S&P500과 나스닥이 각각 0.41%·0.66% 상승했다. 호르무즈 해협의 美·이란 무력 충돌 격화 우려를 강한 노동시장 데이터가 일시 상쇄한 흐름이다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/latest-news/stock-market-today-may-8-2026-updates",
+            "published_date": "2026-05-09",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Oil prices today: Trump insists ceasefire still intact",
+            "summary": "美·이란 휴전이 한 달을 넘긴 가운데 트럼프 대통령이 두 곳의 이란 항만 타격을 '러브 탭(love tap)'이라 표현하며 휴전 유효를 강조했다. WTI는 약 $95.42/배럴로 강보합 마감했으나 주간으로는 6% 이상 급락했다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/08/oil-prices-today-wti-brent-us-iran-fire-war-hormuz-ceasefire.html",
+            "published_date": "2026-05-09",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Trump threatens EU with 'much higher' tariffs if no trade deal signed by new deadline",
+            "summary": "트럼프 대통령이 폰 데어 라이엔 EU 집행위원장과의 통화에서 7월 4일까지 무역 합의 비준을 요구하며 미이행 시 '훨씬 더 높은' 관세를 경고했다. EU산 자동차·트럭에 25% 관세를 예고한 직후라, 발표 후 범유럽 Stoxx600은 0.5% 이상 약세를 보였다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/08/trump-tariffs-trade-eu-europe-deal.html",
+            "published_date": "2026-05-09",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Day 70 of Middle East conflict — US hopes for 'serious offer' from Iran",
+            "summary": "CENTCOM은 5월 7일 호르무즈 해협 통과 중이던 USS Mason 등 美 군함 3척이 이란 미사일·드론·소형정의 표적이 되었으며 모두 명중을 면했다고 밝혔다. 美는 자위 차원에서 호르무즈 인근 이란 기지를 보복 타격했고, 美·이란 협상은 파키스탄 중재로 지속된다.",
+            "source": "CNN",
+            "source_url": "https://www.cnn.com/2026/05/08/world/live-news/iran-war-news",
+            "published_date": "2026-05-09",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "Anthropic의 차세대 모델(코드명 'Mythos'로 회자)이 레거시 금융·인프라 시스템에서 치명적 취약점을 자체 식별했다는 비공식 보고가 5월 들어 확산. 공식 확인은 없음.",
+        "source": "imfounder.com / industry chatter",
+        "source_url": "https://imfounder.com/science-tech/ai/ai-updates-may-2026/"
+      },
+      {
+        "snippet": "OpenAI가 전통적 앱 구조를 대체하는 'AI-first 디바이스'를 내부 검토 중이라는 소식이 X·블로그를 중심으로 재점화. 하드웨어 파트너 윤곽은 여전히 미공개.",
+        "source": "imfounder.com / X chatter",
+        "source_url": "https://imfounder.com/science-tech/ai/ai-updates-may-2026/"
+      }
+    ]
+  },
+  "published_at": "2026-05-10T02:49:04.565277+09:00"
+}
