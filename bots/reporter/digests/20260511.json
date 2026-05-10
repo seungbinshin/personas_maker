@@ -1,0 +1,84 @@
+{
+  "date": "2026-05-11",
+  "digest": {
+    "date": "2026-05-11",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Why Is AMD Stock Soaring?",
+            "summary": "AMD가 5월 9일(현지) 장기 실적 가이던스를 상향 조정하며 AI 가속기 MI 시리즈 수요 호조를 강조. 메모리·CPU·맞춤형 실리콘 다변화 흐름 속 NVIDIA에 이어 차세대 AI 인프라 핵심 수혜주로 부상.",
+            "source": "The Motley Fool",
+            "source_url": "https://www.fool.com/investing/2026/05/09/why-is-amd-stock-soaring/",
+            "published_date": "2026-05-10",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Helium Crunch Will Accelerate Reshoring of AI Chip Manufacturing",
+            "summary": "이란-카타르 분쟁 여파로 글로벌 헬륨의 30%를 책임지던 Ras Laffan 시설이 멈추며 반도체용 헬륨 가격이 40~100% 급등. 미국 내 알제리·국내 헬륨 의존도가 높은 파운드리에 전략적 우위가 형성되며 AI 칩 리쇼어링 압력이 가속.",
+            "source": "The Motley Fool",
+            "source_url": "https://www.fool.com/investing/2026/05/09/helium-crunch-accelerates-ai-chip-reshoring/",
+            "published_date": "2026-05-10",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Why Tower Semiconductor Rallied in April",
+            "summary": "이스라엘 파운드리 Tower Semiconductor가 미국 방산용 칩 생산 신규 파트너십과 실리콘 포토닉스 수주로 4월 큰 폭 상승. 지정학 분산과 첨단패키징 수요 확대 속 틈새 파운드리들의 재평가가 5월 들어 가속됨.",
+            "source": "The Motley Fool",
+            "source_url": "https://www.fool.com/investing/2026/05/09/why-tower-semiconductor-rallied-in-april/",
+            "published_date": "2026-05-10",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Iran War Is Draining World's Oil Buffer at an Unprecedented Pace",
+            "summary": "호르무즈 해협 봉쇄 두 달째, 글로벌 원유 재고가 사상 최고 속도로 감소하며 Brent가 한때 배럴당 $120 수준까지 급등. 정부·산업계의 비축 카드가 빠르게 소진되며 추가 가격 폭등 위험이 커지고 있음.",
+            "source": "Bloomberg / Fortune",
+            "source_url": "https://fortune.com/2026/05/09/iran-war-is-global-oil-stockpile-reserves-releases-strategic-petroleum-reserve/",
+            "published_date": "2026-05-10",
+            "credibility": "major_media"
+          },
+          {
+            "title": "The Iran war will change global energy markets in these important ways, oil executives say",
+            "summary": "메이저 석유사 임원들은 호르무즈 봉쇄로 약 10억 배럴의 공급 손실이 발생했으며 에너지 안보·LNG 라우팅·재생에너지 투자 우선순위가 구조적으로 재편될 것이라 진단. 미국 휘발유 평균가는 갤런당 $4.50선까지 상승.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/09/iran-war-oil-gas-energy-security.html",
+            "published_date": "2026-05-10",
+            "credibility": "major_media"
+          },
+          {
+            "title": "China may not offer breakthroughs when Trump meets Xi because Beijing is 'working backward from our midterm elections'",
+            "summary": "5월 14~15일 트럼프 방중 직전 보도. 베이징은 미국 중간선거 일정을 고려해 핵심 양보를 미루는 전략을 취하고 있으며, 합의는 농산물 구매·항공기 발주 등 상징적 패키지에 머물 가능성이 높다는 분석.",
+            "source": "Fortune",
+            "source_url": "https://fortune.com/2026/05/10/china-trump-xi-meeting-trade-deal-iran-war-midterm-elections/",
+            "published_date": "2026-05-11",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "유명 리커 kopite7kimi가 X에 NVIDIA RTX 60 시리즈 출시를 2027년 하반기로 미뤘으며, 'GR20x' 다이로 Rubin 아키텍처를 소비자 GPU로 확장한다고 주장.",
+        "source": "@kopite7kimi (via Tom's Hardware)",
+        "source_url": "https://www.tomshardware.com/pc-components/gpus/nvidias-next-gen-rtx-60-series-might-not-debut-until-the-second-half-of-2027-says-leaker-rumor-claims-rubin-architecture-will-power-future-consumer-gpus"
+      },
+      {
+        "snippet": "Tesla 차세대 자체 AI 칩(HW6)이 양산 일정 지연으로 Cybercab 출시에 차질이 우려된다는 비공식 보도. 일부 X 소식통은 TSMC N3P 라인 할당 경쟁이 원인으로 지목됨.",
+        "source": "ArenaEV / X 소식통",
+        "source_url": "https://www.arenaev.com/teslas_nextgen_ai_chip_faces_big_delay_creating_a_cybercab_problem-news-5337.php"
+      },
+      {
+        "snippet": "Huawei가 950PR 양산 본격화로 2026년 중국 AI 칩 매출을 75억→120억 달러로 확대해 NVIDIA H200의 규제 공백을 메우고 1위에 오를 것이란 X·블로그 추측이 재확산.",
+        "source": "Tom's Hardware (FT 인용)",
+        "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/huawei-could-seize-chinas-ai-chip-crown-in-2026-as-nvidias-h200-shipments-stall-in-regulatory-limbo-beijing-pushes-homegrown-ai-hardware-dominance-in-a-market-projected-to-hit-usd67-billion-by-2030"
+      }
+    ]
+  },
+  "published_at": "2026-05-11T02:48:27.171717+09:00"
+}
