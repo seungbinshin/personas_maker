@@ -1,0 +1,124 @@
+{
+  "date": "2026-05-13",
+  "digest": {
+    "date": "2026-05-13",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "SK hynix Reportedly Tests Intel EMIB 2.5D Packaging With HBM Amid TSMC CoWoS Tightness",
+            "summary": "SK하이닉스가 TSMC CoWoS 공급 부족에 대응해 인텔의 EMIB 2.5D 패키징 기술로 HBM 통합 R&D를 진행 중. 인텔 EMIB 수율이 90%까지 올라와 CoWoS 대안으로 떠오르며, 양사 주가가 동반 급등했다. AI 칩 공급망 재편을 시사하는 신호로 평가된다.",
+            "source": "TrendForce",
+            "source_url": "https://www.trendforce.com/news/2026/05/11/news-sk-hynix-reportedly-tests-intel-emib-2-5d-packaging-with-hbm-amid-tsmc-cowos-tightness/",
+            "published_date": "2026-05-12",
+            "credibility": "major_media"
+          },
+          {
+            "title": "SoftBank injects $457M into British AI chip startup Graphcore amid aggressive AGI push",
+            "summary": "소프트뱅크가 2024년 인수한 영국 AI 칩 스타트업 그래프코어에 4억 5,700만 달러를 단일 주식 발행 방식으로 추가 투입. 마사요시 손 회장의 AGI·AI 인프라 장악 전략의 일환으로, 올해 추가 자금 투입 가능성도 시사됐다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/12/softbank-graphcore-ai-chip-investment.html",
+            "published_date": "2026-05-13",
+            "credibility": "major_media"
+          },
+          {
+            "title": "AMD's 2nm defection to Samsung dents TSMC's AI grip",
+            "summary": "AMD가 차세대 EPYC 'Venice'·'Verano' 등 2nm CPU 일부 물량을 삼성 파운드리에 발주한 정황이 포착됐다. TSMC 첨단 노드 캐파가 2028년까지 묶여 있는 가운데, 삼성의 HBM 동시 공급 능력이 결정적 변수로 작용했다는 분석.",
+            "source": "DigiTimes",
+            "source_url": "https://www.digitimes.com/news/a20260511PD215/samsung-tsmc-amd-2nm-supply-chain.html",
+            "published_date": "2026-05-12",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Intel: INTC Rockets Toward $160 as Apple Chip Deal Sparks Massive Rally",
+            "summary": "인텔이 애플과의 미국 내 메인 프로세서 위탁생산 예비 합의 보도에 힘입어 주가가 160달러선까지 급등. 애널리스트는 2030년까지 연 100억 달러 매출 추가 효과를 추정하며, 인텔 파운드리 정상화의 결정적 모멘텀으로 평가했다.",
+            "source": "FX Leaders",
+            "source_url": "https://www.fxleaders.com/news/2026/05/12/intel-intc-rockets-toward-150-as-apple-chip-deal-sparks-massive-rally/",
+            "published_date": "2026-05-12",
+            "credibility": "blog"
+          },
+          {
+            "title": "Investors Pull in on Chip Stocks After Hot Inflation: Stock Market Today",
+            "summary": "4월 CPI가 예상치를 웃돌면서 반도체 섹터가 일제히 조정. 지난주 37% 급등했던 마이크론이 3.6% 하락, 퀄컴은 11%·AMD는 2% 빠지며 AI 칩 랠리에 제동이 걸렸다. 금리 인상 가능성이 다시 부상한 점이 직접 트리거.",
+            "source": "Kiplinger",
+            "source_url": "https://www.kiplinger.com/investing/stocks/investors-pull-in-on-chip-stocks-after-hot-inflation-stock-market-today",
+            "published_date": "2026-05-13",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Applied Materials Broadens Advanced Packaging Portfolio with Acquisition of NEXX",
+            "summary": "어플라이드 머티어리얼즈가 ASMPT의 NEXX 사업부 인수에 합의. 대면적 패널 레벨 패키징(PLP) 증착 장비를 확보해 차세대 AI 가속기용 대형 패키지 시장 공략을 강화한다.",
+            "source": "GlobeNewswire",
+            "source_url": "https://www.globenewswire.com/news-release/2026/05/04/3286382/0/en/Applied-Materials-Broadens-Advanced-Packaging-Portfolio-with-Acquisition-of-NEXX.html",
+            "published_date": "2026-05-12",
+            "credibility": "official"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Markets raise chances for a Fed rate hike following hot inflation report",
+            "summary": "4월 CPI가 전월비 0.6%, 전년비 3.8%로 2023년 5월 이후 최고치를 기록. 시장은 연내 금리 인하 기대를 사실상 철회하고, 12월까지 인상 확률을 30%대로 반영하기 시작했다. 근원 CPI도 2.8%로 연준 목표를 크게 상회.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/12/markets-raise-chances-for-a-fed-rate-hike-following-hot-inflation-report.html",
+            "published_date": "2026-05-13",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Oil prices today: Brent, WTI rise as Iran tensions escalate",
+            "summary": "브렌트유가 3.4% 올라 배럴당 107.77달러, WTI는 4.2% 상승해 102.18달러로 마감. 트럼프 대통령이 이란의 역제안을 'garbage'로 일축하면서 호르무즈 해협 봉쇄 장기화 우려가 재차 부각됐다. 사우디 아람코 CEO는 주당 1억 배럴 공급 손실을 경고.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/12/oil-prices-today-brent-wti-trump-iran-war-hormuz.html",
+            "published_date": "2026-05-13",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Stock Market Today (May 12, 2026): Nasdaq, Russell 2000 recover some losses after inflation, oil prices rise",
+            "summary": "S&P 500이 0.37%, 나스닥이 0.65% 하락한 가운데 러셀 2000은 0.33% 반등. 인플레이션·유가 동반 상승이 빅테크와 반도체에 직접 타격을 주며, 위험회피 심리가 다시 강해졌다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/latest-news/stock-market-today-may-12-2026-updates",
+            "published_date": "2026-05-13",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Trump's approach on China has changed, now appears focused on getting along",
+            "summary": "트럼프 대통령이 5월 14~15일 베이징에서 시진핑과 정상회담을 위해 출국. 휴전 6개월 만의 첫 대면 회담으로, 미국산 에너지·대두 수입 확대 등 무역 합의 가능성이 논의되고 있다. 대중 강경 노선에서 협력 모드로 기조 전환 신호로 해석됨.",
+            "source": "Washington Post",
+            "source_url": "https://www.washingtonpost.com/politics/2026/05/12/trump-xi-summit-economy/",
+            "published_date": "2026-05-13",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Russo-Ukraine War – 12 May 2026: Drone strikes hit Kyiv as ceasefire expires",
+            "summary": "미국 중재 임시 휴전 종료 직후 러시아 드론이 키이우 주거 건물을 타격. 우크라이나군 보고로 하루 170건의 교전이 발생했고, 양측 공항 상호 공격을 일시 중단하는 합의를 유럽이 중재할 가능성이 거론된다.",
+            "source": "GlobalSecurity.org",
+            "source_url": "https://www.globalsecurity.org/military/world/war/russo-ukraine-2026-05-12.htm",
+            "published_date": "2026-05-13",
+            "credibility": "blog"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "ZDNet Korea 등 한국 업계 소식통 인용: SK하이닉스가 인텔 EMIB 2.5D 기판을 이미 수령해 HBM 통합 테스트에 착수했다는 미확인 보도. 양사 공식 코멘트는 아직 없음.",
+        "source": "ZDNet Korea / TrendForce",
+        "source_url": "https://wccftech.com/sk-hynix-turns-to-intels-emib-packaging-as-tsmc-cowos-bottlenecks-squeeze-the-ai-supply-chain/"
+      },
+      {
+        "snippet": "삼성 파운드리가 'North American fabless 고객'으로부터 2nm CPU 대형 수주를 따냈으며, 해당 고객이 AMD(EPYC Venice·Verano)라는 X·중화권 소셜 추측이 확산.",
+        "source": "wccftech / 중화권 SNS 루머",
+        "source_url": "https://wccftech.com/samsung-foundry-has-apparently-won-a-2nm-cpu-order-from-a-north-american-fabless-customer-with-amd-identified-as-the-orders-source/"
+      },
+      {
+        "snippet": "The Information 보도: OpenAI–Broadcom 커스텀 AI 칩 'Jalapeno' 1단계 180억 달러 자금 조달이 마이크로소프트의 40% 인수 약정 거부로 난항. 2026년 양산 일정 차질 우려가 제기됨.",
+        "source": "The Information",
+        "source_url": "https://www.theinformation.com/articles/openais-ai-chip-deal-broadcom-hits-18-billion-financing-snag"
+      }
+    ]
+  },
+  "published_at": "2026-05-13T14:06:32.173492+09:00"
+}
