@@ -1,0 +1,79 @@
+{
+  "date": "2026-05-17",
+  "digest": {
+    "date": "2026-05-17",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "How A.I. Was the Elephant in the Room at the Trump-Xi Summit",
+            "summary": "트럼프-시진핑 베이징 정상회담이 무역 의제에 머무르고 AI·반도체 합의는 도출되지 않았다. 동행한 젠슨 황 CEO는 H200의 중국 수출 확대를 노렸지만 별도 돌파구는 나오지 않았다는 보도다.",
+            "source": "TIME",
+            "source_url": "https://time.com/article/2026/05/15/trump-xi-us-china-summit-ai-semiconductor-chips/",
+            "published_date": "2026-05-16",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Treasury yields surge as inflation data points to tricky rates path",
+            "summary": "미 10년물 국채금리가 약 14bp 급등해 4.595%로 마감, 2년물도 4.09%로 올라 2025년 2월 이후 최고치다. 워시 신임 연준 의장 체제에서 시장은 2026년 내 금리 인상 가능성을 50% 이상으로 가격에 반영하고 있다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/15/treasury-yields-surge-as-inflation-data-points-to-tricky-rates-path.html",
+            "published_date": "2026-05-16",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Oil prices jump after Trump says he is losing patience with Iran",
+            "summary": "트럼프 대통령이 이란의 반대 제안을 '쓰레기'라 일축하며 휴전이 '생명유지장치'에 의존하고 있다고 경고하자 브렌트유 3%↑ 109달러, WTI 4%↑ 105달러로 마감했다. 호르무즈 해협 리스크가 다시 부상 중이다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/15/oil-prices-china-us-iran-strait-of-hormuz-middle-east.html",
+            "published_date": "2026-05-16",
+            "credibility": "major_media"
+          },
+          {
+            "title": "How China and U.S. eased the Middle East oil shock and kept prices from spiking even higher",
+            "summary": "이란 전쟁 발발 후 유가가 한때 120달러까지 치솟았으나, 미·중이 전략비축유 동시 방출과 OPEC+ 증산 조율을 통해 가격 폭등을 억제했다는 분석이다. IEA는 2026년 글로벌 공급이 일평균 390만 배럴 감소할 것으로 본다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/15/china-us-oil-iran-war-strait-hormuz-trump-xi.html",
+            "published_date": "2026-05-16",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Stock Market Today (May 15, 2026): Dow falls on inflation concerns, rising Treasury yields",
+            "summary": "S&P500 -1.24%, 나스닥 -1.54%, 다우 -1.07%로 사상최고치에서 후퇴했다. 인텔 -6%, AMD -5.7%, 마이크론 -6.6% 등 반도체 차익실현이 두드러졌고, 유가·금리 동시 급등이 위험자산에 부담을 줬다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/latest-news/stock-market-today-may-15-2026-updates",
+            "published_date": "2026-05-16",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Stock markets worldwide drop from records as worries about oil prices rattle the bond market",
+            "summary": "트럼프-시진핑 정상회담 종료 후 무역 합의 부재와 유가 급등이 동시에 작용하며 글로벌 증시가 사상 최고치에서 동반 하락했다. 채권시장 변동성이 다시 주식시장으로 전이되는 양상이라는 분석이다.",
+            "source": "AP via Local10",
+            "source_url": "https://www.local10.com/business/2026/05/15/stock-markets-worldwide-drop-from-records-as-worries-about-oil-prices-rattle-the-bond-market/",
+            "published_date": "2026-05-16",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "[rumor] 리커 Digital Chat Station이 X에 미디어텍 Dimensity 9600의 TSMC N2P(2nm) 제조, 듀얼 프라임 코어 'Travis' 아키텍처 및 5GHz 근접 부스트 사양을 공개. Vivo X500 Pro / Oppo Find X10 Pro에 9월 탑재 예상.",
+        "source": "Phandroid / Digital Chat Station (Weibo·X)",
+        "source_url": "https://phandroid.com/2026/05/14/dimensity-9600-leaks-hint-at-a-real-challenge-to-apple-and-qualcomm/"
+      },
+      {
+        "snippet": "[rumor] 알리바바 실적컨콜에서 'T-Head 자체 GPU 칩이 대규모 양산 단계 진입'을 공식화. X 업계 트래커들은 누적 출하 47만대·연환산 매출 100억 위안 돌파를 인용하며 중국 클라우드 3사 중 자체칩 확보에서 가장 앞선다고 평가.",
+        "source": "TrendForce / Alibaba earnings call",
+        "source_url": "https://www.trendforce.com/news/2026/03/20/news-alibabas-t-head-reportedly-hits-470k-chip-shipments-expands-amid-unclear-ipo-timeline/"
+      }
+    ]
+  },
+  "published_at": "2026-05-17T02:47:58.432400+09:00"
+}
