@@ -1838,7 +1838,7 @@ if __name__ == "__main__":
         _pipeline = ResearchPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
 
         # HA-Expert pipeline shares the same bot process and reuses ResearchPipeline's RAG.
-        global _ha_pipeline
+        # No `global` needed — we're at module level (inside `if __name__ == "__main__":`).
         from pipelines.ha_expert_pipeline import HAExpertPipeline
         _ha_pipeline = HAExpertPipeline(
             BOT_CONFIG,
