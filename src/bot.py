@@ -1332,6 +1332,164 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
         )
 
 
+def _handle_ha_command(client, channel_id: str, text: str, thread_ts: str = None, event: dict = None):
+    """Handle !ha commands for the HA-Expert persona on the research bot."""
+    import shlex
+
+    parts = text.split(maxsplit=1)
+    if len(parts) < 2:
+        _ha_help(client, channel_id, thread_ts)
+        return
+
+    rest = parts[1].strip()
+    subparts = rest.split(maxsplit=1)
+    subcmd = subparts[0]
+    arg_text = subparts[1] if len(subparts) > 1 else ""
+
+    if not _ha_pipeline:
+        client.chat_postMessage(channel=channel_id, text=":warning: HA-Expert 파이프라인이 초기화되지 않았습니다.", thread_ts=thread_ts)
+        return
+
+    if subcmd == "brief":
+        if not arg_text:
+            client.chat_postMessage(
+                channel=channel_id,
+                text=':warning: 사용법: `!ha brief "대상" "추가 컨텍스트"`',
+                thread_ts=thread_ts,
+            )
+            return
+
+        # Parse quoted target + optional quoted extra_context
+        try:
+            tokens = shlex.split(arg_text)
+        except ValueError as e:
+            client.chat_postMessage(
+                channel=channel_id,
+                text=f":warning: 인용부호 처리 실패: {e}. 예: `!ha brief \"NTT Data\" \"Tokyo meeting\"`",
+                thread_ts=thread_ts,
+            )
+            return
+        if not tokens:
+            client.chat_postMessage(channel=channel_id, text=":warning: 대상을 입력해 주세요.", thread_ts=thread_ts)
+            return
+        target = tokens[0]
+        extra_context = " ".join(tokens[1:])
+
+        client.chat_postMessage(
+            channel=channel_id,
+            text=f":briefcase: HA-Expert: *{target}* 브리핑 시작 (5-15분 소요)",
+            thread_ts=thread_ts,
+        )
+
+        def _run():
+            _ha_pipeline.run_brief(
+                target=target,
+                extra_context=extra_context,
+                channel=channel_id,
+                source_ts=thread_ts or "",
+                requester=(event or {}).get("user", ""),
+            )
+
+        threading.Thread(target=_run, daemon=True).start()
+        return
+
+    if subcmd == "chat":
+        # !ha chat end (in thread)
+        if arg_text.strip() == "end":
+            if thread_ts and _ha_pipeline.has_chat_session(thread_ts):
+                msg_count = _ha_pipeline.end_chat_session(thread_ts)
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=f":checkered_flag: 세션 종료 ({msg_count}개 메시지)",
+                    thread_ts=thread_ts,
+                )
+            else:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=":warning: 활성 HA chat 세션이 없습니다.",
+                    thread_ts=thread_ts,
+                )
+            return
+
+        # !ha chat (no args) — list chattable briefs
+        if not arg_text.strip():
+            briefs = _ha_pipeline.list_briefs(limit=10)
+            if not briefs:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text="아직 작성된 brief가 없습니다. `!ha brief \"대상\"` 으로 시작하세요.",
+                    thread_ts=thread_ts,
+                )
+                return
+            lines = ["*최근 brief 목록:*"]
+            for b in briefs:
+                seq = b["brief_id"].split("_")[1]
+                lines.append(f"  • `{int(seq)}` — {b.get('target', '?')} ({b.get('status', '?')})")
+            lines.append("\n:point_right: `!ha chat <번호>` 로 대화 시작")
+            client.chat_postMessage(channel=channel_id, text="\n".join(lines), thread_ts=thread_ts)
+            return
+
+        # !ha chat <brief_id>
+        brief_arg = arg_text.strip()
+
+        # Reuse the same thread the command was posted in, or create a fresh one
+        chat_thread_ts = thread_ts or _post_and_get_ts(client, channel_id, f":briefcase: HA-Expert chat: {brief_arg}")
+
+        def _start():
+            response = _ha_pipeline.start_chat_session(brief_arg, channel_id, chat_thread_ts)
+            if response is None:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=f":warning: brief를 찾지 못했습니다: `{brief_arg}`. `!ha chat` 으로 목록을 확인하세요.",
+                    thread_ts=chat_thread_ts,
+                )
+            else:
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=response,
+                    thread_ts=chat_thread_ts,
+                )
+
+        threading.Thread(target=_start, daemon=True).start()
+        return
+
+    if subcmd == "list":
+        try:
+            n = int(arg_text.strip()) if arg_text.strip() else 10
+        except ValueError:
+            n = 10
+        briefs = _ha_pipeline.list_briefs(limit=n)
+        if not briefs:
+            client.chat_postMessage(channel=channel_id, text="아직 작성된 brief가 없습니다.", thread_ts=thread_ts)
+            return
+        lines = [f"*최근 brief {len(briefs)}개:*"]
+        for b in briefs:
+            seq = b["brief_id"].split("_")[1]
+            lines.append(f"  • `{int(seq)}` — {b.get('target', '?')} ({b.get('status', '?')}) — {b.get('updated_at', '')}")
+        client.chat_postMessage(channel=channel_id, text="\n".join(lines), thread_ts=thread_ts)
+        return
+
+    _ha_help(client, channel_id, thread_ts)
+
+
+def _ha_help(client, channel_id: str, thread_ts: str | None):
+    text = (
+        "*HA-Expert 명령어:*\n"
+        '• `!ha brief "대상" "추가 컨텍스트"` — 1-pager 브리핑 생성\n'
+        "• `!ha chat <번호>` — brief에 대해 HA-Expert와 대화\n"
+        "• `!ha chat` — 대화 가능한 brief 목록\n"
+        "• `!ha chat end` — (스레드 내) 대화 종료\n"
+        "• `!ha list [N]` — 최근 brief 목록 (기본 10)\n"
+        "• `!ha help` — 이 도움말"
+    )
+    client.chat_postMessage(channel=channel_id, text=text, thread_ts=thread_ts)
+
+
+def _post_and_get_ts(client, channel_id: str, text: str) -> str:
+    resp = client.chat_postMessage(channel=channel_id, text=text)
+    return resp.get("ts", "")
+
+
 # ─── Message Handler ───────────────────────────────────────────────
 
 def handle_message(event, client, logger):
@@ -1451,6 +1609,11 @@ def handle_message(event, client, logger):
             _handle_research_command(client, channel_id, text, reply_ts, event=event)
             return
 
+        # HA-Expert commands (shares the research_pipeline bot process)
+        if PERSONA_TYPE == "research_pipeline" and text.startswith("!ha"):
+            _handle_ha_command(client, channel_id, text, reply_ts, event=event)
+            return
+
         if text.startswith("!test"):
             is_test = True
             logger.info("  → Owner test mode (will respond directly)")
@@ -1459,31 +1622,37 @@ def handle_message(event, client, logger):
 
     logger.info(f"  → Mode: {state.mode}, Channel tone: {get_channel_tone(channel_id)}, Memory: {len(memory.history.get(channel_id, []))}msgs")
 
-    # Research chat: route thread messages to active chat session
+    # Chat session routing: research chat OR ha-expert chat (whichever owns this thread)
     if (
         PERSONA_TYPE == "research_pipeline"
-        and _pipeline
         and not text.startswith("!")
         and event.get("thread_ts")
-        and _pipeline.has_chat_session(event["thread_ts"])
     ):
-        def _continue_chat():
-            response = _pipeline.continue_chat(event["thread_ts"], text)
-            if response:
-                client.chat_postMessage(
-                    channel=channel_id,
-                    text=response,
-                    thread_ts=event["thread_ts"],
-                )
-            else:
-                client.chat_postMessage(
-                    channel=channel_id,
-                    text=":warning: 응답 생성에 실패했습니다. 다시 시도해 주세요.",
-                    thread_ts=event["thread_ts"],
-                )
+        thread_ts_active = event["thread_ts"]
+        active_pipeline = None
+        if _pipeline and _pipeline.has_chat_session(thread_ts_active):
+            active_pipeline = _pipeline
+        elif _ha_pipeline and _ha_pipeline.has_chat_session(thread_ts_active):
+            active_pipeline = _ha_pipeline
 
-        threading.Thread(target=_continue_chat, daemon=True).start()
-        return
+        if active_pipeline:
+            def _continue_chat():
+                response = active_pipeline.continue_chat(thread_ts_active, text)
+                if response:
+                    client.chat_postMessage(
+                        channel=channel_id,
+                        text=response,
+                        thread_ts=thread_ts_active,
+                    )
+                else:
+                    client.chat_postMessage(
+                        channel=channel_id,
+                        text=":warning: 응답 생성에 실패했습니다. 다시 시도해 주세요.",
+                        thread_ts=thread_ts_active,
+                    )
+
+            threading.Thread(target=_continue_chat, daemon=True).start()
+            return
 
     # Coder bot: if dev session is active, route to dev handler
     if PERSONA_TYPE == "coder" and channel_id in _dev_sessions and not text.startswith("!"):
