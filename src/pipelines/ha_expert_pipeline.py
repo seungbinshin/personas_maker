@@ -199,6 +199,9 @@ class HAExpertPipeline(BasePipeline):
     def list_briefs(self, limit: int = 10) -> list[dict]:
         return self.store.list_briefs(limit=limit)
 
+    # NOTE: _chat_sessions access is not protected by _run_lock; safe under
+    # CPython GIL for single-process bots only. Mirrors ResearchPipeline.
+
     # ─── Chat Session Lifecycle ──────────────────────────────────
 
     def _cleanup_expired_sessions(self):
@@ -288,8 +291,6 @@ class HAExpertPipeline(BasePipeline):
         session = self._chat_sessions.get(thread_ts)
         if not session:
             return None
-        session.last_activity = time.time()
-        session.message_count += 1
 
         result = self.runtime.run(
             LLMRunRequest(
@@ -305,6 +306,9 @@ class HAExpertPipeline(BasePipeline):
         if not result.success:
             logger.error("HA chat continuation failed for thread %s", thread_ts)
             return None
+
+        session.last_activity = time.time()
+        session.message_count += 1
         self.store.append_chat_log(session.brief_id, "user", user_message)
         self.store.append_chat_log(session.brief_id, "ha_expert", result.output)
         return result.output

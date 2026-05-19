@@ -188,6 +188,14 @@ def test_start_chat_session_returns_response_and_registers_session(bot_dir, bot_
     assert response == "안녕하세요. Brief 요약은..."
     assert pipeline.has_chat_session("ts.1") is True
 
+    # chat_log should record the assistant's opening message
+    import json as _json
+    log_content = pipeline.store.load_artifact(brief_id, "chat_log.jsonl")
+    assert log_content is not None
+    lines = [_json.loads(l) for l in log_content.strip().splitlines()]
+    assert lines[0]["role"] == "ha_expert"
+    assert "안녕하세요" in lines[0]["message"]
+
 
 def test_start_chat_returns_none_for_unknown_brief(bot_dir, bot_config):
     from pipelines.ha_expert_pipeline import HAExpertPipeline
@@ -243,3 +251,47 @@ def test_end_chat_session_removes_mapping(bot_dir, bot_config):
         count = pipeline.end_chat_session("ts.1")
     assert count >= 1
     assert pipeline.has_chat_session("ts.1") is False
+
+
+def test_start_chat_session_evicts_oldest_when_at_cap(bot_dir, bot_config):
+    from pipelines.ha_expert_pipeline import HAExpertPipeline, MAX_CHAT_SESSIONS
+
+    pipeline = HAExpertPipeline(
+        bot_config=bot_config,
+        slack_client=MagicMock(),
+        api_url="http://api",
+        api_key="key",
+        bot_dir=bot_dir,
+        discourse_knowledge=None,
+        confluence_knowledge=None,
+    )
+    # Create MAX_CHAT_SESSIONS briefs and start chat sessions for each
+    pipeline.runtime.run = MagicMock(return_value=MagicMock(success=True, output="hello"))
+    brief_ids = []
+    for i in range(MAX_CHAT_SESSIONS):
+        bid = pipeline.store.create_brief(f"Brief{i}", "")
+        pipeline.store.save_artifact(bid, "brief.md", f"# Brief: Brief{i}")
+        pipeline.store.save_artifact(bid, "investigation.json", "{}")
+        pipeline.store.update_state(bid, "drafted")
+        brief_ids.append(bid)
+        pipeline.start_chat_session(bid, channel="C", thread_ts=f"ts.{i}")
+
+    assert len(pipeline._chat_sessions) == MAX_CHAT_SESSIONS
+
+    # Make ts.0 the oldest by bumping the others' last_activity forward
+    import time as _time
+    now = _time.time()
+    for i in range(1, MAX_CHAT_SESSIONS):
+        pipeline._chat_sessions[f"ts.{i}"].last_activity = now + 1000
+
+    # Create one more brief and start a new session — oldest (ts.0) should be evicted
+    with patch("requests.delete"):
+        new_bid = pipeline.store.create_brief("Overflow", "")
+        pipeline.store.save_artifact(new_bid, "brief.md", "# Brief: Overflow")
+        pipeline.store.save_artifact(new_bid, "investigation.json", "{}")
+        pipeline.store.update_state(new_bid, "drafted")
+        pipeline.start_chat_session(new_bid, channel="C", thread_ts="ts.new")
+
+    assert len(pipeline._chat_sessions) == MAX_CHAT_SESSIONS
+    assert "ts.0" not in pipeline._chat_sessions
+    assert "ts.new" in pipeline._chat_sessions
