@@ -16,7 +16,7 @@ def store(tmp_path: Path) -> BriefStore:
 
 def test_create_brief_assigns_seq_and_dir(store: BriefStore):
     brief_id = store.create_brief(target="NTT Data", extra_context="Tokyo meeting")
-    assert brief_id.endswith("_ntt-data") or brief_id.endswith("_ntt_data")
+    assert brief_id.endswith("_ntt-data")
     # numeric prefix is zero-padded 3 digits, preceded by YYYYMMDD_
     parts = brief_id.split("_")
     assert len(parts) >= 3
@@ -82,3 +82,18 @@ def test_list_briefs_limit(store: BriefStore):
         store.create_brief(f"X{i}", "")
     listed = store.list_briefs(limit=3)
     assert len(listed) == 3
+
+
+def test_append_chat_log(store: BriefStore):
+    import json
+    brief_id = store.create_brief("X", "")
+    store.append_chat_log(brief_id, "user", "hello")
+    store.append_chat_log(brief_id, "assistant", "world")
+    content = store.load_artifact(brief_id, "chat_log.jsonl")
+    assert content is not None
+    lines = [json.loads(l) for l in content.strip().splitlines()]
+    assert len(lines) == 2
+    assert lines[0]["role"] == "user"
+    assert lines[0]["message"] == "hello"
+    assert lines[1]["role"] == "assistant"
+    assert lines[1]["message"] == "world"

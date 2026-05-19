@@ -78,7 +78,8 @@ class BriefStore:
     def create_brief(self, target: str, extra_context: str, requester: str = "", channel: str = "", source_ts: str = "") -> str:
         """Create a new brief directory + initial state.json + request.json. Returns full brief_id."""
         seq = self._next_seq()
-        date = datetime.now().strftime("%Y%m%d")
+        now = datetime.now()
+        date = now.strftime("%Y%m%d")
         slug = _slugify(target)
         brief_id = f"{date}_{seq:03d}_{slug}"
         brief_dir = self.briefs_dir / brief_id
@@ -88,8 +89,8 @@ class BriefStore:
             "brief_id": brief_id,
             "target": target,
             "status": "investigating",
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "created_at": now.isoformat(),
+            "updated_at": now.isoformat(),
         }
         self._write_json(brief_dir / "state.json", state)
 
@@ -111,10 +112,13 @@ class BriefStore:
             logger.error(f"Brief not found: {brief_id}")
             return
         state_path = brief_dir / "state.json"
+        if not state_path.exists():
+            logger.error(f"state.json missing for brief {brief_id}")
+            return
         state = self._read_json(state_path)
         state["status"] = status
         state["updated_at"] = datetime.now().isoformat()
-        if metadata:
+        if metadata is not None:
             state.setdefault("metadata", {}).update(metadata)
         self._write_json(state_path, state)
         logger.info(f"Updated brief {brief_id}: status={status}")
@@ -164,7 +168,7 @@ class BriefStore:
             state_path = d / "state.json"
             if state_path.exists():
                 briefs.append(self._read_json(state_path))
-            if limit and len(briefs) >= limit:
+            if limit is not None and len(briefs) >= limit:
                 break
         return briefs
 
