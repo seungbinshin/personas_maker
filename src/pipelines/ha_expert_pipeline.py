@@ -198,3 +198,146 @@ class HAExpertPipeline(BasePipeline):
 
     def list_briefs(self, limit: int = 10) -> list[dict]:
         return self.store.list_briefs(limit=limit)
+
+    # ─── Chat Session Lifecycle ──────────────────────────────────
+
+    def _cleanup_expired_sessions(self):
+        now = time.time()
+        expired = [
+            ts for ts, s in self._chat_sessions.items()
+            if now - s.last_activity > CHAT_SESSION_IDLE_SECONDS
+        ]
+        for ts in expired:
+            self.end_chat_session(
+                ts,
+                notify_reason=":hourglass: 1시간 이상 대화가 없어 세션을 자동 종료했습니다. `!ha chat <번호>`로 다시 시작할 수 있습니다.",
+            )
+
+    def start_chat_session(self, brief_id: str, channel: str, thread_ts: str) -> str | None:
+        """Start a chat session about an existing brief. Returns the first response."""
+        self._cleanup_expired_sessions()
+
+        if len(self._chat_sessions) >= MAX_CHAT_SESSIONS:
+            oldest_ts = min(self._chat_sessions, key=lambda k: self._chat_sessions[k].last_activity)
+            self.end_chat_session(
+                oldest_ts,
+                notify_reason=(
+                    f":wave: 동시 대화 세션 한도({MAX_CHAT_SESSIONS}개)를 초과해 가장 오래 비활성인 세션을 자동 종료했습니다."
+                ),
+            )
+
+        state = self.store.get_brief(brief_id)
+        if not state:
+            return None
+        actual_id = state["brief_id"]
+        target = state.get("target", "")
+
+        brief_md = self.store.load_artifact(actual_id, "brief.md") or "(brief.md 없음)"
+        investigation = self.store.load_artifact(actual_id, "investigation.json") or "{}"
+        request_raw = self.store.load_artifact(actual_id, "request.json") or "{}"
+        try:
+            request = json.loads(request_raw)
+        except json.JSONDecodeError:
+            request = {}
+        extra_context = request.get("extra_context", "")
+
+        brief_dir = self.store._brief_dir(actual_id)
+        cwd = str(brief_dir.resolve()) if brief_dir else ""
+
+        from prompts.ha_expert_chat import HA_EXPERT_CHAT_SYSTEM_PROMPT
+        prompt = (
+            HA_EXPERT_CHAT_SYSTEM_PROMPT
+            .replace("{base_context}", self._base_context)
+            .replace("{brief_md}", brief_md)
+            .replace("{investigation_json}", investigation)
+            .replace("{target}", target)
+            .replace("{extra_context}", extra_context or "(없음)")
+        )
+
+        session_id = uuid.uuid4().hex
+        result = self.runtime.run(
+            LLMRunRequest(
+                prompt=prompt,
+                session_id=session_id,
+                cwd=cwd or None,
+                allow_file_write=True,
+                heartbeat_channel=self.status_channel,
+                heartbeat_agent="ha_expert",
+                heartbeat_label="HA-Expert 대화 시작",
+            )
+        )
+        if not result.success:
+            logger.error("Failed to create HA-Expert chat session for brief %s", actual_id)
+            return None
+
+        session = HAChatSession(
+            session_id=session_id,
+            brief_id=actual_id,
+            channel=channel,
+            thread_ts=thread_ts,
+            cwd=cwd,
+            message_count=1,
+        )
+        self._chat_sessions[thread_ts] = session
+        self.store.append_chat_log(actual_id, "ha_expert", result.output)
+        logger.info("HA chat started: thread=%s brief=%s session=%s", thread_ts, actual_id, session_id)
+        return result.output
+
+    def continue_chat(self, thread_ts: str, user_message: str) -> str | None:
+        self._cleanup_expired_sessions()
+        session = self._chat_sessions.get(thread_ts)
+        if not session:
+            return None
+        session.last_activity = time.time()
+        session.message_count += 1
+
+        result = self.runtime.run(
+            LLMRunRequest(
+                prompt=user_message,
+                session_id=session.session_id,
+                cwd=session.cwd or None,
+                allow_file_write=True,
+                heartbeat_channel=self.status_channel,
+                heartbeat_agent="ha_expert",
+                heartbeat_label="HA-Expert 대화",
+            )
+        )
+        if not result.success:
+            logger.error("HA chat continuation failed for thread %s", thread_ts)
+            return None
+        self.store.append_chat_log(session.brief_id, "user", user_message)
+        self.store.append_chat_log(session.brief_id, "ha_expert", result.output)
+        return result.output
+
+    def end_chat_session(self, thread_ts: str, *, notify_reason: str | None = None) -> int:
+        session = self._chat_sessions.pop(thread_ts, None)
+        if not session:
+            return 0
+
+        if notify_reason and self.slack and session.channel and session.thread_ts:
+            try:
+                self.slack.chat_postMessage(
+                    channel=session.channel,
+                    text=notify_reason,
+                    thread_ts=session.thread_ts,
+                )
+            except Exception as e:
+                logger.warning("Failed to post HA chat-end notification: %s", e)
+
+        try:
+            import requests
+            requests.delete(
+                f"{self.api_url}/session",
+                headers={"Content-Type": "application/json", "x-api-key": self.api_key},
+                json={"sessionId": session.session_id},
+                timeout=5,
+            )
+        except Exception as e:
+            logger.warning("Failed to close API session %s: %s", session.session_id, e)
+
+        logger.info("HA chat ended: thread=%s messages=%d", thread_ts, session.message_count)
+        return session.message_count
+
+    def has_chat_session(self, thread_ts: str) -> bool:
+        self._cleanup_expired_sessions()
+        return thread_ts in self._chat_sessions

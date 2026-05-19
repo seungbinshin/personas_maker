@@ -157,3 +157,89 @@ def test_gather_internal_context_returns_placeholder_when_no_kb(bot_dir, bot_con
     )
     result = pipeline._gather_internal_context("Anything")
     assert result == "(자사 내부 문서 매칭 없음)"
+
+
+def _make_pipeline_with_brief(bot_dir, bot_config):
+    from pipelines.ha_expert_pipeline import HAExpertPipeline
+
+    pipeline = HAExpertPipeline(
+        bot_config=bot_config,
+        slack_client=MagicMock(),
+        api_url="http://api",
+        api_key="key",
+        bot_dir=bot_dir,
+        discourse_knowledge=None,
+        confluence_knowledge=None,
+    )
+    brief_id = pipeline.store.create_brief("Acme", "ctx")
+    pipeline.store.save_artifact(brief_id, "brief.md", "# Brief: Acme\nTL;DR")
+    pipeline.store.save_artifact(brief_id, "investigation.json", '{"target":"Acme"}')
+    pipeline.store.update_state(brief_id, "drafted")
+    return pipeline, brief_id
+
+
+def test_start_chat_session_returns_response_and_registers_session(bot_dir, bot_config):
+    pipeline, brief_id = _make_pipeline_with_brief(bot_dir, bot_config)
+
+    fake_result = MagicMock(success=True, output="안녕하세요. Brief 요약은...")
+    pipeline.runtime.run = MagicMock(return_value=fake_result)
+
+    response = pipeline.start_chat_session(brief_id, channel="C123", thread_ts="ts.1")
+    assert response == "안녕하세요. Brief 요약은..."
+    assert pipeline.has_chat_session("ts.1") is True
+
+
+def test_start_chat_returns_none_for_unknown_brief(bot_dir, bot_config):
+    from pipelines.ha_expert_pipeline import HAExpertPipeline
+
+    pipeline = HAExpertPipeline(
+        bot_config=bot_config,
+        slack_client=MagicMock(),
+        api_url="http://api",
+        api_key="key",
+        bot_dir=bot_dir,
+        discourse_knowledge=None,
+        confluence_knowledge=None,
+    )
+    assert pipeline.start_chat_session("nonexistent", "C", "ts") is None
+
+
+def test_continue_chat_routes_to_existing_session(bot_dir, bot_config):
+    pipeline, brief_id = _make_pipeline_with_brief(bot_dir, bot_config)
+
+    pipeline.runtime.run = MagicMock(side_effect=[
+        MagicMock(success=True, output="첫 응답"),
+        MagicMock(success=True, output="두번째 응답"),
+    ])
+    pipeline.start_chat_session(brief_id, channel="C", thread_ts="ts.1")
+    out = pipeline.continue_chat("ts.1", "후속 질문")
+    assert out == "두번째 응답"
+
+
+def test_continue_chat_unknown_thread_returns_none(bot_dir, bot_config):
+    from pipelines.ha_expert_pipeline import HAExpertPipeline
+
+    pipeline = HAExpertPipeline(
+        bot_config=bot_config,
+        slack_client=MagicMock(),
+        api_url="http://api",
+        api_key="key",
+        bot_dir=bot_dir,
+        discourse_knowledge=None,
+        confluence_knowledge=None,
+    )
+    assert pipeline.continue_chat("ts.unknown", "msg") is None
+
+
+def test_end_chat_session_removes_mapping(bot_dir, bot_config):
+    pipeline, brief_id = _make_pipeline_with_brief(bot_dir, bot_config)
+
+    pipeline.runtime.run = MagicMock(return_value=MagicMock(success=True, output="첫"))
+    pipeline.start_chat_session(brief_id, channel="C", thread_ts="ts.1")
+    assert pipeline.has_chat_session("ts.1") is True
+
+    with patch("requests.delete") as fake_delete:
+        fake_delete.return_value = MagicMock(status_code=200)
+        count = pipeline.end_chat_session("ts.1")
+    assert count >= 1
+    assert pipeline.has_chat_session("ts.1") is False
