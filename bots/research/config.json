@@ -59,6 +59,15 @@
     "reviewer": {
       "display_name": "리뷰어",
       "emoji": ":judge:"
+    },
+    "ha_expert": {
+      "display_name": "HA-Expert",
+      "emoji": ":briefcase:"
     }
+  },
+  "ha_expert": {
+    "base_context_file": "context/ha_expert_base.md",
+    "publish_channel": "",
+    "status_channel": ""
   }
 }
