@@ -1,0 +1,90 @@
+{
+  "date": "2026-05-20",
+  "digest": {
+    "date": "2026-05-20",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Samsung's critical union negotiations break down eight days before planned 18-day chip factory strike that's projected to cost $700 million per day",
+            "summary": "삼성전자 노조와의 정부 중재 협상이 결렬되며 5월 21일부터 18일간의 메모리 공장 파업이 임박. 약 45,000명이 참여 예정으로, 세계 HBM 공급의 핵심 거점이 멈출 경우 AI 메모리 가격 폭등과 NVIDIA Rubin 공급망 차질이 우려됨.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/tech-industry/samsungs-last-ditch-union-talks-collapse-eight-days-before-planned-18-day-chip-factory-strike",
+            "published_date": "2026-05-19",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Google I/O 2026 Live Updates: Sundar Pichai Launches Gemini 3.5 Flash, New Gemini Omni Video Model",
+            "summary": "구글이 I/O 2026 키노트에서 Gemini 3.5 Flash와 비디오 생성 모델 Gemini Omni를 공개. Android 17의 Gemini Intelligence 통합, 새 노트북 플랫폼 Aluminium OS, Android XR 글래스 프리뷰 등 AI 하드웨어/플랫폼 확장이 함께 발표됨.",
+            "source": "Analytics Insight",
+            "source_url": "https://www.analyticsinsight.net/artificial-intelligence/google-io-2026-live-updates-gemini-android-17-xr-glasses-and-more",
+            "published_date": "2026-05-19",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Nvidia Q1 FY27 Earnings Preview (May 20, 2026): Data Center, Blackwell, China Outlook",
+            "summary": "엔비디아가 5월 20일(현지) 회계 Q1 FY27 실적을 발표. 컨센서스 매출 78.5B 달러, 자체 가이던스 78B±2%로 YoY 약 77% 성장 전망이며, 데이터센터 부문 72.8B 추정. H20 규제 영향과 H200 중국 재개통 후 가이던스 정상화 여부가 핵심 관전 포인트.",
+            "source": "HeyGoTrade",
+            "source_url": "https://www.heygotrade.com/en/blog/nvidia-q1-fy27-earnings-preview-may-20-2026/",
+            "published_date": "2026-05-19",
+            "credibility": "blog"
+          },
+          {
+            "title": "Nvidia earnings preview: Q1 2027",
+            "summary": "S&P Global이 엔비디아의 Q1 FY2027 실적을 미리 분석. Blackwell 매출이 전년 86.4B→137.0B로 확장 전망이며, 중국 비중 제외 가이던스에서 4.5B 재고 충당의 베이스라인 유지 여부가 차주 시장 방향을 좌우할 변수로 지목됨.",
+            "source": "S&P Global",
+            "source_url": "https://www.spglobal.com/market-intelligence/en/news-insights/research/2026/05/nvidia-earnings-preview-q1-2027",
+            "published_date": "2026-05-19",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Stock Market Today (May 19, 2026): Russell 2000, Nasdaq fall as chip stocks crash",
+            "summary": "반도체 지수가 3거래일 누적 7% 급락하며 나스닥을 끌어내림. AI 칩 종목의 연초 급등 되돌림과 중동 인플레이션 리스크가 겹쳤고, 10년물 국채 수익률은 1년래 최고치, 20·30년물은 약 20년래 최고치로 상승.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/stock-market-today/stock-market-today-may-19-2026-updates",
+            "published_date": "2026-05-19",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Economic Outlook at Risk of Further Deterioration, OECD Says",
+            "summary": "OECD 사무총장 코르만은 G7 회동에서 중동 분쟁 장기화로 글로벌 성장 하방·인플레 상방 압력이 가중됐다고 평가. 3월 중간보고서의 2026년 성장률 2.9% 전망을 향후 수주 내 공식 하향 조정할 것임을 시사.",
+            "source": "Bloomberg",
+            "source_url": "https://www.bloomberg.com/news/articles/2026-05-19/economic-outlook-at-risk-of-further-deterioration-oecd-says",
+            "published_date": "2026-05-19",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Oil prices fall after Trump delays planned Iran strike, easing supply disruption fears",
+            "summary": "트럼프 대통령이 카타르·사우디·UAE 정상의 요청을 받아 대(對)이란 군사공격을 보류한다고 밝히면서 브렌트유는 1%대 하락한 110.61달러, WTI는 108.21달러를 기록. 다만 두 유종 모두 2월 28일 전쟁 발발 이후 54% 이상 상승한 상태가 유지됨.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/19/oil-today-brent-wti-iran-trump-hormuz-iea-supply-crude.html",
+            "published_date": "2026-05-19",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Global Economy Briefing — May 19, 2026",
+            "summary": "트럼프의 이란 공격 보류와 걸프 중재 본격화 속 글로벌 시장은 혼조세로 출발. 美 국채 금리 상승, 일본 GDP 상회, 브라질 IBC-Br 급락 등 매크로 변수가 엔비디아 실적 발표 직전 시장 심리를 재편하고 있음.",
+            "source": "Rio Times",
+            "source_url": "https://www.riotimesonline.com/global-economy-briefing-may-19-2026/",
+            "published_date": "2026-05-19",
+            "credibility": "blog"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "Intel Razor Lake-AX에 32코어 Xe3P GPU 탑재, Apple Silicon·AMD Strix Halo 대항 단일 패키지로 설계됐다는 X 유출이 확산.",
+        "source": "OC3D / X leak",
+        "source_url": "https://overclock3d.net/news/cpu_mainboard/intels-planned-razor-lake-ax-processor-can-have-a-big-battlemage-sized-gpu-leak-claims/"
+      }
+    ]
+  },
+  "published_at": "2026-05-20T02:48:06.272715+09:00"
+}
