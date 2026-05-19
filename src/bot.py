@@ -86,6 +86,7 @@ elif PERSONA_TYPE in ("reporter", "research_pipeline"):
 
 # ─── Pipeline Setup (reporter / research_pipeline) ──────────────
 _pipeline = None
+_ha_pipeline = None  # set during startup for research_pipeline persona
 _bot_scheduler = None
 
 if PERSONA_TYPE in ("reporter", "research_pipeline"):
@@ -1666,6 +1667,21 @@ if __name__ == "__main__":
         logger.info(f"Research pipeline mode: initializing pipeline + scheduler")
         from pipelines.research_pipeline import ResearchPipeline
         _pipeline = ResearchPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
+
+        # HA-Expert pipeline shares the same bot process and reuses ResearchPipeline's RAG.
+        global _ha_pipeline
+        from pipelines.ha_expert_pipeline import HAExpertPipeline
+        _ha_pipeline = HAExpertPipeline(
+            BOT_CONFIG,
+            app.client,
+            CLAUDE_API_URL,
+            CLAUDE_API_KEY,
+            BOT_DIR,
+            discourse_knowledge=getattr(_pipeline, "discourse_knowledge", None),
+            confluence_knowledge=getattr(_pipeline, "confluence_knowledge", None),
+            url_resolver=_ccapi_base_url,
+        )
+        logger.info("HA-Expert pipeline initialized")
 
         schedule_config = BOT_CONFIG.get("schedule", {})
         discovery_time = schedule_config.get("discovery_scan", "22:00")
