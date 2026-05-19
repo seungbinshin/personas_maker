@@ -35,45 +35,45 @@ If the target is not a specific company (e.g. a market trend or self-product top
 
 Return ONLY valid JSON. No markdown headings, bullets, code fences, or prose around the JSON.
 
-{{
+{
   "target": "{target}",
   "target_type": "company | market | self_product | other",
-  "snapshot": {{
+  "snapshot": {
     "what": "1-2 sentence description",
     "scale": "employee count, revenue, market cap, or whatever is publicly known",
     "core_products": ["product 1", "product 2"]
-  }},
+  },
   "recent_moves": [
-    {{
+    {
       "date": "YYYY-MM",
       "event": "what happened",
       "source": "URL",
       "relevance": "why this matters for the meeting"
-    }}
+    }
   ],
   "key_players": [
-    {{"name": "Name", "role": "Role", "source": "URL"}}
+    {"name": "Name", "role": "Role", "source": "URL"}
   ],
-  "competitive_context": {{
+  "competitive_context": {
     "main_competitors": ["competitor 1"],
     "positioning": "how the target positions itself",
     "sources": ["URL"]
-  }},
+  },
   "hyperaccel_hooks": [
-    {{
+    {
       "hook": "concrete touchpoint",
       "evidence": "what makes this a real hook (not speculation)",
       "source": "URL or 'internal: <doc name>'"
-    }}
+    }
   ],
   "risks": [
-    {{"risk": "description", "why_it_matters": "explanation"}}
+    {"risk": "description", "why_it_matters": "explanation"}
   ],
   "unknowns": [
     "thing we tried to find but could not"
   ],
   "all_sources": ["URL1", "URL2", ...]
-}}
+}
 
 Rules:
 - Every fact in snapshot/recent_moves/key_players/competitive_context/hyperaccel_hooks must have a source URL or be marked as "internal: <doc>".

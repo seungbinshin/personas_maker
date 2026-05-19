@@ -1610,7 +1610,7 @@ def handle_message(event, client, logger):
             return
 
         # HA-Expert commands (shares the research_pipeline bot process)
-        if PERSONA_TYPE == "research_pipeline" and text.startswith("!ha"):
+        if PERSONA_TYPE == "research_pipeline" and (text == "!ha" or text.startswith("!ha ")):
             _handle_ha_command(client, channel_id, text, reply_ts, event=event)
             return
 
