@@ -127,7 +127,7 @@ class HAExpertPipeline(BasePipeline):
         self.store.update_state(brief_id, "drafted")
 
         # Post final brief
-        seq = brief_id.split("_")[1]
+        seq = self.store.seq_of(brief_id)
         self.post_to_slack(
             channel=channel,
             text=brief_md,
@@ -136,7 +136,7 @@ class HAExpertPipeline(BasePipeline):
         self.post_to_slack(
             channel=channel,
             text=(
-                f":speech_balloon: 후속 대화: `!ha chat {int(seq)}` "
+                f":speech_balloon: 후속 대화: `!ha chat {seq}` "
                 f"(전체 ID: `{brief_id}`)"
             ),
             agent_name="ha_expert",
@@ -180,17 +180,16 @@ class HAExpertPipeline(BasePipeline):
 
     def _gather_internal_context(self, target: str) -> str:
         """Pull matching snippets from Discourse + Confluence knowledge if available."""
+        keywords = [w for w in target.split() if w]
+        if not keywords:
+            return "(자사 내부 문서 매칭 없음)"
+
         parts = []
         for label, kb in (("Discourse", self.discourse_knowledge), ("Confluence", self.confluence_knowledge)):
             if kb is None:
                 continue
             try:
-                # Try a few common search method names; skip if not available
-                snippets = None
-                for method_name in ("search", "query", "lookup"):
-                    if hasattr(kb, method_name):
-                        snippets = getattr(kb, method_name)(target)
-                        break
+                snippets = kb.build_context(keywords)
                 if snippets:
                     parts.append(f"=== Internal: {label} ===\n{snippets}")
             except Exception as e:

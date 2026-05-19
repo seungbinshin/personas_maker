@@ -97,3 +97,16 @@ def test_append_chat_log(store: BriefStore):
     assert lines[0]["message"] == "hello"
     assert lines[1]["role"] == "assistant"
     assert lines[1]["message"] == "world"
+
+
+def test_seq_of_extracts_sequence_number():
+    assert BriefStore.seq_of("20260519_012_acme") == 12
+    assert BriefStore.seq_of("19990101_001_x") == 1
+
+
+def test_seq_of_raises_on_invalid_format():
+    import pytest
+    with pytest.raises(ValueError):
+        BriefStore.seq_of("garbage")
+    with pytest.raises(ValueError):
+        BriefStore.seq_of("20260519_abc_xyz")

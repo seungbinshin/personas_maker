@@ -172,6 +172,14 @@ class BriefStore:
                 break
         return briefs
 
+    @staticmethod
+    def seq_of(brief_id: str) -> int:
+        """Extract the numeric sequence from a brief_id like '20260519_012_acme'."""
+        parts = brief_id.split("_")
+        if len(parts) < 2 or not parts[1].isdigit():
+            raise ValueError(f"Invalid brief_id format: {brief_id!r}")
+        return int(parts[1])
+
     def _read_json(self, path: Path) -> dict:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
