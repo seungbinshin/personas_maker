@@ -1,0 +1,106 @@
+{
+  "date": "2026-05-22",
+  "digest": {
+    "date": "2026-05-22",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "AI Hardware Startup Hark Valued at $6 Billion in New Funding Round",
+            "summary": "Brett Adcock의 AI 하드웨어 스타트업 Hark가 7억 달러 이상의 시리즈 A를 유치하며 60억 달러 기업가치를 인정받았다. Parkway Venture Capital이 주도하고 NVIDIA, AMD Ventures, Intel Capital, Qualcomm Ventures, Brookfield, Salesforce Ventures 등 빅테크 자본이 대거 참여했다.",
+            "source": "Bloomberg",
+            "source_url": "https://www.bloomberg.com/news/articles/2026-05-21/ai-hardware-startup-hark-valued-at-6-billion-in-new-funding-round",
+            "published_date": "2026-05-22",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Huawei Unveils Fully Domestic AI Accelerator 'Atlas 350', Claims 3x Performance Over NVIDIA's H20",
+            "summary": "화웨이가 5월 20일 션전 파트너 컨퍼런스에서 완전 국산 부품으로 구축된 AI 가속기 'Atlas 350'을 공개했다. 자체 NPU 'Ascend 950PR'과 국산 HBM 'HiBL 1.0'을 탑재해 NVIDIA H20 대비 3배 성능을 주장하며 미국 수출 통제에 대응한다.",
+            "source": "BigGo Finance",
+            "source_url": "https://finance.biggo.com/news/WVXYGZ0BrdTHlKtC94uL",
+            "published_date": "2026-05-21",
+            "credibility": "blog"
+          },
+          {
+            "title": "White House Postpones AI Executive Order Signing Ceremony",
+            "summary": "트럼프 대통령이 OpenAI Sam Altman, Anthropic Dario Amodei 등 빅테크 CEO 초청 행사로 예정됐던 AI·사이버보안 행정명령 서명식을 돌연 연기했다. 트럼프는 'AI 리더십을 방해할 수 있는 조항이 마음에 들지 않는다'고 언급, 모델 사전공유 의무화 등 일부 조항에 이견이 있는 것으로 알려졌다.",
+            "source": "Axios",
+            "source_url": "https://www.axios.com/2026/05/21/white-house-postpones-ai-eo-signing",
+            "published_date": "2026-05-22",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Anthropic Eyes $300M Stainless Acquisition To Strengthen AI Infrastructure",
+            "summary": "Anthropic이 AI 개발자 도구 스타트업 Stainless 인수를 3억 달러 규모로 협상 중인 것으로 보도됐다. 매출이 2분기 109억 달러로 두 배 증가하며 첫 분기 흑자를 앞둔 가운데 SDK·API 툴체인을 통한 인프라 강화 의도로 풀이된다.",
+            "source": "Open Source For You",
+            "source_url": "https://www.opensourceforu.com/2026/05/anthropic-eyes-300m-stainless-acquisition-to-strengthen-ai-infrastructure/",
+            "published_date": "2026-05-21",
+            "credibility": "blog"
+          },
+          {
+            "title": "Two Hours That Changed AI — OpenAI Model Cracks 80-Year-Old Geometry Problem",
+            "summary": "OpenAI가 자사 범용 추론 모델이 80년 동안 풀리지 않았던 유명 기하학 난제를 자율적으로 해결했다고 발표했다. 같은 시점 Anthropic의 매출 두 배 성장, 트럼프의 AI 행정명령 서명 연기까지 겹치며 AI 업계에 압축적 뉴스 사이클이 발생했다.",
+            "source": "Axios",
+            "source_url": "https://www.axios.com/2026/05/21/ai-news-cycle-openai-anthropic-spacex",
+            "published_date": "2026-05-22",
+            "credibility": "major_media"
+          },
+          {
+            "title": "TSMC's COUPE Push Puts Samsung's Silicon Photonics Ambitions Under Pressure",
+            "summary": "TSMC가 CPO/실리콘 포토닉스 패키징 플랫폼 COUPE의 양산 일정을 가속하며 광-전 통합 AI 가속기 시장 선점에 나섰다. 삼성의 자체 실리콘 포토닉스 로드맵에 직접적 위협이 되며 차세대 AI 인터커넥트 주도권 경쟁이 본격화됐다.",
+            "source": "DIGITIMES",
+            "source_url": "https://www.digitimes.com/news/a20260520PD215/samsung-silicon-photonics-tsmc-production.html",
+            "published_date": "2026-05-21",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Tech Forum 2026: How much longer can semiconductors sustain Taiwan?",
+            "summary": "DIGITIMES Tech Forum 2026에서 분석가들은 AI 서버 기술 전환 흐름과 함께 대만 반도체 의존 구조의 지속성을 논의했다. CoWoS 증설, HBM 공급, 칩렛 패키징 병목이 향후 12개월 산업 변수로 지목됐다.",
+            "source": "DIGITIMES",
+            "source_url": "https://www.digitimes.com/news/a20260521PD206/semiconductor-industry-taiwan-tsmc-growth-digitimes-2026.html",
+            "published_date": "2026-05-22",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Oil prices jump more than 3% after Iran supreme leader says uranium must remain in country",
+            "summary": "WTI 원유가 5월 21일 약 4% 급등해 배럴당 $101.96, 브렌트유는 3% 올라 $108.34를 기록했다. 이란 최고지도자가 농축 우라늄의 해외 반출을 불허한다는 입장을 밝히면서 미·이란 평화협상 전망이 흐려진 데다 호르무즈 해협 봉쇄 지속이 가격을 끌어올렸다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/05/21/oil-price-today-iran-war-strait-hormuz-trump.html",
+            "published_date": "2026-05-22",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Stock Market Today (May 21, 2026): Nasdaq, S&P 500 fall after Treasurys, oil prices rise",
+            "summary": "S&P500 -0.45%, 다우 -0.48%, 나스닥 -0.50% 하락했고 러셀2000만 +2.56% 상승했다. 국채금리와 유가 동반 상승, 이란발 지정학 리스크가 NVIDIA 호실적의 긍정 효과를 압도하면서 위험자산 회피 심리가 부각됐다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-may-21-2026",
+            "published_date": "2026-05-22",
+            "credibility": "major_media"
+          },
+          {
+            "title": "US Stock Market Today (21 May 2026): Dollar Crash, Oil Surges to $102 on US-Iran Deal Concerns",
+            "summary": "달러 약세 속 유가가 $102까지 치솟고 금·은이 상승, 비트코인은 $78K 선으로 후퇴했다. 미·이란 협상 교착과 호르무즈 긴장이 인플레이션·실질금리 경로를 다시 불확실하게 만들고 있다는 평가다.",
+            "source": "Sunday Guardian Live",
+            "source_url": "https://sundayguardianlive.com/business/us-stock-market-today-21-may-2026-dow-drops-nasdaq-sp-500-edge-higher-as-dollar-crash-oil-surges-102-on-us-iran-deal-gold-silver-rises-bitcoin-retreats-78k-what-investors-should-watch-195023/",
+            "published_date": "2026-05-22",
+            "credibility": "blog"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "유명 리커 kopite7kimi가 X에서 NVIDIA RTX 60 시리즈가 Rubin 아키텍처 기반 'GR20x' 다이로 2027년 하반기 출시될 것이라고 주장. 데이터센터용 Rubin이 컨슈머 GPU로 이식되는 시점이 기존 예상보다 1년가량 늦춰지는 셈.",
+        "source": "@kopite7kimi",
+        "source_url": "https://x.com/kopite7kimi"
+      }
+    ]
+  },
+  "published_at": "2026-05-22T02:47:17.917079+09:00"
+}
