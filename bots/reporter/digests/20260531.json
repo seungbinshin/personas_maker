@@ -1,0 +1,95 @@
+{
+  "date": "2026-05-31",
+  "digest": {
+    "date": "2026-05-31",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "After Nvidia's $20B not-acqui-hire, AI chip startup Groq reportedly raising $650M",
+            "summary": "Groq가 NVIDIA의 약 $20B 규모 기술 라이선스·인력 영입 거래 이후 $650M 추가 펀딩 라운드를 추진 중이다. 회사는 자체 하드웨어에서 AI 인퍼런스 서비스 중심으로 사업 축을 옮기고 있다.",
+            "source": "TechCrunch",
+            "source_url": "https://techcrunch.com/2026/05/29/after-nvidias-20b-not-acqui-hire-ai-chip-startup-groq-reportedly-raising-650m/",
+            "published_date": "2026-05-30",
+            "credibility": "major_media"
+          },
+          {
+            "title": "SK Hynix joins $1 trillion club after Samsung, Micron on AI chip boom",
+            "summary": "SK하이닉스 주가가 9.3% 급등하며 시가총액 1,680조원(약 $1.12T)을 돌파, Samsung·Micron에 이어 메모리 3사 모두 1조 달러 클럽에 진입했다. HBM4 16-Hi 양산 임박과 잔여 물량 매진이 랠리를 이끌었다.",
+            "source": "CNN Business",
+            "source_url": "https://www.cnn.com/2026/05/29/business/sk-hynix-chips-trillion-dollar-club-intl-hnk",
+            "published_date": "2026-05-30",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Chip stocks surge on report of Apple-Intel deal, rekindled AI trade",
+            "summary": "WSJ 보도에 따르면 Apple이 Intel로부터 칩을 공급받는 계약을 체결, Intel 주가가 15% 폭등했다. 반면 기존 공급사 TSMC 주가는 하락했으며 반도체 업종 전반은 오후 거래에서 4.6% 상승했다.",
+            "source": "Yahoo Finance",
+            "source_url": "https://finance.yahoo.com/sectors/technology/live/tech-stocks-today-semiconductor-earnings-ai-boom-musk-altman-fight-100000447.html",
+            "published_date": "2026-05-30",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Arm warns of smartphone unit growth turning negative amid memory shortage",
+            "summary": "Arm Holdings는 분기 실적 어닝 비트에도 메모리 칩 부족으로 스마트폰 출하량이 마이너스 성장에 진입할 것이라 경고했다. 다만 에이전틱 AI용 CPU 수요로 데이터센터 부문 전망은 상향 조정됐다.",
+            "source": "Yahoo Finance",
+            "source_url": "https://finance.yahoo.com/sectors/technology/live/tech-stocks-today-semiconductor-earnings-ai-boom-musk-altman-fight-100000447.html",
+            "published_date": "2026-05-30",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Microsoft x NVIDIA \"New Era of PC\" tease ahead of Computex 2026",
+            "summary": "MS와 NVIDIA가 5월 29일 동시 소셜 포스팅으로 'PC 새 시대'를 예고하며 Computex 2026(6/2~5)에서의 Arm 기반 N1X PC 칩 발표 관측이 확산됐다. MS Windows·Surface 책임자는 새 Windows 버전은 아니라고 선을 그었다.",
+            "source": "Gagadget",
+            "source_url": "https://gagadget.com/en/712882-nvidia-and-microsoft-tease-a-new-era-of-pc-ahead-of-computex-2026/",
+            "published_date": "2026-05-30",
+            "credibility": "blog"
+          },
+          {
+            "title": "TSMC employees considering strikes over rumored 15% bonus cuts",
+            "summary": "Samsung 노조의 합의 타결 이후 TSMC 내부에서도 보너스 15% 삭감안에 대한 반발이 확산, 파업·노조화 움직임이 보고됐다. AI 수요로 사상 최대 매출에도 capex 자금 확보를 위한 보상 축소가 갈등의 원인이다.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/tech-industry/tsmc-employees-threaten-samsung-style-strike-over-rumored-15-percent-bonus-cuts-despite-record-profits",
+            "published_date": "2026-05-30",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "US stocks rally Friday as Nasdaq leads on chip-stock surge",
+            "summary": "5월 29일(현지) 뉴욕 증시는 반도체 강세에 힘입어 Nasdaq이 1.6% 상승하며 시장을 견인했다. Apple-Intel 공급 계약 보도와 AI 트레이드 부활이 위험 선호 심리를 끌어올렸다.",
+            "source": "Yahoo Finance",
+            "source_url": "https://finance.yahoo.com/sectors/technology/live/tech-stocks-today-semiconductor-earnings-ai-boom-musk-altman-fight-100000447.html",
+            "published_date": "2026-05-30",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Korea's Kospi hits record as Samsung-SK Hynix make up over 42% of index",
+            "summary": "Samsung과 SK Hynix가 Kospi에서 차지하는 비중이 5월 기준 사상 최고치인 42%를 넘어섰다. Kospi는 올해 약 90% 상승해 글로벌 주요 지수 중 최고 상승률을 기록하며 AI 반도체 집중 리스크 논쟁이 재점화됐다.",
+            "source": "Bloomberg",
+            "source_url": "https://www.bloomberg.com/graphics/2026-samsung-tsmc-ai-rally/",
+            "published_date": "2026-05-30",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "NVIDIA의 Arm 기반 N1/N1X PC 칩이 Dell·Lenovo 노트북에 2026년 상반기 탑재될 것이라는 유출 — 20코어 CPU와 RTX 5070급 통합 GPU 사양으로 알려짐.",
+        "source": "Tom's Hardware (leak roundup)",
+        "source_url": "https://www.tomshardware.com/pc-components/cpus/nvidias-n1-n1x-chips-leak-once-again-this-time-tipped-for-release-in-first-half-of-2026-hotly-anticipated-chips-to-reportedly-debut-on-dell-and-lenovo-laptops"
+      },
+      {
+        "snippet": "Apple-Intel 칩 공급 계약 보도 — Intel이 향후 iPhone용 칩을 일부 공급한다는 WSJ 미확인 보도로 Intel +15%, TSMC 하락.",
+        "source": "WSJ via Yahoo Finance",
+        "source_url": "https://finance.yahoo.com/sectors/technology/live/tech-stocks-today-semiconductor-earnings-ai-boom-musk-altman-fight-100000447.html"
+      }
+    ]
+  },
+  "published_at": "2026-05-31T02:47:06.522598+09:00"
+}
