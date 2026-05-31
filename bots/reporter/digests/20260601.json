@@ -1,0 +1,34 @@
+{
+  "date": "2026-06-01",
+  "digest": {
+    "date": "2026-06-01",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Dell confirms XPS laptop with NVIDIA N1X at Computex",
+            "summary": "Dell이 5월 31일 엠바고 종료에 맞춰 N1X 탑재 XPS 노트북을 공개. Lenovo Legion·IdeaPad, ASUS ProArt 등도 N1/N1X 라인업으로 합류해 NVIDIA의 ARM PC 진영이 본격 형성.",
+            "source": "VideoCardz",
+            "source_url": "https://videocardz.com/newz/dell-confirms-xps-laptop-with-nvidia-n1x-at-computex",
+            "published_date": "2026-05-31",
+            "credibility": "blog"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "Lenovo Legion 7 15N1X11 게이밍 노트북이 NVIDIA N1X 탑재 모델로 유출됐고, 245W 어댑터가 필요한 것으로 알려져 ARM SoC의 전력 프로파일에 대한 의문이 제기됨.",
+        "source": "VideoCardz / Lenovo internal leak",
+        "source_url": "https://videocardz.com/newz/dell-confirms-xps-laptop-with-nvidia-n1x-at-computex"
+      },
+      {
+        "snippet": "X 계정 'Serenity'(@aleabitoreddit)의 X-Fab 보유 공시 한 줄에 주가가 단숨에 +70% 폭등, 40만 팔로워 인플루언서의 시장 영향력이 다시 도마 위에.",
+        "source": "Bloomberg",
+        "source_url": "https://www.bloomberg.com/news/articles/2026-05-27/popular-x-account-sparks-massive-rally-in-little-known-chipmaker"
+      }
+    ]
+  },
+  "published_at": "2026-06-01T02:47:39.571380+09:00"
+}
