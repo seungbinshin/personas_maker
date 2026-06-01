@@ -42,10 +42,13 @@ node_modules/
 
 # ── Process & log files ──
 .persona.*.pids
+.persona.*.last_restart
+.persona.*.log
 .*-api.log
 .*-bot.log
 .claude-code-api.log
 .slack_bot.log
+claude-code-api/logs/
 
 # ── OS files ──
 .DS_Store
