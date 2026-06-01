@@ -22,6 +22,7 @@ import logging
 import os
 import threading
 import time
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -56,6 +57,7 @@ class ChatSession:
     report_id: str
     channel: str
     thread_ts: str
+    cwd: str = ""
     created_at: float = field(default_factory=time.time)
     last_activity: float = field(default_factory=time.time)
     message_count: int = 0
@@ -193,17 +195,32 @@ class ResearchPipeline(BasePipeline):
         )
         return stats
 
-    def sync_confluence(self, keywords: str, full: bool = False) -> dict:
-        """Run a Confluence sync for given keywords. Incremental by default, full if forced."""
+    def sync_confluence(
+        self,
+        keywords: str = "",
+        full: bool = False,
+        spaces_override: list[str] | None = None,
+    ) -> dict:
+        """Run a Confluence sync. Incremental by default, full if forced.
+
+        If keywords is empty, performs a space-wide sync (pulls every page in the
+        target spaces). spaces_override replaces the configured default_spaces
+        when provided.
+        """
         confluence_config = self.config.get("confluence", {})
         base_url = confluence_config.get("base_url", "")
         api_token = os.environ.get("CONFLUENCE_API_TOKEN", "")
         email = os.environ.get("CONFLUENCE_EMAIL", "")
         default_spaces = confluence_config.get("default_spaces", [])
+        spaces = spaces_override if spaces_override is not None else default_spaces
 
         if not base_url or not api_token or not email:
             logger.error("Confluence config missing: base_url, CONFLUENCE_API_TOKEN, or CONFLUENCE_EMAIL")
             return {"error": "missing config"}
+
+        if not keywords and not spaces:
+            logger.error("sync_confluence: keywords and spaces both empty — refusing whole-instance scan")
+            return {"error": "keywords or spaces required"}
 
         client = ConfluenceClient(base_url, email, api_token)
         vault_rel = confluence_config.get("vault_path", "knowledge")
@@ -213,8 +230,9 @@ class ResearchPipeline(BasePipeline):
 
         sync = ConfluenceSync(client, self.runtime, self.bot_dir / vault_rel, progress_callback=_progress)
 
-        self._post_status(f":books: Confluence 동기화를 시작합니다... (키워드: {keywords})", agent="researcher")
-        stats = sync.run_sync(keywords=keywords, spaces=default_spaces, full=full)
+        scope_msg = f"키워드: {keywords}" if keywords else f"스페이스 {spaces} 전체"
+        self._post_status(f":books: Confluence 동기화를 시작합니다... ({scope_msg})", agent="researcher")
+        stats = sync.run_sync(keywords=keywords, spaces=spaces, full=full)
         self._post_status(
             f":white_check_mark: Confluence 동기화 완료 ({stats.get('mode', 'full')}): "
             f"{stats['page_count']}개 요약, {stats['skipped_pages']}개 스킵, "
@@ -657,11 +675,20 @@ class ResearchPipeline(BasePipeline):
                 break
         feedback_history = "\n\n".join(feedback_parts)
 
+        report_dir = self.store._report_dir(report_id)
+        researcher_cwd = None
+        if report_dir is not None:
+            researcher_dir = report_dir / "researcher"
+            researcher_dir.mkdir(parents=True, exist_ok=True)
+            (researcher_dir / "figures").mkdir(parents=True, exist_ok=True)
+            researcher_cwd = str(researcher_dir.resolve())
+
         report = self.authoring_skill.write_research_report(
             scope_text=scope_text,
             idea_brief_json=idea_brief_json,
             deep_dive_json=deep_dive_json,
             feedback_history=feedback_history,
+            cwd=researcher_cwd,
             heartbeat_channel=self.status_channel,
             heartbeat_agent="researcher",
             heartbeat_label=f"{title} 리포트 작성 ({idx}/{total})",
@@ -906,6 +933,14 @@ class ResearchPipeline(BasePipeline):
             agent="researcher",
         )
 
+        report_dir = self.store._report_dir(report_id)
+        researcher_cwd = None
+        if report_dir is not None:
+            researcher_dir = report_dir / "researcher"
+            researcher_dir.mkdir(parents=True, exist_ok=True)
+            (researcher_dir / "figures").mkdir(parents=True, exist_ok=True)
+            researcher_cwd = str(researcher_dir.resolve())
+
         result = self.critique_skill.revise_report(
             scope_text=self.fit_evaluator.scope_text(),
             idea_brief_json=idea_brief_json,
@@ -913,6 +948,7 @@ class ResearchPipeline(BasePipeline):
             previous_report=previous_report,
             reviewer_feedback=review_json,
             report_version=report_version,
+            cwd=researcher_cwd,
             heartbeat_channel=self.status_channel,
             heartbeat_agent="researcher",
             heartbeat_label=f"{title} 리포트 수정 ({idx}/{total})",
@@ -1377,8 +1413,10 @@ class ResearchPipeline(BasePipeline):
             idea = json.loads(idea_brief_json)
             title = idea.get("title", "Research Report")
 
-            # Convert MD → HTML and save locally
-            html = convert_report(report, title)
+            # Convert MD → HTML, inlining figures relative to researcher/.
+            report_dir = self.store._report_dir(rid)
+            base_dir = (report_dir / "researcher") if report_dir else None
+            html = convert_report(report, title, base_dir=base_dir)
             self.store.save_artifact(rid, "report_final.html", html)
 
             # Upload HTML file to Slack
@@ -1500,7 +1538,13 @@ class ResearchPipeline(BasePipeline):
         # Check max sessions
         if len(self._chat_sessions) >= MAX_CHAT_SESSIONS:
             oldest_ts = min(self._chat_sessions, key=lambda k: self._chat_sessions[k].last_activity)
-            self.end_chat_session(oldest_ts)
+            self.end_chat_session(
+                oldest_ts,
+                notify_reason=(
+                    f":wave: 동시 대화 세션 한도({MAX_CHAT_SESSIONS}개)를 초과해 가장 오래 비활성인 이 세션을 자동 종료했습니다. "
+                    "이어가려면 `!research chat <번호>`로 새 세션을 시작하세요."
+                ),
+            )
 
         # Load report artifacts
         report = self.store.get_report(report_id)
@@ -1510,6 +1554,11 @@ class ResearchPipeline(BasePipeline):
         artifacts = self.store.load_all_artifacts(report_id)
         if not artifacts:
             return None
+
+        report_dir = self.store._report_dir(report_id)
+        if report_dir is None:
+            return None
+        cwd = str(report_dir.resolve())
 
         # Build context prompt
         from prompts.researcher import RESEARCHER_CHAT_SYSTEM_PROMPT
@@ -1536,30 +1585,38 @@ class ResearchPipeline(BasePipeline):
             .replace("{deep_dive}", deep_dive)
             .replace("{report}", report_text)
             .replace("{review_section}", review_section)
+            .replace("{report_dir}", cwd)
         )
 
-        # Create session via LLM call
+        # ccapi pins a sessionId to a single worker for context continuity, but
+        # the client owns sessionId allocation — the server does not echo one back.
+        session_id = uuid.uuid4().hex
+
         result = self.runtime.run(
             LLMRunRequest(
                 prompt=prompt,
+                session_id=session_id,
+                cwd=cwd,
+                allow_file_write=True,
                 heartbeat_channel=self.status_channel,
                 heartbeat_agent="researcher",
                 heartbeat_label="리포트 대화 시작",
             )
         )
-        if not result.success or not result.session_id:
+        if not result.success:
             logger.error("Failed to create chat session for report %s", report_id)
             return None
 
         session = ChatSession(
-            session_id=result.session_id,
+            session_id=session_id,
             report_id=report_id,
             channel=channel,
             thread_ts=thread_ts,
+            cwd=cwd,
             message_count=1,
         )
         self._chat_sessions[thread_ts] = session
-        logger.info("Chat session started: thread=%s report=%s session=%s", thread_ts, report_id, result.session_id)
+        logger.info("Chat session started: thread=%s report=%s session=%s cwd=%s", thread_ts, report_id, session_id, cwd)
         return result.output
 
     def continue_chat(self, thread_ts: str, user_message: str) -> str | None:
@@ -1577,6 +1634,8 @@ class ResearchPipeline(BasePipeline):
             LLMRunRequest(
                 prompt=user_message,
                 session_id=session.session_id,
+                cwd=session.cwd or None,
+                allow_file_write=True,
                 heartbeat_channel=self.status_channel,
                 heartbeat_agent="researcher",
                 heartbeat_label="리포트 대화",
@@ -1588,11 +1647,26 @@ class ResearchPipeline(BasePipeline):
 
         return result.output
 
-    def end_chat_session(self, thread_ts: str) -> int:
-        """End a chat session. Returns the message count."""
+    def end_chat_session(self, thread_ts: str, *, notify_reason: str | None = None) -> int:
+        """End a chat session. Returns the message count.
+
+        If `notify_reason` is provided, post it to the session's Slack thread before
+        cleanup so the user knows why the session went away (idle timeout, eviction).
+        Pass None for user-initiated ends — the bot.py handler already confirms.
+        """
         session = self._chat_sessions.pop(thread_ts, None)
         if not session:
             return 0
+
+        if notify_reason and self.slack and session.channel and session.thread_ts:
+            try:
+                self.slack.chat_postMessage(
+                    channel=session.channel,
+                    text=notify_reason,
+                    thread_ts=session.thread_ts,
+                )
+            except Exception as e:
+                logger.warning("Failed to post chat-end notification to thread %s: %s", thread_ts, e)
 
         # Close the claude-code-api session
         try:
@@ -1634,8 +1708,15 @@ class ResearchPipeline(BasePipeline):
             ts for ts, s in self._chat_sessions.items()
             if now - s.last_activity > CHAT_IDLE_TIMEOUT
         ]
+        idle_min = CHAT_IDLE_TIMEOUT // 60
         for ts in expired:
-            self.end_chat_session(ts)
+            self.end_chat_session(
+                ts,
+                notify_reason=(
+                    f":hourglass_flowing_sand: {idle_min}분 비활성으로 리포트 대화 세션을 자동 종료했습니다. "
+                    "이어가려면 `!research chat <번호>`로 새 세션을 시작하세요."
+                ),
+            )
 
     @staticmethod
     def _find_latest_artifact(artifacts: dict[str, str], prefix: str, suffix: str) -> str | None:

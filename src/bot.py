@@ -142,6 +142,17 @@ class ChannelMemory:
 
 memory = ChannelMemory()
 
+_rag_build_locks: dict[str, threading.Lock] = {}
+_rag_build_locks_meta = threading.Lock()
+
+def _get_rag_build_lock(channel_id: str) -> threading.Lock:
+    with _rag_build_locks_meta:
+        lock = _rag_build_locks.get(channel_id)
+        if lock is None:
+            lock = threading.Lock()
+            _rag_build_locks[channel_id] = lock
+        return lock
+
 # ─── State ──────────────────────────────────────────────────────
 
 class BotState:
@@ -254,29 +265,30 @@ RESEARCH_KEYWORDS = re.compile(
 def classify_question(text: str) -> str:
     return ConversationSessionOrchestrator.classify_question(text)
 
+_INTERIM_PHRASES_CODER = (
+    "잠만 확인해볼게",
+    "오 그거 해볼게 잠만",
+    "작업 시작할게",
+    "ㅇㅋ 한번 보자",
+    "잠시만, 보고 있어",
+    "ㄱㄷㄱㄷ 작업 ㄱㄱ",
+)
+_INTERIM_PHRASES_PERSONA = (
+    "잠만 찾아볼게",
+    "ㅇㅋ 잠깐만 찾아볼게",
+    "잠만, 한번 보고 올게",
+    "어 잠만 ㄱㄷ",
+    "오 잠만 확인",
+    "잠시만 검색좀 ㄱㄱ",
+    "ㅇㅇ 한번 보자",
+    "잠깐 ㄱㄷ",
+)
+
 def generate_interim_message(channel_id: str, channel_tone: str) -> str:
-    """Generate a natural 'hold on' message."""
-    conversation = memory.get_conversation(channel_id)
-    last_msg = conversation.strip().split("\n")[-1] if conversation else ""
-
+    """Pick a natural 'hold on' message (static — no LLM call)."""
     if PERSONA_TYPE == "coder":
-        prompt = (
-            f"너는 코딩봇이야. 사용자가 방금 이렇게 말했어:\n"
-            f"{last_msg}\n\n"
-            f"작업을 시작한다는 뉘앙스의 짧은 대답을 해줘. "
-            f"매번 다르게, 자연스럽게. 한 문장만. 예시 느낌: '잠만 확인해볼게', '오 그거 해볼게 잠만', '작업 시작할게' 등."
-        )
-    else:
-        prompt = (
-            f"너는 {DISPLAY_NAME}이야. 친구가 방금 이렇게 말했어:\n"
-            f"{last_msg}\n\n"
-            f"이건 좀 찾아봐야 하는 질문이야. "
-            f"'잠만 찾아볼게' 뉘앙스의 짧은 대답을 {DISPLAY_NAME} 말투로 해줘. "
-            f"매번 다르게, 자연스럽게. 한 문장만."
-        )
-
-    result = _call_api(prompt, timeout_ms=10000)
-    return result if result else "잠만 확인해볼게"
+        return random.choice(_INTERIM_PHRASES_CODER)
+    return random.choice(_INTERIM_PHRASES_PERSONA)
 
 def generate_fallback_message(channel_id: str, channel_tone: str) -> str:
     conversation = memory.get_conversation(channel_id)
@@ -328,15 +340,25 @@ def _build_system_prompt(channel_id: str, channel_tone: str) -> str:
     if PERSONA_TYPE == "coder":
         return CORE_IDENTITY
 
+    if rag_instance is None:
+        return CORE_IDENTITY
+
     cached = memory.get_cached_prompt(channel_id)
     if cached:
         logger.info(f"  💾 Using cached system prompt")
         return cached
-    conversation = memory.get_conversation(channel_id)
-    system_prompt = rag_instance.get_system_prompt(conversation, channel_tone)
-    memory.cache_prompt(channel_id, system_prompt)
-    logger.info(f"  🔍 RAG: built new system prompt")
-    return system_prompt
+
+    lock = _get_rag_build_lock(channel_id)
+    with lock:
+        cached = memory.get_cached_prompt(channel_id)
+        if cached:
+            logger.info(f"  💾 Using cached system prompt (post-lock)")
+            return cached
+        conversation = memory.get_conversation(channel_id)
+        system_prompt = rag_instance.get_system_prompt(conversation, channel_tone)
+        memory.cache_prompt(channel_id, system_prompt)
+        logger.info(f"  🔍 RAG: built new system prompt")
+        return system_prompt
 
 def _call_api(prompt: str, timeout_ms: int, session_id: str | None = None) -> str:
     """Call claude-code-api and return the response text."""
@@ -1168,8 +1190,12 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
                     rid = r.get("report_id", "")
                     status = r.get("status", "?")
                     title = r.get("metadata", {}).get("title", rid)
-                    lines.append(f"• `{rid}` — {title} ({status})")
-                lines.append(f"\n:point_right: `!research chat <report_id>` 로 대화를 시작하세요.")
+                    seq, _, _ = rid.partition("_")
+                    lines.append(f"• `{seq}` (`{rid}`) — {title} ({status})")
+                lines.append(
+                    "\n:point_right: `!research chat <번호>` 로 대화 시작 "
+                    "(예: `!research chat 28`). 전체 ID도 사용 가능합니다."
+                )
                 client.chat_postMessage(
                     channel=channel_id,
                     text="\n".join(lines),
@@ -1177,22 +1203,28 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
                 )
             return
 
-        report_id = parts[2]
-        # Verify report exists
-        report = _pipeline.store.get_report(report_id)
+        report_id_input = parts[2]
+        report = _pipeline.store.get_report(report_id_input)
         if not report:
             client.chat_postMessage(
                 channel=channel_id,
-                text=f":warning: 리포트 `{report_id}`를 찾을 수 없습니다. `!research list`로 확인하세요.",
+                text=(
+                    f":warning: 리포트 `{report_id_input}`를 찾을 수 없습니다. "
+                    "`!research chat` (인자 없음)로 대화 가능한 리포트 목록을 확인하세요. "
+                    "번호만 입력해도 됩니다 (예: `!research chat 28`)."
+                ),
                 thread_ts=thread_ts,
             )
             return
+
+        # Use the canonical report_id from state.json for everything downstream.
+        report_id = report.get("report_id", report_id_input)
 
         # Post initial message to create a thread
         title = report.get("metadata", {}).get("title", report_id)
         result = client.chat_postMessage(
             channel=channel_id,
-            text=f":microscope: *{title}* 리포트 대화를 시작합니다...\n잠시만 기다려 주세요.",
+            text=f":microscope: *{title}* (`{report_id}`) 리포트 대화를 시작합니다...\n잠시만 기다려 주세요.",
         )
         chat_thread_ts = result["ts"]
 
@@ -1264,6 +1296,54 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
 
         threading.Thread(target=_run, daemon=True).start()
 
+    elif subcmd == "sync-confluence-space":
+        # !research sync-confluence-space Bertha              → all pages in Bertha (incremental)
+        # !research sync-confluence-space Bertha full         → all pages in Bertha (full rebuild)
+        # !research sync-confluence-space Bertha,BerthaEdge   → multiple spaces, comma-separated
+        # !research sync-confluence-space all                 → use config default_spaces
+        if len(parts) < 3:
+            client.chat_postMessage(
+                channel=channel_id,
+                text=":warning: 스페이스 키를 입력하세요. 예: `!research sync-confluence-space Bertha` "
+                     "(여러 개: `Bertha,BerthaEdge`, 전체 기본: `all`)",
+                thread_ts=thread_ts,
+            )
+            return
+
+        raw_spaces = parts[2].strip('"').strip("'")
+        force_full = len(parts) > 3 and parts[3] == "full"
+        mode_label = "전체" if force_full else "증분"
+
+        if raw_spaces.lower() == "all":
+            spaces_override = None  # falls back to default_spaces
+            scope_label = "기본 스페이스 전체"
+        else:
+            spaces_override = [s.strip() for s in raw_spaces.split(",") if s.strip()]
+            scope_label = ", ".join(spaces_override)
+
+        client.chat_postMessage(
+            channel=channel_id,
+            text=f":books: Confluence 스페이스 {mode_label} 동기화를 시작합니다... (대상: {scope_label})",
+            thread_ts=thread_ts,
+        )
+
+        def _run():
+            try:
+                _pipeline.sync_confluence(
+                    keywords="",
+                    full=force_full,
+                    spaces_override=spaces_override,
+                )
+            except Exception:
+                logger.exception("Confluence space sync failed")
+                client.chat_postMessage(
+                    channel=channel_id,
+                    text=":x: Confluence 스페이스 동기화 실패 — 로그를 확인하세요.",
+                    thread_ts=thread_ts,
+                )
+
+        threading.Thread(target=_run, daemon=True).start()
+
     elif subcmd == "publish":
         # !research publish <report_id>
         if len(parts) < 3:
@@ -1325,7 +1405,8 @@ def _handle_research_command(client, channel_id: str, text: str, thread_ts: str 
                 "• `!research chat <report_id>` — 리포트에 대해 연구원과 대화\n"
                 "• `!research chat` — 대화 가능한 리포트 목록\n"
                 "• `!research chat end` — (스레드 내) 대화 종료\n"
-                "• `!research sync-confluence \"키워드\"` — Confluence 문서 동기화\n"
+                "• `!research sync-confluence \"키워드\"` — Confluence 문서 동기화 (키워드 기반)\n"
+                "• `!research sync-confluence-space <SPACE|all>` — Confluence 스페이스 전체 동기화\n"
                 "• `!research publish <report_id>` — Discourse에 리포트 게재"
             ),
             thread_ts=thread_ts,
@@ -1657,6 +1738,11 @@ def handle_message(event, client, logger):
     # Coder bot: if dev session is active, route to dev handler
     if PERSONA_TYPE == "coder" and channel_id in _dev_sessions and not text.startswith("!"):
         handle_dev_message(client, channel_id, text, reply_ts)
+        return
+
+    # Pipeline bots have no general chat fallback — only ! commands and active sessions.
+    if PERSONA_TYPE in ("reporter", "research_pipeline"):
+        logger.info("  → No matching command for pipeline bot; ignoring")
         return
 
     # On-demand mode: only respond when explicitly triggered

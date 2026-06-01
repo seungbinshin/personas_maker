@@ -31,6 +31,16 @@ is_pid_alive() {
 pid_file()  { echo "$SCRIPT_DIR/.persona.${1}.pids"; }
 api_log()   { echo "$SCRIPT_DIR/.${1}-api.log"; }
 bot_log()   { echo "$SCRIPT_DIR/.${1}-bot.log"; }
+restart_marker() { echo "$SCRIPT_DIR/.persona.${1}.last_restart"; }
+
+# Watchdog tuning (override via env)
+WATCHDOG_WINDOW_MIN=${WATCHDOG_WINDOW_MIN:-5}      # look-back window in minutes
+WATCHDOG_ERROR_THRESHOLD=${WATCHDOG_ERROR_THRESHOLD:-20}  # restart if [ERROR] count exceeds this
+WATCHDOG_COOLDOWN_SEC=${WATCHDOG_COOLDOWN_SEC:-600}  # min seconds between watchdog restarts per bot
+
+# Log rotation tuning
+LOG_ROTATE_MIN_MB=${LOG_ROTATE_MIN_MB:-50}
+LOG_ROTATE_KEEP_DAYS=${LOG_ROTATE_KEEP_DAYS:-7}
 
 # ─── List available bots ────────────────────────────────────────
 
@@ -194,6 +204,91 @@ do_status_bot() {
     fi
 }
 
+# ─── Watchdog: detect broken-loop and auto-restart ──────────────
+
+do_watchdog_bot() {
+    local name="$1"
+    local b_log
+    b_log=$(bot_log "$name")
+    [[ -f "$b_log" ]] || return 0
+
+    read_bot_pids "$name"
+    if [[ -z "${BOT_PID:-}" ]] || ! is_pid_alive "$BOT_PID"; then
+        # Bot is dead (crash, OOM, signal). Cold-start it so the watchdog is
+        # genuinely self-healing instead of leaving it down indefinitely.
+        # NOTE: relies on AbandonProcessGroup=true in com.persona.watchdog.plist
+        # so launchd does not reap the freshly-spawned bot when this run exits.
+        log_warn "[$name] watchdog: bot not alive (PID ${BOT_PID:-none}), cold-starting"
+        echo "=== [$name] watchdog cold-start $(date) (dead PID ${BOT_PID:-none}) ===" >> "$b_log"
+        do_start_bot "$name" >/dev/null
+        date +%s > "$(restart_marker "$name")"
+        return 0
+    fi
+
+    # Cooldown guard
+    local marker
+    marker=$(restart_marker "$name")
+    if [[ -f "$marker" ]]; then
+        local last_ts now diff
+        last_ts=$(cat "$marker" 2>/dev/null || echo 0)
+        now=$(date +%s)
+        diff=$((now - last_ts))
+        if (( diff < WATCHDOG_COOLDOWN_SEC )); then
+            return 0
+        fi
+    fi
+
+    # Count [ERROR] lines newer than (now - WATCHDOG_WINDOW_MIN minutes).
+    # Log lines are prefixed with "YYYY-MM-DD HH:MM:SS,mmm", so lexical >= works.
+    local since
+    since=$(date -v-${WATCHDOG_WINDOW_MIN}M '+%Y-%m-%d %H:%M' 2>/dev/null \
+            || date -d "${WATCHDOG_WINDOW_MIN} minutes ago" '+%Y-%m-%d %H:%M')
+    local err_count
+    err_count=$(tail -n 20000 "$b_log" \
+        | awk -v s="$since" 'index($0,"[ERROR]") && $0 >= s' \
+        | wc -l | tr -d ' ')
+
+    if (( err_count > WATCHDOG_ERROR_THRESHOLD )); then
+        log_warn "[$name] watchdog: $err_count ERRORs in last ${WATCHDOG_WINDOW_MIN}m (threshold ${WATCHDOG_ERROR_THRESHOLD}), restarting PID $BOT_PID"
+        echo "=== [$name] watchdog restart $(date) (errors=$err_count window=${WATCHDOG_WINDOW_MIN}m) ===" >> "$b_log"
+        do_stop_bot "$name" >/dev/null
+        sleep 1
+        do_start_bot "$name" >/dev/null
+        date +%s > "$marker"
+    fi
+}
+
+# ─── Log rotation (copytruncate-safe for O_APPEND fds) ──────────
+
+do_rotate_logs() {
+    local size_bytes=$((LOG_ROTATE_MIN_MB * 1024 * 1024))
+    local stamp
+    stamp=$(date '+%Y%m%d-%H%M%S')
+    local any=false
+
+    shopt -s nullglob
+    for log in "$SCRIPT_DIR"/.*-bot.log "$SCRIPT_DIR"/.*-api.log; do
+        local sz
+        sz=$(stat -f%z "$log" 2>/dev/null || stat -c%s "$log" 2>/dev/null || echo 0)
+        if (( sz > size_bytes )); then
+            local rotated="${log}.${stamp}"
+            cp "$log" "$rotated"
+            : > "$log"          # safe: bot writes via shell O_APPEND
+            gzip -f "$rotated"  # creates ${rotated}.gz, removes ${rotated}
+            log_ok "Rotated $(basename "$log") ($((sz/1024/1024))MB) → $(basename "${rotated}").gz"
+            any=true
+        fi
+    done
+    shopt -u nullglob
+
+    # Cleanup rotations older than retention
+    find "$SCRIPT_DIR" -maxdepth 1 \( -name '.*-bot.log.*.gz' -o -name '.*-api.log.*.gz' \) \
+        -mtime "+${LOG_ROTATE_KEEP_DAYS}" -print -delete 2>/dev/null \
+        | while read -r f; do log_info "Removed old rotation: $(basename "$f")"; done
+
+    $any || log_info "No logs exceeded ${LOG_ROTATE_MIN_MB}MB threshold"
+}
+
 # ─── Resolve bot names (handle 'all') ───────────────────────────
 
 resolve_bots() {
@@ -272,8 +367,18 @@ case "$cmd" in
         done
         ;;
 
+    watchdog)
+        for bot in $(resolve_bots "${target:-all}"); do
+            do_watchdog_bot "$bot"
+        done
+        ;;
+
+    rotate-logs)
+        do_rotate_logs
+        ;;
+
     *)
-        echo "Usage: $0 {start|stop|restart|status|list} [bot-name|all]"
+        echo "Usage: $0 {start|stop|restart|status|list|watchdog|rotate-logs} [bot-name|all]"
         echo ""
         echo "Commands:"
         echo "  start <name|all>    Start bot(s) and their API server(s)"
@@ -281,6 +386,8 @@ case "$cmd" in
         echo "  restart <name|all>  Restart bot(s)"
         echo "  status              Show status of all bots"
         echo "  list                List available bots"
+        echo "  watchdog [name|all] Restart bot(s) if recent [ERROR] count exceeds threshold"
+        echo "  rotate-logs         Rotate bot/api logs >${LOG_ROTATE_MIN_MB}MB, keep ${LOG_ROTATE_KEEP_DAYS}d gzip'd"
         echo ""
         echo "Available bots: $(list_bots)"
         exit 1

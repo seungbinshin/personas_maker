@@ -114,14 +114,16 @@ class ConfluenceSync:
 
     def run_sync(
         self,
-        keywords: str,
+        keywords: str = "",
         spaces: list[str] | None = None,
         full: bool = False,
     ) -> dict:
         """Main sync entry point.
 
         Args:
-            keywords: Search keywords for Confluence CQL.
+            keywords: Search keywords for Confluence CQL. If empty, all pages in
+                the given spaces are pulled (space-wide sync). Either keywords or
+                spaces must be provided.
             spaces: Optional list of space keys to scope the search.
             full: Force full sync (ignore last_sync timestamps).
 
@@ -147,8 +149,9 @@ class ConfluenceSync:
         }
 
         # 1. Search for matching pages
+        scope_label = f"'{keywords}'" if keywords else f"스페이스 {spaces or []} 전체"
         self._report_progress(
-            f":mag: Confluence {mode} 동기화: '{keywords}' 검색 중..."
+            f":mag: Confluence {mode} 동기화: {scope_label} 검색 중..."
         )
         search_results = self.client.search(keywords, spaces)
         self._report_progress(
@@ -238,7 +241,7 @@ class ConfluenceSync:
 
         # 6. Save index
         keyword_history: list[str] = index.get("keyword_history", [])
-        if keywords not in keyword_history:
+        if keywords and keywords not in keyword_history:
             keyword_history.append(keywords)
 
         self._save_index(

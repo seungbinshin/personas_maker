@@ -6,11 +6,14 @@ import json
 import logging
 import re
 from html import unescape
+from pathlib import Path
 
 from discourse_client import DiscourseClient
 from report_store import ReportStore
 
 logger = logging.getLogger(__name__)
+
+_IMG_MD = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 
 REPORT_DISCLAIMER = """> 이 리포트는 **SeungbinShin이 구현한 리서치봇**이 자동 작성하였습니다.
 > 지식 베이스는 **Confluence EVT1 관련 페이지**와 **Discourse에서 논의된 정보**에 의존합니다.
@@ -62,6 +65,15 @@ class DiscoursePublisher:
 
         # Extract title from first H1
         title = self._extract_title(report_md, metadata)
+
+        # Resolve and upload any local figures, rewriting markdown image refs to
+        # Discourse short_url placeholders. Without this step, `![](figures/x.svg)`
+        # would render as a broken image on Discourse.
+        report_dir = self.store._report_dir(report_id)
+        report_md = self._rewrite_image_refs(
+            report_md,
+            base_dir=(report_dir / "researcher") if report_dir else None,
+        )
 
         # Build post body: disclaimer + report
         body = REPORT_DISCLAIMER + report_md
@@ -138,6 +150,47 @@ class DiscoursePublisher:
                 report_id, state.get("status", "accepted"),
                 metadata={"last_checked_post_number": post_number},
             )
+
+    def _rewrite_image_refs(self, md: str, base_dir: Path | None) -> str:
+        """Upload local figures to Discourse and rewrite markdown refs to short_url.
+
+        Skips absolute URLs (http(s)://) and unresolvable / missing files (logs and
+        leaves the original markdown alone — broken image is preferable to dropping
+        a publish silently).
+        """
+        if base_dir is None:
+            return md
+        cache: dict[str, str] = {}
+
+        def _replace(m: re.Match) -> str:
+            alt, src = m.group(1), m.group(2)
+            if src.startswith(("http://", "https://", "data:", "upload://")):
+                return m.group(0)
+            if src in cache:
+                return f"![{alt}]({cache[src]})"
+            try:
+                path = (base_dir / src).resolve()
+                path.relative_to(base_dir.resolve())
+            except ValueError:
+                logger.warning("Image %s escapes base_dir; leaving ref untouched", src)
+                return m.group(0)
+            if not path.is_file():
+                logger.warning("Image not found for Discourse upload: %s", path)
+                return m.group(0)
+            try:
+                resp = self.client.upload_image(path)
+            except Exception as e:
+                logger.warning("Discourse upload failed for %s: %s", path, e)
+                return m.group(0)
+            short_url = resp.get("short_url") or resp.get("url")
+            if not short_url:
+                logger.warning("Discourse upload returned no url for %s: %s", path, resp)
+                return m.group(0)
+            cache[src] = short_url
+            logger.info("Uploaded figure %s → %s", src, short_url)
+            return f"![{alt}]({short_url})"
+
+        return _IMG_MD.sub(_replace, md)
 
     def _load_latest_report(self, report_id: str) -> str | None:
         """Load the latest report version (review_final.md > report_v*.md)."""

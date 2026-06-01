@@ -83,14 +83,32 @@ class ReportStore:
         self.reports_dir.mkdir(parents=True, exist_ok=True)
 
     def _report_dir(self, idea_id: str) -> Path | None:
-        """Find report directory by idea_id (may have date prefix)."""
-        # Try exact match first
+        """Resolve a report directory by:
+          1. Exact directory name.
+          2. Numeric-prefix shortcut — if the input is all digits, match the seq
+             prefix exactly. So `28` and `028` both find `028_*`. Avoids the
+             substring trap where `1` accidentally matched `021_*`.
+          3. Substring fallback for partial idea-ids (legacy behavior).
+        """
+        if not self.reports_dir.exists():
+            return None
+
         exact = self.reports_dir / idea_id
-        if exact.exists():
+        if exact.exists() and exact.is_dir():
             return exact
-        # Search for date-prefixed directories
-        for d in sorted(self.reports_dir.iterdir(), reverse=True):
-            if d.is_dir() and idea_id in d.name:
+
+        dirs = [d for d in self.reports_dir.iterdir() if d.is_dir()]
+
+        if idea_id.isdigit():
+            target_seq = int(idea_id)
+            for d in dirs:
+                head, _, _ = d.name.partition("_")
+                if head.isdigit() and int(head) == target_seq:
+                    return d
+            return None  # numeric input but no seq match — do NOT fall through
+
+        for d in sorted(dirs, reverse=True):
+            if idea_id in d.name:
                 return d
         return None
 

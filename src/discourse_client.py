@@ -85,6 +85,31 @@ class DiscourseClient:
 
     # ── Write operations ───────────────────────────────────────
 
+    def upload_image(self, path, mime: str | None = None) -> dict:
+        """Upload an image (or other file) to Discourse. Returns {url, short_url, ...}.
+
+        Use the returned `short_url` (e.g. `upload://abc.svg`) inside post markdown
+        for canonical Discourse image references.
+        """
+        from pathlib import Path as _Path
+        p = _Path(path)
+        suffix = p.suffix.lower().lstrip(".")
+        guessed_mime = mime or {
+            "svg": "image/svg+xml",
+            "png": "image/png",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "gif": "image/gif",
+            "webp": "image/webp",
+        }.get(suffix, "application/octet-stream")
+        url = f"{self.base_url}/uploads.json"
+        with p.open("rb") as fh:
+            files = {"file": (p.name, fh, guessed_mime)}
+            data = {"type": "composer", "synchronous": "true"}
+            resp = requests.post(url, headers=self.headers, files=files, data=data, timeout=60)
+        resp.raise_for_status()
+        return resp.json()
+
     def create_topic(
         self,
         title: str,

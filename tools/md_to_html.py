@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import base64
+import logging
 import re
+from pathlib import Path
 
 import markdown
+
+logger = logging.getLogger(__name__)
 
 
 _CSS = """\
@@ -80,11 +85,78 @@ def _restore_math(html: str, blocks: list[str]) -> str:
     return html
 
 
-def convert_report(md_text: str, title: str) -> str:
-    """Convert markdown text to a styled HTML document."""
+_IMG_TAG = re.compile(r'<img\s+([^>]*?)src="([^"]+)"([^>]*)>', re.IGNORECASE)
+_SVG_HEADER = re.compile(r"<\?xml[^>]*\?>\s*", re.IGNORECASE)
+_SVG_DOCTYPE = re.compile(r"<!DOCTYPE[^>]*>\s*", re.IGNORECASE)
+
+
+def _inline_images(html: str, base_dir: Path) -> str:
+    """Replace <img src="figures/foo.svg"> with inline SVG / base64-encoded raster.
+
+    Skips absolute URLs (http/https/data:). Logs and leaves the tag untouched if the
+    file is missing — broken image is better than a hard failure.
+    """
+
+    def _resolve(rel_path: str) -> Path | None:
+        if rel_path.startswith(("http://", "https://", "data:", "/")):
+            return None
+        candidate = (base_dir / rel_path).resolve()
+        try:
+            candidate.relative_to(base_dir.resolve())
+        except ValueError:
+            logger.warning("Image %s escapes base_dir; skipping inline", rel_path)
+            return None
+        return candidate if candidate.is_file() else None
+
+    def _replace(m: re.Match) -> str:
+        before, src, after = m.group(1), m.group(2), m.group(3)
+        path = _resolve(src)
+        if path is None:
+            if not src.startswith(("http://", "https://", "data:")):
+                logger.warning("Inline-image source not found: %s (base=%s)", src, base_dir)
+            return m.group(0)
+
+        suffix = path.suffix.lower()
+        if suffix == ".svg":
+            try:
+                svg = path.read_text(encoding="utf-8")
+            except OSError:
+                return m.group(0)
+            svg = _SVG_HEADER.sub("", svg).strip()
+            svg = _SVG_DOCTYPE.sub("", svg).strip()
+            # Strip the <img> tag entirely; embed SVG inline so it renders standalone.
+            return f'<figure class="report-figure">{svg}</figure>'
+        if suffix in (".png", ".jpg", ".jpeg", ".gif", ".webp"):
+            mime = {
+                ".png": "image/png",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".gif": "image/gif",
+                ".webp": "image/webp",
+            }[suffix]
+            try:
+                data = path.read_bytes()
+            except OSError:
+                return m.group(0)
+            b64 = base64.b64encode(data).decode("ascii")
+            return f'<img {before}src="data:{mime};base64,{b64}"{after}>'
+        return m.group(0)
+
+    return _IMG_TAG.sub(_replace, html)
+
+
+def convert_report(md_text: str, title: str, base_dir: Path | None = None) -> str:
+    """Convert markdown text to a styled HTML document.
+
+    If `base_dir` is given, relative `<img src="...">` references are resolved against
+    it and inlined (SVG embedded as <svg>, raster encoded as data: URLs) so the
+    resulting HTML is self-contained for Slack/email distribution.
+    """
     protected, math_blocks = _protect_math(md_text)
     body = markdown.markdown(protected, extensions=_EXTENSIONS)
     body = _restore_math(body, math_blocks)
+    if base_dir is not None:
+        body = _inline_images(body, base_dir)
     return (
         "<!DOCTYPE html>\n"
         '<html lang="ko">\n<head>\n'

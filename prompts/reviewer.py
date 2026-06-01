@@ -5,7 +5,7 @@ REVIEWER_PROMPT = """You are a CTO-level senior architect at HyperAccel. You are
 {scope}
 
 Your job is to:
-1. Evaluate each report independently on 4 criteria
+1. Evaluate each report independently on 5 criteria
 2. Compare them against each other
 3. Rank them by overall value to HyperAccel
 4. Decide accept/revise/reject for each
@@ -34,6 +34,12 @@ Evaluation criteria (each out of 10):
    - Are references sufficient?
    - Is the logical flow natural?
 
+5. **Trend Fit** (against the workload-trend awareness section in the scope)
+   - Is the report explicit about which current LLM workload trends the idea addresses vs. ignores?
+   - When the source paper did not characterize behavior under a relevant trend (e.g. only tested 4K context), does the report state this honestly rather than gloss it?
+   - Penalize ideas whose value prop is silently optimized for an outdated profile; do NOT penalize ideas that honestly mark a trend as "unknown / not characterized in source" — that is correct behavior.
+   - Do not require the report to address EVERY trend; weight by relevance to the idea.
+
 Decision criteria:
 - **ACCEPT**: All 4 scores >= {accept_threshold}/10
 - **REVISE**: Any score < {accept_threshold}/10 → provide specific feedback
@@ -58,7 +64,8 @@ Return your evaluation as JSON:
         "technical_accuracy": {{"score": N, "comment": "Comment in Korean"}},
         "feasibility": {{"score": N, "comment": "Comment in Korean"}},
         "novelty": {{"score": N, "comment": "Comment in Korean"}},
-        "completeness": {{"score": N, "comment": "Comment in Korean"}}
+        "completeness": {{"score": N, "comment": "Comment in Korean"}},
+        "trend_fit": {{"score": N, "comment": "Comment in Korean — call out silent assumptions; honest 'unknown' markers are NOT penalized"}}
       }},
       "overall_comment": "Review in Korean (2-3 lines)",
       "revision_requests": ["Specific revision request (Korean)"],

@@ -61,19 +61,28 @@ class ConfluenceClient:
         return resp.json()
 
     def search(
-        self, keywords: str, spaces: list[str] | None = None
+        self, keywords: str = "", spaces: list[str] | None = None
     ) -> list[ConfluencePage]:
-        """CQL search for pages matching keywords, optionally scoped to spaces."""
+        """CQL search for pages. If keywords is empty, returns all pages in the given spaces.
+
+        Requires at least one of keywords or spaces to be set — refuses to scan an
+        entire Confluence instance.
+        """
+        if not keywords and not spaces:
+            raise ValueError(
+                "search() requires keywords or spaces; refusing to scan all of Confluence"
+            )
         cql_parts = ["type=page"]
         if spaces:
             safe_spaces = [s.replace('"', '\\"') for s in spaces]
             space_clauses = " OR ".join(f'space="{s}"' for s in safe_spaces)
             cql_parts.append(f"({space_clauses})")
-        safe_keywords = keywords.replace('"', '\\"')
-        cql_parts.append(f'text ~ "{safe_keywords}"')
+        if keywords:
+            safe_keywords = keywords.replace('"', '\\"')
+            cql_parts.append(f'text ~ "{safe_keywords}"')
         cql = " AND ".join(cql_parts)
 
-        expand = "body.storage,version,metadata.labels,ancestors"
+        expand = "body.storage,version,metadata.labels,ancestors,space"
         pages: list[ConfluencePage] = []
         start = 0
         limit = 25
@@ -110,12 +119,12 @@ class ConfluenceClient:
             start += limit
             time.sleep(FETCH_DELAY)
 
-        logger.info("Search '%s' returned %d pages", keywords, len(pages))
+        logger.info("Search '%s' (spaces=%s) returned %d pages", keywords or "<none>", spaces or [], len(pages))
         return pages
 
     def fetch_page(self, page_id: str) -> ConfluencePage:
         """Fetch a single page with full body content."""
-        expand = "body.storage,version,metadata.labels,ancestors"
+        expand = "body.storage,version,metadata.labels,ancestors,space"
         data = self._get(f"/content/{page_id}", params={"expand": expand})
         return self._parse_page(data)
 
@@ -125,7 +134,7 @@ class ConfluenceClient:
             logger.warning("Recursion depth limit reached for page %s", page_id)
             return []
 
-        expand = "body.storage,version,metadata.labels,ancestors"
+        expand = "body.storage,version,metadata.labels,ancestors,space"
         children: list[ConfluencePage] = []
         start = 0
         limit = 25

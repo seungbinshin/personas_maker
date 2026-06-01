@@ -28,6 +28,7 @@ Investigation items:
 5. **Implementation examples**: Check if this has been applied to real chips/systems
 6. **Performance benchmarks**: Collect quantitative metrics (TOPS, TOPS/W, latency, area, etc.)
 7. **Open source/code**: Check for available implementations
+8. **Trend alignment**: Per the workload-trend awareness section in the scope, identify which current LLM workload trends this idea addresses and which it ignores. Note evaluation gaps in the source paper explicitly (e.g. context length only tested up to 4K, no MoE config). Use honest "unknown" / "not characterized" rather than guessing.
 
 Use WebSearch to thoroughly investigate all items above.
 Use the researcher's suggested_searches as starting points.
@@ -55,6 +56,11 @@ Return results as JSON:
     "methodology": "Detailed methodology description",
     "results": "Experimental results summary",
     "limitations": "Limitations"
+  }},
+  "trend_alignment": {{
+    "addresses": ["Trends from the workload-trend awareness section that this idea explicitly addresses"],
+    "ignores": ["Relevant trends the idea is silent on — call them out, do not gloss"],
+    "evaluation_gaps": ["What the source paper did NOT characterize (e.g. 'only evaluated up to 4K tokens', 'no MoE configuration tested') — honest 'unknown' is the correct answer"]
   }},
   "key_question_answers": [
     {{
