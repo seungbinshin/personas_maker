@@ -193,3 +193,55 @@ def test_chat_prompt_steers_away_from_self_laugh_and_monotony(monkeypatch):
     assert "스스로 ㅋ" in p  # don't laugh at your own lines
     assert "다양하게" in p  # vary the format / openers
     assert "일관성 유지" not in p  # regression guard: old self-echo framing stays gone
+
+
+# ─── [SKIP] leak: robust marker stripping ───────────────────────────
+
+
+def test_strip_skip_pure_skip_returns_empty():
+    from bot import _strip_skip
+
+    assert _strip_skip("[SKIP]") == ""
+
+
+def test_strip_skip_removes_appended_skip_line():
+    from bot import _strip_skip
+
+    raw = "방금 졸업장 사진까지 보여줬잖아\n대전과학고라고 박혀있구만\n\n[SKIP]"
+    assert _strip_skip(raw) == "방금 졸업장 사진까지 보여줬잖아\n대전과학고라고 박혀있구만"
+
+
+def test_strip_skip_removes_inline_skip_token():
+    from bot import _strip_skip
+
+    assert _strip_skip("[SKIP] 무슨 소리야") == "무슨 소리야"
+
+
+def test_strip_skip_keeps_normal_text():
+    from bot import _strip_skip
+
+    assert _strip_skip("그냥 일하지 뭐") == "그냥 일하지 뭐"
+
+
+# ─── identity corrections (school, age, anti-confabulation) ─────────
+
+
+def test_core_identity_has_correct_school():
+    from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
+
+    assert "경기북과고" in ID
+    assert "절대 대전과학고" in ID  # explicit negation of the hallucinated school
+
+
+def test_core_identity_has_correct_age():
+    from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
+
+    assert "2000년 9월 1일" in ID
+    assert "만 25" in ID
+
+
+def test_core_identity_has_anti_confabulation_rule():
+    from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
+
+    assert "지어내" in ID  # don't fabricate facts about yourself
+    assert "사진 보내" in ID  # don't claim fake actions like sending a photo

@@ -389,6 +389,16 @@ def _build_system_prompt(channel_id: str, channel_tone: str) -> str:
         logger.info(f"  🔍 RAG: built new system prompt")
         return system_prompt
 
+def _strip_skip(text: str) -> str:
+    """Remove [SKIP] markers wherever the model placed them — alone, on their own
+    line, or appended/inline to a real reply. If nothing meaningful remains the
+    result is '' (the bot stays silent). The model sometimes tacks [SKIP] onto a
+    multi-line answer; the old exact-match check let that leak into the channel."""
+    if "[SKIP]" not in text.upper():
+        return text
+    text = re.sub(r"\[SKIP\]", "", text, flags=re.IGNORECASE)
+    return "\n".join(ln for ln in (line.strip() for line in text.split("\n")) if ln)
+
 def _call_api(prompt: str, timeout_ms: int, session_id: str | None = None) -> str:
     """Call claude-code-api and return the response text."""
     logger.info(f"  📝 Prompt size: {len(prompt)} chars, timeout: {timeout_ms}ms")
@@ -401,7 +411,8 @@ def _call_api(prompt: str, timeout_ms: int, session_id: str | None = None) -> st
     text = result.output.strip()
     logger.info(f"  📨 Raw response ({result.duration_ms}ms): {text[:200]}")
     _call_api._last_session_id = result.session_id
-    if text == "[SKIP]" or not text:
+    text = _strip_skip(text)
+    if not text:
         return ""
     if PERSONA_TYPE == "persona":
         if "소프트웨어 개발" in text or "도움이 필요하시면" in text or "I can help" in text:
