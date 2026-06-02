@@ -1,0 +1,79 @@
+{
+  "date": "2026-06-03",
+  "digest": {
+    "date": "2026-06-03",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "Intel Announces New AI Innovations at Computex 2026",
+            "summary": "인텔이 Computex에서 18A 공정 기반 차세대 Xeon 6+ 프로세서와 함께 SambaNova RDU를 결합한 랙스케일 AI 인프라를 발표했다. 추론·에이전트 워크로드 확장을 겨냥한 칩-투-시스템 솔루션을 전략 파트너들과 함께 공급한다.",
+            "source": "Dataconomy",
+            "source_url": "https://dataconomy.com/2026/06/02/intel-xeon-6-plus-chips-ai-infrastructure-computex-2026/",
+            "published_date": "2026-06-02",
+            "credibility": "major_media"
+          },
+          {
+            "title": "SIA-Deloitte: Chips Account for 95% of an AI Server Rack's Value",
+            "summary": "SIA와 딜로이트 공동 보고서는 반도체가 최첨단 AI 서버 랙 가치의 95% 이상, AI 데이터센터 총 자본지출의 50% 이상을 차지한다고 분석했다. 2028년까지 데이터센터 인프라에 4조 달러가 투입되고 그중 최대 2.8조 달러가 반도체에 쓰일 전망이다.",
+            "source": "Semiconductor Industry Association",
+            "source_url": "https://www.semiconductors.org/new-report-finds-semiconductors-account-for-95-of-an-ai-data-server-racks-value-encompassing-the-full-stack-of-chip-technologies/",
+            "published_date": "2026-06-02",
+            "credibility": "official"
+          },
+          {
+            "title": "Alphabet Announces $80 Billion Equity Raise to Fund AI Compute",
+            "summary": "알파벳이 AI 컴퓨팅 인프라 확충을 위해 총 800억 달러 규모의 주식 발행 계획을 발표했고, 버크셔 해서웨이가 100억 달러를 사모 투자하기로 했다. 발표 직후 나스닥과 러셀2000이 상승했다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-june-02-2026",
+            "published_date": "2026-06-02",
+            "credibility": "major_media"
+          },
+          {
+            "title": "HPE Surges ~26% on Blockbuster AI Data Center Earnings",
+            "summary": "휴렛팩커드엔터프라이즈(HPE)가 AI 데이터센터 수요에 힘입어 분기 사상 최대 실적을 발표하며 시간외에서 약 26% 급등했다. 호실적은 Dell·SMCI 등 관련주까지 끌어올렸다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-june-02-2026",
+            "published_date": "2026-06-02",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Oil Hovers Near $91 as US-Iran Talks and Strait of Hormuz Weigh",
+            "summary": "WTI·브렌트유가 미·이란 협상과 호르무즈 해협 통항 불확실성 속에 배럴당 약 91달러로 전일 급등분을 일부 반납했다. 트럼프는 협상이 진행 중이며 다음 주 호르무즈 재개 양해각서 가능성을 시사했다.",
+            "source": "Trading Economics / Fortune",
+            "source_url": "https://fortune.com/article/price-of-oil-06-02-2026/",
+            "published_date": "2026-06-02",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Fed Officials Signal Rate Hikes Possible as Oil-Driven Inflation Reaccelerates",
+            "summary": "클리블랜드 연은의 해맥 총재가 물가 고착 우려로 곧 금리 인상이 적절할 수 있다고 경고했다. 이란발 유가 급등으로 케빈 워시 신임 의장 체제의 첫 회의를 앞두고 시장은 인하 기대를 접고 인상 가능성까지 가격에 반영하기 시작했다.",
+            "source": "Yahoo Finance",
+            "source_url": "https://finance.yahoo.com/economy/live/stock-market-today-tuesday-june-2-ai-231755175.html",
+            "published_date": "2026-06-02",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "NVIDIA가 RTX Spark 로드맵에서 차세대 Vera Rubin/Rosa Feynman 세대 칩에 LPDDR6를 거쳐 결국 HBM 메모리를 탑재할 것이라는 전망이 흘러나왔다 (미확정 로드맵).",
+        "source": "Tom's Hardware",
+        "source_url": "https://www.tomshardware.com/pc-components/cpus/nvidia-unveils-dgx-sparrk-roadmap-for-laptops-and-desktop-pcs-at-computex-2026-three-generations-outlined-rubin-followed-by-rosa-feynman"
+      },
+      {
+        "snippet": "엔비디아가 16-Hi HBM4를 2026년 4분기까지 공급하라고 요청, SK하이닉스·삼성·마이크론이 신규 물량 수주 경쟁에 돌입했다는 미확인 보도.",
+        "source": "TweakTown",
+        "source_url": "https://www.tweaktown.com/news/109495/sk-hynix-samsung-and-micron-fighting-for-nvidia-supply-contracts-for-new-16-hi-hbm4-orders/index.html"
+      }
+    ]
+  },
+  "published_at": "2026-06-03T02:48:41.311860+09:00"
+}
