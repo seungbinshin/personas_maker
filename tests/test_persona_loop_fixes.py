@@ -229,7 +229,9 @@ def test_strip_skip_keeps_normal_text():
 def test_core_identity_has_correct_school():
     from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
 
-    assert "경기북과고" in ID
+    assert "죽전초등학교" in ID  # elementary
+    assert "죽전중학교" in ID  # middle
+    assert "경기북과고" in ID  # high (12기, 조기졸업)
     assert "절대 대전과학고" in ID  # explicit negation of the hallucinated school
 
 
