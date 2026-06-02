@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import difflib
 import re
 import time
 from collections import defaultdict
@@ -93,6 +94,53 @@ class ConversationSessionOrchestrator:
     def split_response(text: str) -> list[str]:
         text = text.replace("\\n", "\n")
         return [line.strip() for line in text.split("\n") if line.strip()]
+
+    @staticmethod
+    def _normalize(s: str) -> str:
+        """Whitespace/punctuation-insensitive key for repetition comparison."""
+        return re.sub(r"[\s.,!?~…]+", "", s).lower()
+
+    @staticmethod
+    def dedupe_lines(
+        lines: list[str],
+        recent: list[str] | None = None,
+        min_len: int = 7,
+        threshold: float = 0.85,
+    ) -> list[str]:
+        """Drop lines that repeat earlier lines in this burst or the bot's recent
+        output. Breaks the self-cascade where the bot replays the same phrase
+        (e.g. "야마자키 마시러 가자") turn after turn.
+
+        Short reaction tokens (< min_len chars, e.g. ㅋㅋㅋㅋ, ㄷㄷ, 헉) are signature
+        phrases and are never deduped — repeating them is in-character.
+        """
+        recent_norm = [
+            ConversationSessionOrchestrator._normalize(r)
+            for r in (recent or [])
+            if len(r.strip()) >= min_len
+        ]
+        kept: list[str] = []
+        kept_norm: list[str] = []
+        for line in lines:
+            if len(line.strip()) < min_len:
+                kept.append(line)
+                continue
+            norm = ConversationSessionOrchestrator._normalize(line)
+            is_dup = any(
+                norm == prev
+                or difflib.SequenceMatcher(None, norm, prev).ratio() >= threshold
+                for prev in kept_norm + recent_norm
+            )
+            if is_dup:
+                continue
+            kept.append(line)
+            kept_norm.append(norm)
+        return kept
+
+    @staticmethod
+    def cap_bursts(lines: list[str], max_lines: int = 3) -> list[str]:
+        """Enforce the persona's documented 2-3 messages-per-turn burst pattern."""
+        return lines[:max_lines]
 
     def build_system_prompt(
         self,

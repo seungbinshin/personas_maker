@@ -126,6 +126,35 @@ class ChannelMemory:
             lines.append(f"[{m['sender']}] {m['text']}")
         return "\n".join(lines)
 
+    def get_conversation_exclude_last_bot(self, channel_id: str) -> str:
+        """Like get_conversation but drops a trailing bot turn, so the model never
+        reads its own latest message as the thing to 'continue' — cuts the core
+        self-echo feedback edge."""
+        msgs = self.history.get(channel_id, [])
+        if not msgs:
+            return ""
+        cutoff = time.time() - self.session_timeout
+        recent = [m for m in msgs if m["ts"] > cutoff]
+        if recent and recent[-1]["role"] != "user":
+            recent = recent[:-1]
+        if not recent:
+            return ""
+        return "\n".join(f"[{m['sender']}] {m['text']}" for m in recent)
+
+    def recent_bot_lines(self, channel_id: str, last_n_msgs: int = 4) -> list[str]:
+        """Individual lines the bot recently said (within the session), used to
+        suppress verbatim/near-verbatim self-repetition before sending."""
+        cutoff = time.time() - self.session_timeout
+        recent = [m for m in self.history.get(channel_id, []) if m["ts"] > cutoff]
+        bot_msgs = [m for m in recent if m["role"] != "user"][-last_n_msgs:]
+        lines: list[str] = []
+        for m in bot_msgs:
+            for ln in m["text"].split("\n"):
+                ln = ln.strip()
+                if ln:
+                    lines.append(ln)
+        return lines
+
     def get_cached_prompt(self, channel_id: str) -> str | None:
         cached = self.cached_prompts.get(channel_id)
         if cached and (time.time() - cached["ts"]) < 300:
@@ -383,7 +412,8 @@ def _call_api(prompt: str, timeout_ms: int, session_id: str | None = None) -> st
 _call_api._last_session_id = None
 
 def generate_chat_response(channel_id: str, channel_tone: str) -> str:
-    conversation = memory.get_conversation(channel_id)
+    # Exclude a trailing bot turn so the model never continues its own last line.
+    conversation = memory.get_conversation_exclude_last_bot(channel_id)
     if not conversation:
         return ""
 
@@ -404,15 +434,17 @@ def generate_chat_response(channel_id: str, channel_tone: str) -> str:
             f"---\n\n"
             f"아래는 Slack 대화야. [{DISPLAY_NAME}]은 네가 이전에 한 말이야:\n\n"
             f"{conversation}\n\n"
-            f"위 대화에 {DISPLAY_NAME}으로서 자연스럽게 대답해. 코드나 개발 도움이 아니라 일상 대화야. "
-            f"짧게 한국어 반말로. 이전 답변과 일관성 유지. 할 말 없으면 [SKIP]만.\n\n"
+            f"위 대화의 마지막 메시지에 {DISPLAY_NAME}으로서 짧게 반응해. 코드나 개발 도움이 아니라 일상 대화야. "
+            f"한국어 반말로, 한두 줄이면 충분해. "
+            f"이미 한 말을 반복하거나 대화를 요약·나열하지 마. 마지막 메시지에 대한 새로운 반응만 해. "
+            f"할 말 없거나 같은 말이 반복될 것 같으면 [SKIP]만.\n\n"
             f"도구 사용 없이 바로 대답해."
         )
 
     return _call_api(prompt, timeout_ms=30000)
 
 def generate_research_response(channel_id: str, channel_tone: str) -> str:
-    conversation = memory.get_conversation(channel_id)
+    conversation = memory.get_conversation_exclude_last_bot(channel_id)
     if not conversation:
         return ""
 
@@ -439,7 +471,8 @@ def generate_research_response(channel_id: str, channel_tone: str) -> str:
             f"2. 검색 결과를 {DISPLAY_NAME} 말투로 자연스럽게 전달해 (짧은 한국어 반말).\n"
             f"3. 숫자/데이터는 정확하게, 하지만 말투는 캐주얼하게.\n"
             f"4. 출처 URL은 붙이지 마. 친구한테 말하듯이.\n"
-            f"5. 할 말 없으면 [SKIP]만."
+            f"5. 이미 한 말은 반복하지 마.\n"
+            f"6. 할 말 없으면 [SKIP]만."
         )
 
     return _call_api(prompt, timeout_ms=120000)
@@ -467,14 +500,34 @@ def _handle_draft(client, channel_id: str, sender_name: str, original_text: str,
         ),
     )
 
+# Max messages the persona may post in a single turn. The owner's chat data shows
+# 66% of real bursts are 2-3 messages; this enforces that and bounds the feedback
+# loop (a long reply re-enters context next turn and gets imitated).
+MAX_BURST_LINES = 3
+
 def send_response(client, channel_id: str, response: str, thread_ts: str = None):
-    for line in split_response(response):
+    lines = split_response(response)
+    # Drop lines that repeat the bot's own recent output (self-cascade blocker),
+    # then cap to the burst limit.
+    lines = ConversationSessionOrchestrator.dedupe_lines(
+        lines, memory.recent_bot_lines(channel_id)
+    )
+    if len(lines) > MAX_BURST_LINES:
+        logger.warning(f"  ⚠️ Burst truncated: {len(lines)} → {MAX_BURST_LINES} lines")
+        lines = ConversationSessionOrchestrator.cap_bursts(lines, MAX_BURST_LINES)
+    if not lines:
+        logger.info("  ↷ Response suppressed (all lines were self-repeats)")
+        memory.cached_prompts.pop(channel_id, None)
+        return
+    for line in lines:
         client.chat_postMessage(
             channel=channel_id,
             text=line,
             thread_ts=thread_ts,
         )
-    memory.add_message(channel_id, DISPLAY_NAME, response, is_bot=True)
+    # Store only what was actually sent — keeps memory == channel reality and
+    # stops the 30-msg window from filling with un-sent flood lines.
+    memory.add_message(channel_id, DISPLAY_NAME, "\n".join(lines), is_bot=True)
     memory.cached_prompts.pop(channel_id, None)
 
 def send_code_response(client, channel_id: str, response: str, thread_ts: str = None):
