@@ -50,17 +50,6 @@ def test_dedupe_keeps_distinct_lines():
     assert Orch.dedupe_lines(lines) == ["오 그거 좋네", "근데 좀 비싸지 않아?"]
 
 
-# ─── cap_bursts: enforce the 2-3 burst pattern ──────────────────────
-
-
-def test_cap_bursts_caps_to_three_by_default():
-    assert Orch.cap_bursts(["a", "b", "c", "d", "e"]) == ["a", "b", "c"]
-
-
-def test_cap_bursts_under_limit_unchanged():
-    assert Orch.cap_bursts(["a", "b"]) == ["a", "b"]
-
-
 # ─── retrieve_context: no humor fallback on dark/aggressive input ───
 
 
@@ -136,16 +125,16 @@ class _FakeClient:
         self.posted.append(text)
 
 
-def test_send_response_caps_burst_to_three():
+def test_send_response_posts_all_lines_uncapped():
     import bot
 
     cid = "C_cap"
     bot.memory.clear_channel(cid)
     client = _FakeClient()
     bot.send_response(client, cid, "한줄\n두줄\n세줄\n네줄\n다섯줄")
-    assert client.posted == ["한줄", "두줄", "세줄"]
-    # memory stores only what was actually sent
-    assert bot.memory.get_conversation(cid) == "[승빈] 한줄\n두줄\n세줄"
+    # no per-turn message cap — every distinct line is posted
+    assert client.posted == ["한줄", "두줄", "세줄", "네줄", "다섯줄"]
+    assert bot.memory.get_conversation(cid) == "[승빈] 한줄\n두줄\n세줄\n네줄\n다섯줄"
 
 
 def test_send_response_suppresses_pure_self_repeat():

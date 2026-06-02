@@ -467,8 +467,8 @@ def generate_chat_response(channel_id: str, channel_tone: str) -> str:
             f"---\n\n"
             f"아래는 Slack 대화야. [{DISPLAY_NAME}]은 네가 이전에 한 말이야:\n\n"
             f"{conversation}\n\n"
-            f"위 대화의 마지막 메시지에 {DISPLAY_NAME}으로서 짧게 반응해. 코드나 개발 도움이 아니라 일상 대화야. "
-            f"한국어 반말로, 한두 줄이면 충분해. "
+            f"위 대화의 마지막 메시지에 {DISPLAY_NAME}으로서 반응해. 코드나 개발 도움이 아니라 일상 대화야. "
+            f"한국어 반말로. 보통은 짧게(한두 줄), 설명할 게 많으면 필요한 만큼 더 써도 돼. "
             f"이미 한 말을 반복하거나 대화를 요약·나열하지 마. 마지막 메시지에 대한 새로운 반응만 해. "
             f"네가 한 말에 스스로 ㅋ 붙이지 마(ㅋㅋㅋ는 상대가 진짜 웃길 때만). "
             f"매번 ㅋ로 시작하거나 ㄷㄷ로 끝내는 똑같은 형식 말고, 반응을 매번 다양하게 바꿔. "
@@ -536,21 +536,14 @@ def _handle_draft(client, channel_id: str, sender_name: str, original_text: str,
         ),
     )
 
-# Max messages the persona may post in a single turn. The owner's chat data shows
-# 66% of real bursts are 2-3 messages; this enforces that and bounds the feedback
-# loop (a long reply re-enters context next turn and gets imitated).
-MAX_BURST_LINES = 3
-
 def send_response(client, channel_id: str, response: str, thread_ts: str = None):
     lines = split_response(response)
-    # Drop lines that repeat the bot's own recent output (self-cascade blocker),
-    # then cap to the burst limit.
+    # Drop lines that repeat the bot's own recent output (self-cascade blocker).
+    # No per-turn message cap — the bot outputs as many distinct lines as it needs;
+    # repetition (the actual flooding pathology) is still guarded by dedupe_lines.
     lines = ConversationSessionOrchestrator.dedupe_lines(
         lines, memory.recent_bot_lines(channel_id)
     )
-    if len(lines) > MAX_BURST_LINES:
-        logger.warning(f"  ⚠️ Burst truncated: {len(lines)} → {MAX_BURST_LINES} lines")
-        lines = ConversationSessionOrchestrator.cap_bursts(lines, MAX_BURST_LINES)
     if not lines:
         logger.info("  ↷ Response suppressed (all lines were self-repeats)")
         memory.cached_prompts.pop(channel_id, None)

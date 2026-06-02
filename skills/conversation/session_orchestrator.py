@@ -137,11 +137,6 @@ class ConversationSessionOrchestrator:
             kept_norm.append(norm)
         return kept
 
-    @staticmethod
-    def cap_bursts(lines: list[str], max_lines: int = 3) -> list[str]:
-        """Enforce the persona's documented 2-3 messages-per-turn burst pattern."""
-        return lines[:max_lines]
-
     def build_system_prompt(
         self,
         channel_id: str,
