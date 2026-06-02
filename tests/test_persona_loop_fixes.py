@@ -192,7 +192,15 @@ def test_chat_prompt_steers_away_from_self_laugh_and_monotony(monkeypatch):
     p = captured["prompt"]
     assert "스스로 ㅋ" in p  # don't laugh at your own lines
     assert "다양하게" in p  # vary the format / openers
+    assert "애교" in p  # don't use 앙/웅 aegyo with friends
     assert "일관성 유지" not in p  # regression guard: old self-echo framing stays gone
+
+
+def test_core_identity_restricts_aegyo_to_girlfriend():
+    from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
+
+    assert "애교" in ID
+    assert "여친 채연한테만" in ID  # 앙/웅/사랑해 are girlfriend-only
 
 
 # ─── [SKIP] leak: robust marker stripping ───────────────────────────
