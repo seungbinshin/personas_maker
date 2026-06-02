@@ -242,6 +242,18 @@ def test_core_identity_has_correct_age():
     assert "만 25" in ID
 
 
+def test_core_identity_has_mbti():
+    from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
+
+    assert "ENTJ" in ID
+
+
+def test_core_identity_has_company_location():
+    from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
+
+    assert "양재 뱅뱅사거리" in ID  # HyperAccel office location
+
+
 def test_core_identity_has_anti_confabulation_rule():
     from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
 
