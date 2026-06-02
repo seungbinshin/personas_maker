@@ -189,8 +189,30 @@ class BotState:
     channel_tones: dict = {}
     monitored_channels: set = set()
     pending_drafts: dict = {}
+    last_chat_ts: dict = {}  # channel_id -> ts of the latest human chat message
 
 state = BotState()
+
+def _ts_float(ts: str) -> float:
+    try:
+        return float(ts)
+    except (TypeError, ValueError):
+        return 0.0
+
+def _mark_chat_message(channel_id: str, ts: str) -> None:
+    """Record the latest human chat message ts for a channel."""
+    prev = state.last_chat_ts.get(channel_id)
+    if prev is None or _ts_float(ts) >= _ts_float(prev):
+        state.last_chat_ts[channel_id] = ts
+
+def _is_chat_superseded(channel_id: str, my_ts: str) -> bool:
+    """True if a newer human chat message arrived after my_ts. Used to drop a
+    reply whose triggering message was overtaken mid-generation — Slack Bolt
+    runs each event in its own thread, so rapid bursts spawn concurrent
+    generations that would otherwise post overlapping/duplicate replies (read by
+    users as the bot responding to itself)."""
+    latest = state.last_chat_ts.get(channel_id)
+    return latest is not None and _ts_float(latest) > _ts_float(my_ts)
 
 # ─── Dev Sessions (coder type only) ─────────────────────────────
 
@@ -1856,10 +1878,19 @@ def handle_message(event, client, logger):
         return
 
     # Quick chat path
+    my_ts = event.get("ts", "")
+    _mark_chat_message(channel_id, my_ts)
     response = generate_chat_response(channel_id, tone)
 
     if not response:
         logger.info(f"  → No response generated (empty or SKIP)")
+        return
+
+    # Drop a reply whose triggering message was overtaken by a newer one while we
+    # were generating — the newer message's handler will answer. Prevents the
+    # concurrent-burst overlap that reads as the bot responding to itself.
+    if not is_test and _is_chat_superseded(channel_id, my_ts):
+        logger.info(f"  ↷ Superseded by newer message during generation; dropping stale reply")
         return
 
     logger.info(f"  ✅ Response ready ({len(response)} chars)")

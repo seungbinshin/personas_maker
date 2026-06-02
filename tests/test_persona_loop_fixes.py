@@ -223,6 +223,27 @@ def test_strip_skip_keeps_normal_text():
     assert _strip_skip("그냥 일하지 뭐") == "그냥 일하지 뭐"
 
 
+# ─── self-respond: drop a reply superseded by a newer human message ─
+
+
+def test_chat_superseded_when_newer_message_arrives():
+    import bot
+
+    bot.state.last_chat_ts.clear()
+    bot._mark_chat_message("C", "100.100")
+    bot._mark_chat_message("C", "100.200")  # a newer message arrives
+    assert bot._is_chat_superseded("C", "100.100") is True  # older reply is stale
+    assert bot._is_chat_superseded("C", "100.200") is False  # latest still answers
+
+
+def test_chat_not_superseded_for_single_message():
+    import bot
+
+    bot.state.last_chat_ts.clear()
+    bot._mark_chat_message("C", "200.000")
+    assert bot._is_chat_superseded("C", "200.000") is False
+
+
 # ─── identity corrections (school, age, anti-confabulation) ─────────
 
 
@@ -246,6 +267,14 @@ def test_core_identity_has_mbti():
     from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
 
     assert "ENTJ" in ID
+
+
+def test_core_identity_residence_is_gangbuk():
+    from skills.persona.context_builder import DEFAULT_CORE_IDENTITY as ID
+
+    loc_line = [l for l in ID.split("\n") if l.strip().startswith("location:")][0]
+    assert "강북" in loc_line  # residence
+    assert "대전" not in loc_line  # corrected away from the KAIST-era inference
 
 
 def test_core_identity_has_company_location():
