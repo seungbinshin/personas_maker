@@ -169,3 +169,27 @@ def test_send_response_keeps_fresh_line_drops_repeat():
     client = _FakeClient()
     bot.send_response(client, cid, "야마자키 마시러 가자 진짜\n오 그건 진짜 새로운 얘기네")
     assert client.posted == ["오 그건 진짜 새로운 얘기네"]
+
+
+# ─── chat prompt: break the formulaic ㅋㅋㅋㅋ…ㄷㄷ skeleton ──────────
+
+
+def test_chat_prompt_steers_away_from_self_laugh_and_monotony(monkeypatch):
+    import bot
+
+    captured = {}
+
+    def fake_call_api(prompt, timeout_ms, session_id=None):
+        captured["prompt"] = prompt
+        return ""
+
+    monkeypatch.setattr(bot, "_call_api", fake_call_api)
+    cid = "C_prompt"
+    bot.memory.clear_channel(cid)
+    bot.memory.add_message(cid, "Harry", "뭐해")
+    bot.generate_chat_response(cid, "casual")
+
+    p = captured["prompt"]
+    assert "스스로 ㅋ" in p  # don't laugh at your own lines
+    assert "다양하게" in p  # vary the format / openers
+    assert "일관성 유지" not in p  # regression guard: old self-echo framing stays gone
