@@ -69,6 +69,9 @@ class ResearchPipeline(BasePipeline):
     def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path, url_resolver=None):
         super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver)
         self.research_config = bot_config.get("research", {})
+        # Apply an effort level (e.g. "max") to all one-shot investigation calls.
+        # Stateful chat sessions are excluded automatically by ClaudeRuntimeClient.
+        self.runtime.default_effort = self.research_config.get("effort")
         self.publish_channel = self.research_config.get("publish_channel", "")
         self.status_channel = self.research_config.get("status_channel", "")
         self.max_intern_feedback_rounds = self.research_config.get("max_intern_feedback_rounds", 3)

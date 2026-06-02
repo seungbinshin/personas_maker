@@ -49,7 +49,7 @@ RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY, url_resolve
 
 VALID_MODELS = {
     "sonnet": os.environ.get("CLAUDE_SONNET_MODEL", "claude-sonnet-4-6"),
-    "opus": os.environ.get("CLAUDE_OPUS_MODEL", "claude-opus-4-7"),
+    "opus": os.environ.get("CLAUDE_OPUS_MODEL", "claude-opus-4-8"),
     "haiku": os.environ.get("CLAUDE_HAIKU_MODEL", "claude-haiku-4-5-20251001"),
 }
 

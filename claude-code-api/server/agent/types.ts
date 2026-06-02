@@ -8,6 +8,7 @@ export interface RunRequest {
   cwd?: string;            // per-request working directory (e.g. git worktree path)
   model?: string;          // per-request model override (e.g. "claude-opus-4-6")
   allowFileWrite?: boolean; // if true, removes Write/Edit/NotebookEdit from disallowedTools
+  effort?: "low" | "medium" | "high" | "max"; // sets CLAUDE_CODE_EFFORT_LEVEL for this request's session
 }
 
 export interface RunResult {

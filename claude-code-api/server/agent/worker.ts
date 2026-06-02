@@ -77,6 +77,7 @@ export class AgentWorker {
     cwd?: string;
     model?: string;
     allowFileWrite?: boolean;
+    effort?: string;
   }): Promise<void> {
     const env: Record<string, string> = {};
     for (const [k, v] of Object.entries(process.env)) {
@@ -93,13 +94,18 @@ export class AgentWorker {
       delete env.ANTHROPIC_API_KEY;
     }
 
+    // Per-request effort level (low|medium|high|max). The Claude Code CLI reads
+    // CLAUDE_CODE_EFFORT_LEVEL and it takes precedence over the model default.
+    if (opts?.effort) env.CLAUDE_CODE_EFFORT_LEVEL = opts.effort;
+
     const claudeExe = findClaudeExecutable();
     const effectiveCwd = opts?.cwd || this.projectDir;
     const effectiveModel = opts?.model || CLAUDE_MODEL;
 
     console.log(
       `[Agent] Worker ${this.id}: model=${effectiveModel} exe=${claudeExe} cwd=${effectiveCwd}` +
-      (opts?.allowFileWrite ? " fileWrite=ON" : "")
+      (opts?.allowFileWrite ? " fileWrite=ON" : "") +
+      (opts?.effort ? ` effort=${opts.effort}` : "")
     );
 
     if (process.env.NODE_ENV === "production") {
@@ -154,6 +160,7 @@ export class AgentWorker {
     cwd?: string;
     model?: string;
     allowFileWrite?: boolean;
+    effort?: string;
   }): Promise<void> {
     const env: Record<string, string> = {};
     for (const [k, v] of Object.entries(process.env)) {
@@ -167,13 +174,17 @@ export class AgentWorker {
       delete env.ANTHROPIC_API_KEY;
     }
 
+    // Per-request effort level (low|medium|high|max) via CLAUDE_CODE_EFFORT_LEVEL.
+    if (opts.effort) env.CLAUDE_CODE_EFFORT_LEVEL = opts.effort;
+
     const claudeExe = findClaudeExecutable();
     const effectiveCwd = opts.cwd || this.projectDir;
     const effectiveModel = opts.model || CLAUDE_MODEL;
 
     console.log(
       `[Agent] Worker ${this.id} (no-warmup): model=${effectiveModel} exe=${claudeExe} cwd=${effectiveCwd}` +
-      (opts.allowFileWrite ? " fileWrite=ON" : "")
+      (opts.allowFileWrite ? " fileWrite=ON" : "") +
+      (opts.effort ? ` effort=${opts.effort}` : "")
     );
 
     const sessionOptions: SDKSessionOptions & { cwd?: string } = {
@@ -214,7 +225,7 @@ export class AgentWorker {
   }
 
   async execute(request: RunRequest): Promise<RunResult> {
-    const hasOverrides = request.cwd || request.model || request.allowFileWrite;
+    const hasOverrides = request.cwd || request.model || request.allowFileWrite || request.effort;
 
     // If per-request overrides are provided, create a fresh session (skip warmup — the real prompt is the first message)
     if (hasOverrides) {
@@ -224,6 +235,7 @@ export class AgentWorker {
         cwd: request.cwd,
         model: request.model,
         allowFileWrite: request.allowFileWrite,
+        effort: request.effort,
       });
     }
 

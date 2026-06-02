@@ -2,7 +2,7 @@
   "name": "research",
   "display_name": "연구팀",
   "persona_type": "research_pipeline",
-  "default_model": "claude-opus-4-7",
+  "default_model": "claude-opus-4-8",
   "api_keys": "research:sk-research-key-12345",
   "schedule": {
     "discovery_scan": "22:00",
@@ -28,7 +28,8 @@
     "num_ideas": 3,
     "max_parallel": 3,
     "max_intern_feedback_rounds": 3,
-    "reviewer_accept_threshold": 7
+    "reviewer_accept_threshold": 7,
+    "effort": "max"
   },
   "discourse": {
     "base_url": "https://hyperaccel.discourse.group",

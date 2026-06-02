@@ -17,6 +17,7 @@ class LLMRunRequest:
     cwd: str | None = None
     model: str | None = None
     allow_file_write: bool = False
+    effort: str | None = None  # 'low'|'medium'|'high'|'max' — maps to CLAUDE_CODE_EFFORT_LEVEL
 
 
 @dataclass(slots=True)

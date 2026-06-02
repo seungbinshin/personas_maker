@@ -26,12 +26,17 @@ class ClaudeRuntimeClient:
         api_key: str,
         heartbeat_callback: Callable[[str, str | None, str], None] | None = None,
         url_resolver: Callable[[], str] | None = None,
+        default_effort: str | None = None,
     ):
         self.api_url = api_url.rstrip("/")
         self.api_key = api_key
         self.heartbeat_callback = heartbeat_callback
         self.url_resolver = url_resolver
         self.last_session_id: str | None = None
+        # When set ('low'|'medium'|'high'|'max'), stamped onto every one-shot
+        # (session-less) request. Stateful sessions are excluded because each
+        # request would otherwise force a session rebuild and lose chat context.
+        self.default_effort = default_effort
 
     def _post_run(self, body: dict, http_timeout: int) -> requests.Response:
         return requests.post(
@@ -99,6 +104,12 @@ class ClaudeRuntimeClient:
                 body["model"] = request.model
             if request.allow_file_write:
                 body["allowFileWrite"] = True
+            # Effort applies to one-shot calls only. Skip for stateful sessions:
+            # passing it would mark the request as an "override" server-side and
+            # rebuild the session each turn, dropping conversation history.
+            effort = request.effort or self.default_effort
+            if effort and not request.session_id:
+                body["effort"] = effort
 
             resp = self._post_run_with_refresh(body, http_timeout)
             resp.raise_for_status()
