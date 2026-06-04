@@ -762,7 +762,7 @@ class ResearchPipeline(BasePipeline):
         for rev in reviews:
             idea_id = rev.get("idea_id", "")
             for rid in valid_ids:
-                if idea_id in rid:
+                if self._rid_matches_idea(rid, idea_id):
                     self.store.save_artifact(
                         rid, "review_v1.json",
                         json.dumps(rev, ensure_ascii=False, indent=2),
@@ -815,6 +815,13 @@ class ResearchPipeline(BasePipeline):
 
         self._post_status("\n".join(lines), agent="reviewer")
 
+    @staticmethod
+    def _rid_matches_idea(report_id: str, idea_id: str) -> bool:
+        """Exact match of the idea_id portion of a report_id ('NNN_<idea_id>').
+        Substring matching ('idea_id in rid') could route a review to the wrong
+        report when one idea_id is a substring of another."""
+        return bool(idea_id) and report_id.split("_", 1)[-1] == idea_id
+
     # ─── Stage 6: Post-Review Revision Loop ─────────────────────
 
     def run_revision_loop(self, report_ids: list[str], batch_review: dict):
@@ -833,6 +840,11 @@ class ResearchPipeline(BasePipeline):
 
         logger.info(f"=== Stage 6: Revision Loop ({len(revise_ids)} reports, max {self.max_revision_rounds} rounds) ===")
 
+        # Reports whose revision could not be GENERATED (timeout/validation/system
+        # error). These must not be marked 'infeasible' — that label is a content
+        # verdict reserved for reviewer rejection after max rounds.
+        authoring_failed: set[str] = set()
+
         for round_num in range(1, self.max_revision_rounds + 1):
             self._post_status(
                 f":arrows_counterclockwise: *리비전 라운드 {round_num}/{self.max_revision_rounds}* ({len(revise_ids)}건)",
@@ -846,8 +858,12 @@ class ResearchPipeline(BasePipeline):
                     report = self._researcher_revise_report(rid, round_num, i, len(revise_ids))
                     if report:
                         revised_ids.append(rid)
+                        authoring_failed.discard(rid)
+                    else:
+                        authoring_failed.add(rid)
                 except Exception as e:
                     logger.error(f"Revision failed for {rid}: {e}", exc_info=True)
+                    authoring_failed.add(rid)
 
             if not revised_ids:
                 break
@@ -863,7 +879,7 @@ class ResearchPipeline(BasePipeline):
                 idea_id = rev.get("idea_id", "")
                 decision = rev.get("decision", "unknown")
                 for rid in revised_ids:
-                    if idea_id in rid:
+                    if self._rid_matches_idea(rid, idea_id):
                         review_version = round_num + 1
                         self.store.save_artifact(
                             rid, f"review_v{review_version}.json",
@@ -888,15 +904,28 @@ class ResearchPipeline(BasePipeline):
                 agent="reviewer",
             )
 
-            revise_ids = still_revise
+            # Carry this round's authoring failures into the next round so they
+            # get re-attempted (still_revise is built from revised_ids only, so
+            # without this they'd silently vanish from the loop).
+            revise_ids = still_revise + [
+                rid for rid in revise_ids if rid in authoring_failed
+            ]
             if not revise_ids:
                 break
 
-        # Mark remaining revise reports as infeasible after max rounds
+        # Mark remaining revise reports as infeasible after max rounds —
+        # but only those the REVIEWER kept rejecting. Authoring failures stay
+        # 'revise' so they can be retried instead of being misjudged as infeasible.
         for rid in revise_ids:
-            self.store.update_state(rid, "infeasible", metadata={"reason": f"{self.max_revision_rounds}회 리비전 후에도 승인 불가"})
             state = self.store.get_report(rid)
             idea_id = state.get("idea_id", "unknown") if state else "unknown"
+            if rid in authoring_failed:
+                self._post_status(
+                    f":warning: `{idea_id}` — 리비전 생성 실패(시스템 오류), 'revise' 상태 유지 (invalid/ 산출물 확인)",
+                    agent="researcher",
+                )
+                continue
+            self.store.update_state(rid, "infeasible", metadata={"reason": f"{self.max_revision_rounds}회 리비전 후에도 승인 불가"})
             self._post_status(
                 f":no_entry: `{idea_id}` — {self.max_revision_rounds}회 리비전 후 실현 불가능으로 판단, 종료",
                 agent="reviewer",
@@ -1356,6 +1385,20 @@ class ResearchPipeline(BasePipeline):
         self.run_feedback_loop(report_ids)
         self.run_reports(report_ids)
 
+        # Sweep in stray reports stuck at report_draft (e.g. salvaged after a
+        # validation-fail incident, or a run that died before Stage 5) so they
+        # get reviewed with this batch instead of sitting unreviewable forever.
+        stray_draft_ids = [
+            r["report_id"] for r in self.store.list_reports("report_draft")
+            if r.get("report_id") and r["report_id"] not in report_ids
+        ]
+        if stray_draft_ids:
+            self._post_status(
+                f":recycle: 리뷰 대기 중이던 report_draft {len(stray_draft_ids)}건을 이번 배치 리뷰에 포함합니다.",
+                agent="reviewer",
+            )
+            report_ids = report_ids + stray_draft_ids
+
         batch_review = self.run_batch_review(report_ids)
         if batch_review:
             has_revise = any(
@@ -1383,7 +1426,7 @@ class ResearchPipeline(BasePipeline):
                 continue
 
             for rid in report_ids:
-                if idea_id not in rid:
+                if not self._rid_matches_idea(rid, idea_id):
                     continue
                 report = self.store.load_artifact(rid, "report_final.md")
                 idea_brief_json = self.store.load_artifact(rid, "idea_brief.json")

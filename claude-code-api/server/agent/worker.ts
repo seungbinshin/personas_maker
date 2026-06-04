@@ -1,5 +1,7 @@
 import {
+  query,
   unstable_v2_createSession,
+  type Options,
   type SDKSession,
   type SDKSessionOptions,
   type SDKResultMessage,
@@ -49,6 +51,10 @@ export class AgentWorker {
   private busySince?: number;
   private session: SDKSession | null = null;
   private projectDir: string;
+  // Override fingerprint of the current session. Stateful sessions are rebuilt
+  // ONLY when this changes — rebuilding on every override request (old
+  // behavior) wiped chat context on every turn that carried a cwd.
+  private sessionOverridesKey = "";
 
   constructor(id: string, userId?: string) {
     this.id = id;
@@ -226,23 +232,38 @@ export class AgentWorker {
 
   async execute(request: RunRequest): Promise<RunResult> {
     const hasOverrides = request.cwd || request.model || request.allowFileWrite || request.effort;
+    const isStateful = Boolean(request.sessionId);
 
-    // If per-request overrides are provided, create a fresh session (skip warmup — the real prompt is the first message)
-    if (hasOverrides) {
-      this.session?.close();
-      this.session = null;
-      await this._createSessionNoWarmup({
+    // Session-less request with overrides → one-shot v1 query() (see
+    // _runOneShotOverride for why the v2 session path cannot honor cwd).
+    // The worker's warm base session stays intact for subsequent requests.
+    const oneShotOverride = Boolean(hasOverrides && !isStateful);
+
+    if (hasOverrides && isStateful) {
+      // Stateful session: (re)build only when the overrides actually change.
+      const key = JSON.stringify({
         cwd: request.cwd,
         model: request.model,
         allowFileWrite: request.allowFileWrite,
         effort: request.effort,
       });
+      if (key !== this.sessionOverridesKey || !this.session) {
+        this.session?.close();
+        this.session = null;
+        await this._createSessionNoWarmup({
+          cwd: request.cwd,
+          model: request.model,
+          allowFileWrite: request.allowFileWrite,
+          effort: request.effort,
+        });
+        this.sessionOverridesKey = key;
+      }
     }
 
     if (this._state !== "ready") {
       throw new Error(`Worker ${this.id} is not ready (state: ${this._state})`);
     }
-    if (!this.session) {
+    if (!oneShotOverride && !this.session) {
       throw new Error(`Worker ${this.id} has no session`);
     }
 
@@ -250,10 +271,13 @@ export class AgentWorker {
     this.busySince = Date.now();
     const startTime = Date.now();
     const timeoutMs = request.timeoutMs || DEFAULT_TIMEOUT_MS;
+    const abortController = new AbortController();
 
     try {
       const result = await Promise.race([
-        this._ask(request.prompt),
+        oneShotOverride
+          ? this._runOneShotOverride(request, abortController)
+          : this._ask(request.prompt),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("hard timeout")), timeoutMs)
         ),
@@ -275,6 +299,7 @@ export class AgentWorker {
       };
     } catch (err) {
       const timedOut = (err as Error).message === "hard timeout";
+      if (timedOut) abortController.abort();
       return {
         success: false,
         output: timedOut ? "" : String(err),
@@ -286,6 +311,62 @@ export class AgentWorker {
       this._state = "ready";
       this.busySince = undefined;
     }
+  }
+
+  /**
+   * One-shot execution via the v1 query() API, used for session-less requests
+   * with per-request overrides (cwd/model/allowFileWrite/effort).
+   *
+   * WHY: the v2 SDKSessionOptions silently DROPS `cwd` — in SDK 0.2.50 the
+   * session constructor forwards an explicit field list that does not include
+   * it. Override "sessions" therefore always ran in the server's process.cwd:
+   * the research bot's report figures landed in the ccapi install directory
+   * instead of the report's researcher/ directory, and every report shipped
+   * without figures. v1 query() honors Options.cwd at spawn time.
+   */
+  private async _runOneShotOverride(
+    request: RunRequest,
+    abortController: AbortController,
+  ): Promise<SDKResultMessage> {
+    const options: Options = {
+      abortController,
+      model: request.model || CLAUDE_MODEL,
+      pathToClaudeCodeExecutable: findClaudeExecutable(),
+      permissionMode: "bypassPermissions",
+      disallowedTools: getDisallowedTools(request.allowFileWrite),
+      cwd: request.cwd || this.projectDir,
+      env: this._buildEnv(request.effort),
+    };
+
+    console.log(
+      `[Agent] Worker ${this.id} (one-shot query): model=${options.model} cwd=${options.cwd}` +
+      (request.allowFileWrite ? " fileWrite=ON" : "") +
+      (request.effort ? ` effort=${request.effort}` : "")
+    );
+
+    for await (const msg of query({ prompt: request.prompt, options })) {
+      if (msg.type === "result") {
+        return msg as SDKResultMessage;
+      }
+    }
+    throw new Error("Query ended without result");
+  }
+
+  private _buildEnv(effort?: string): Record<string, string> {
+    const env: Record<string, string> = {};
+    for (const [k, v] of Object.entries(process.env)) {
+      if (v !== undefined) env[k] = v;
+    }
+    env.CLAUDE_CODE_SKIP_BYPASS_PERMISSIONS_WARNING = "1";
+    env.DISABLE_INSTALLATION_CHECKS = "1";
+    // Prevent nested Claude Code session error
+    delete env.CLAUDECODE;
+    if (!process.env.USE_CLAUDE_API_KEY) {
+      delete env.ANTHROPIC_API_KEY;
+    }
+    // Per-request effort level via CLAUDE_CODE_EFFORT_LEVEL.
+    if (effort) env.CLAUDE_CODE_EFFORT_LEVEL = effort;
+    return env;
   }
 
   private async _ask(prompt: string): Promise<SDKResultMessage> {
