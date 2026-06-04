@@ -1,0 +1,87 @@
+{
+  "date": "2026-06-05",
+  "digest": {
+    "date": "2026-06-05",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "TSMC CEO Warns Chip Supply Won't Meet AI Demand for Years",
+            "summary": "TSMC C.C. Wei 회장이 주주총회에서 AI發 수요를 향후 수년간 공급이 따라가지 못할 것이라고 밝혔다. 미국 등 신규 증설에도 첨단 패키징·생산능력 병목이 지속될 전망이며, 메모리처럼 급격한 가격 인상은 자제하겠다고 했다.",
+            "source": "Bloomberg",
+            "source_url": "https://www.bloomberg.com/news/articles/2026-06-04/tsmc-ceo-warns-chip-supply-won-t-meet-ai-fueled-demand-for-years",
+            "published_date": "2026-06-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Intel's New Crescent Island Datacenter GPU Detailed",
+            "summary": "Intel의 신형 데이터센터 GPU 'Crescent Island'가 Xe3P 아키텍처 기반에 최대 480GB LPDDR5X 메모리를 탑재한 에이전틱 AI 추론용 칩으로 조명됐다. NVIDIA가 Groq 인수 후 접은 Rubin CPX의 공백을 노린 포지셔닝으로 평가된다.",
+            "source": "The Register",
+            "source_url": "https://www.theregister.com/ai-and-ml/2026/06/04/intels-new-gpu-is-what-nvidias-rubin-cpx-nearly-was/5250989",
+            "published_date": "2026-06-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "DeepSeek to Raise ~$7.4B in Maiden Funding Round",
+            "summary": "중국 AI 스타트업 DeepSeek가 텐센트·CATL 등으로부터 약 500억 위안(74억 달러) 규모 첫 펀딩을 추진 중이다. 투자 후 기업가치는 520억~590억 달러 수준으로 거론된다.",
+            "source": "Reuters/Yahoo Finance",
+            "source_url": "https://finance.yahoo.com/markets/stocks/articles/deepseek-slated-draw-7-billion-041632070.html",
+            "published_date": "2026-06-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Apoha Exits Stealth with $36M Series A for 'Wave-Form' AI",
+            "summary": "신생 AI 스타트업 Apoha가 새로운 액체 '파형(wave-form)' 데이터 기반 AI를 내세우며 3,600만 달러 시리즈 A로 스텔스에서 벗어났다. 기존 디지털 방식과 다른 연산 패러다임을 표방한다.",
+            "source": "Fortune",
+            "source_url": "https://fortune.com/2026/06/03/apoha-36-million-series-a-funding-round-exit-stealth-wave-form-ai-liquid-intelligence/",
+            "published_date": "2026-06-04",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Coralogix Raises $200M to Build Monitoring Layer for AI Agents",
+            "summary": "옵저버빌리티 업체 Coralogix가 AI 에이전트 감시·모니터링 계층 구축을 노리고 2억 달러를 조달했다. 에이전틱 AI 확산에 따른 운영·관측 수요 증가를 겨냥한 베팅이다.",
+            "source": "TechCrunch",
+            "source_url": "https://techcrunch.com/2026/06/03/coralogix-raises-200m-in-race-to-build-the-monitoring-layer-for-ai-agents/",
+            "published_date": "2026-06-04",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Oil Falls ~3% to ~$92 on Israel-Lebanon Ceasefire and Iran Talks",
+            "summary": "WTI 유가가 이스라엘-레바논 휴전 합의와 미-이란 협상 진전 기대에 3% 넘게 하락해 배럴당 약 92달러로 내려갔다. 중동 공급 차질 우려가 완화되며 위험자산 심리가 일부 개선됐다.",
+            "source": "Trading Economics",
+            "source_url": "https://tradingeconomics.com/commodity/crude-oil",
+            "published_date": "2026-06-05",
+            "credibility": "major_media"
+          },
+          {
+            "title": "May Jobs Report Due Friday; Payrolls Seen Cooling as Warsh's First FOMC Nears",
+            "summary": "5월 비농업 고용지표(6월 5일 발표)는 8.5만~9.3만 명 증가로 둔화가 예상되며 노동시장의 점진적 냉각을 시사한다. 켈빈 워시 신임 연준 의장의 첫 FOMC가 6월 6일 시작돼 시장의 관망세가 짙다.",
+            "source": "Yahoo Finance",
+            "source_url": "https://finance.yahoo.com/economy/live/jobs-report-may-data-labor-market-live-updates-090000760.html",
+            "published_date": "2026-06-05",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "유출가 Kopite7kimi가 NVIDIA 차세대 소비자용 RTX 60 시리즈가 Rubin 아키텍처('GR20x' 다이) 기반으로 2027년 하반기에야 출시될 것이라고 주장. 게이밍 Rubin 칩은 아직 테이프아웃도 안 된 미확인 루머.",
+        "source": "@kopite7kimi (via Tom's Hardware)",
+        "source_url": "https://www.tomshardware.com/pc-components/gpus/nvidias-next-gen-rtx-60-series-might-not-debut-until-the-second-half-of-2027-says-leaker-rumor-claims-rubin-architecture-will-power-future-consumer-gpus"
+      },
+      {
+        "snippet": "중국이 공개했다는 신형 국산 AI 칩 아키텍처를 두고 모델명·트랜지스터 수·TOPS 등 구체 사양과 출시일이 일절 공개되지 않아 업계 추측만 무성한 상태.",
+        "source": "Technosports (industry speculation)",
+        "source_url": "https://technosports.co.in/ai-chip-china-next/"
+      }
+    ]
+  },
+  "published_at": "2026-06-05T02:49:33.559565+09:00"
+}
