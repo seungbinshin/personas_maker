@@ -29,6 +29,13 @@ RESEARCH_KEYWORDS = re.compile(
 # Word tokens for topic-perseveration detection (>=2 chars; hangul/latin/digit).
 _TOKEN_RE = re.compile(r"[0-9A-Za-z가-힣]{2,}")
 
+# All-jamo tokens (ㄷㄷ, ㄹㅇ, ㅋㅋ, ㅇㅈ …) — by construction of the writing
+# system these are chat interjections/abbreviations, never content words. They
+# are invisible to _TOKEN_RE (hangul-syllable range), rotate under the modal
+# opener bar, and land mid-line — hence their own TIC detection dimension.
+_JAMO_RE = re.compile(r"[ㄱ-ㅎㅏ-ㅣ]+")
+_TOKEN_TRIM = ".,!?~…"
+
 
 @dataclass(slots=True)
 class ConversationMessage:
@@ -163,6 +170,10 @@ class ConversationSessionOrchestrator:
     TOPIC_HUMAN_WINDOW = 12  # human turns used as the self-calibrating baseline
     STRUCTURE_WINDOW = 4  # turns examined for a locked line-count skeleton
     MASKABLE_LEN = 2      # only short interjection tokens get masked/stripped
+    TIC_WINDOW = 8        # recent bot turns for jamo-interjection overuse
+    TIC_MIN_DF = 4        # tic must appear in >=4 of last 8 turns (chronic,
+    #                       not bursty — no prior-window gate, unlike topics)
+    TIC_HUMAN_MARGIN = 2  # mirroring a tic the humans also spam is room culture
 
     @staticmethod
     def _collapse_runs(token: str) -> str:
@@ -189,7 +200,7 @@ class ConversationSessionOrchestrator:
         report: dict = {
             "opener": None, "opener_count": 0,
             "closer": None, "closer_count": 0,
-            "topics": [], "line_count": None,
+            "topics": [], "tics": [], "line_count": None,
         }
         turns = [t.strip() for t in bot_turns if t and t.strip()]
 
@@ -258,6 +269,36 @@ class ConversationSessionOrchestrator:
                     break
             report["topics"] = kept
 
+        # TIC overuse: an all-jamo interjection (ㄷㄷ/ㄹㅇ class) appearing
+        # ANYWHERE in most recent turns. These rotate under the opener bar and
+        # sit mid-line/on non-final line ends, so the positional and topic
+        # detectors never see them. Chronic by nature — no burstiness gate.
+        if len(turns) >= cls.TIC_MIN_DF:
+            def jamo_forms(text: str) -> dict[str, str]:
+                """collapsed form -> original surface form, per turn."""
+                forms: dict[str, str] = {}
+                for tok in text.split():
+                    tok = tok.strip(_TOKEN_TRIM)
+                    if tok and _JAMO_RE.fullmatch(tok):
+                        forms.setdefault(cls._collapse_runs(tok), tok)
+                return forms
+
+            bot_forms = [jamo_forms(t) for t in turns[-cls.TIC_WINDOW:]]
+            human_df = Counter(
+                k
+                for t in human_turns[-cls.TOPIC_HUMAN_WINDOW:]
+                for k in jamo_forms(t)
+            )
+            bot_df = Counter(k for f in bot_forms for k in f)
+            tics = []
+            for key, df in bot_df.most_common():
+                if df < cls.TIC_MIN_DF:
+                    break
+                if df - human_df.get(key, 0) < cls.TIC_HUMAN_MARGIN:
+                    continue
+                tics.append(next(f[key] for f in bot_forms if key in f))
+            report["tics"] = tics[:3]
+
         # STRUCTURE lock-in: identical multi-line count across recent turns.
         if len(turns) >= cls.STRUCTURE_WINDOW:
             counts = [
@@ -273,7 +314,8 @@ class ConversationSessionOrchestrator:
     def has_convergence_flags(report: dict) -> bool:
         return bool(
             report.get("opener") or report.get("closer")
-            or report.get("topics") or report.get("line_count")
+            or report.get("topics") or report.get("tics")
+            or report.get("line_count")
         )
 
     @classmethod
@@ -295,6 +337,12 @@ class ConversationSessionOrchestrator:
             items.append(
                 f"{topics} 얘기(표현)를 여러 턴째 반복해서 끌고 가는 중이야. "
                 f"상대가 다시 꺼내기 전엔 쓰지 마."
+            )
+        if report.get("tics"):
+            tics = ", ".join(f"'{t}'" for t in report["tics"])
+            items.append(
+                f"{tics} 같은 추임새를 거의 매 답변마다 쓰고 있어. "
+                f"이번 답변에선 그 추임새 없이 말해."
             )
         if report.get("line_count"):
             items.append(
@@ -334,6 +382,13 @@ class ConversationSessionOrchestrator:
         for stem in report.get("topics", []):
             if any(cls._stem_match(tok, stem) for tok in tokens):
                 violations.append(f"'{stem}' 화제를 또 언급함")
+        if report.get("tics"):
+            raw_tokens = {
+                cls._collapse_runs(t.strip(_TOKEN_TRIM)) for t in text.split()
+            }
+            for tic in report["tics"]:
+                if cls._collapse_runs(tic) in raw_tokens:
+                    violations.append(f"'{tic}' 추임새를 또 씀")
         return violations
 
     @classmethod
@@ -360,9 +415,11 @@ class ConversationSessionOrchestrator:
 
     @classmethod
     def mask_attractor_tokens(cls, text: str, tokens: tuple | list) -> str:
-        """Remove flagged opener/closer interjections from a RENDERED context
-        turn so in-context induction loses its fuel (the model stops seeing 14
-        copies of its own locked opener). Memory itself is untouched."""
+        """Remove flagged interjections from a RENDERED context turn so
+        in-context induction loses its fuel (the model stops seeing 14 copies
+        of its own locked opener/tic). Removes the token at ANY position —
+        tics land mid-line and on non-final line ends, not just turn edges.
+        Memory itself is untouched."""
         masked = {
             cls._collapse_runs(t)
             for t in tokens
@@ -372,11 +429,10 @@ class ConversationSessionOrchestrator:
             return text
         out = []
         for line in text.split("\n"):
-            parts = line.split()
-            if parts and cls._collapse_runs(parts[0]) in masked:
-                parts = parts[1:]
-            if parts and cls._collapse_runs(parts[-1]) in masked:
-                parts = parts[:-1]
+            parts = [
+                p for p in line.split()
+                if cls._collapse_runs(p.strip(_TOKEN_TRIM)) not in masked
+            ]
             if parts:
                 out.append(" ".join(parts))
         return "\n".join(out)

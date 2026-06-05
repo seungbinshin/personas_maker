@@ -552,11 +552,12 @@ def _detect_channel_convergence(channel_id: str) -> tuple[dict, int, list]:
         memory.recent_human_turns(channel_id, ConversationSessionOrchestrator.TOPIC_HUMAN_WINDOW),
     )
     streak = _update_convergence_streak(channel_id, report)
-    mask = [t for t in (report["opener"], report["closer"]) if t]
+    mask = [t for t in (report["opener"], report["closer"], *report["tics"]) if t]
     if ConversationSessionOrchestrator.has_convergence_flags(report):
         logger.info(
             f"  🌀 Convergence flags (streak {streak}): opener={report['opener']} "
-            f"closer={report['closer']} topics={report['topics']} lines={report['line_count']}"
+            f"closer={report['closer']} topics={report['topics']} tics={report['tics']} "
+            f"lines={report['line_count']}"
         )
     return report, streak, mask
 

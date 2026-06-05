@@ -588,3 +588,96 @@ def test_sender_name_falls_back_to_uid_and_does_not_cache_failure():
     bot._sender_name_cache.clear()
     assert bot._get_sender_name(client, "U_CACHE2") == "U_CACHE2"  # graceful fallback
     assert bot._get_sender_name(client, "U_CACHE2") == "준희"  # failure was not cached
+
+
+# ─── detect_convergence: TIC (jamo interjection) overuse ─────────────
+# ㄷㄷ/ㄹㅇ escaped all three dimensions: they rotate (each under the 4-of-5
+# opener bar), land mid-line or on non-final line ends (closer checks only the
+# last line), and are all-jamo so the hangul-syllable topic tokenizer never
+# sees them. The TIC dimension counts all-jamo tokens (a Unicode class, not a
+# token list) anywhere in a turn.
+
+
+def _tic_turns(tic: str, n_with: int = 5, n_total: int = 8) -> list[str]:
+    turns = []
+    openers = ["오", "야", "근데", "그건", "헉", "흠", "원래", "약간"]
+    for i in range(n_total):
+        if i < n_with:
+            turns.append(f"{openers[i]} 새로운 말 {i}번째 {tic}\n다음 줄 {i}")
+        else:
+            turns.append(f"{openers[i]} 전혀 다른 말 {i}\n새 줄이다 {i}")
+    return turns
+
+
+def test_tic_flagged_when_jamo_token_overused():
+    report = Orch.detect_convergence(_tic_turns("ㅉㅉ", 5), ["새 질문이야"])
+    assert "ㅉㅉ" in report["tics"]  # synthetic jamo — no hardcoded token list
+
+
+def test_tic_not_flagged_below_threshold():
+    report = Orch.detect_convergence(_tic_turns("ㅉㅉ", 3), ["새 질문이야"])
+    assert report["tics"] == []  # 3-of-8 is normal signature seasoning
+
+
+def test_tic_not_flagged_when_humans_use_it_too():
+    humans = ["ㅉㅉ 그러게", "아 ㅉㅉ", "ㅉㅉ 맞지", "ㅉㅉ", "별개 얘기"]
+    report = Orch.detect_convergence(_tic_turns("ㅉㅉ", 5), humans)
+    assert report["tics"] == []  # mirroring room culture is not a tic
+
+
+def test_tic_ignores_regular_hangul_words():
+    # A real 2-char word repeated every turn is the TOPIC detector's domain —
+    # the tic class is jamo-only tokens.
+    report = Orch.detect_convergence(_tic_turns("인정", 8), ["새 질문이야"])
+    assert report["tics"] == []
+
+
+def test_tic_groups_character_run_variants():
+    turns = [
+        "오 하나 ㄷㄷ\n둘", "야 둘 ㄷㄷㄷ\n셋", "근데 셋 ㄷㄷ\n넷",
+        "그건 넷 ㄷㄷㄷㄷ\n다섯", "헉 다섯 ㄷㄷ\n여섯", "흠 여섯\n일곱",
+        "원래 일곱\n여덟", "약간 여덟\n아홉",
+    ]
+    report = Orch.detect_convergence(turns, ["새 질문이야"])
+    assert any(t.startswith("ㄷㄷ") for t in report["tics"])
+
+
+def test_render_note_names_tic():
+    report = Orch.detect_convergence(_tic_turns("ㅉㅉ", 6), ["새 질문이야"])
+    note = Orch.render_convergence_note(report)
+    assert "ㅉㅉ" in note
+    assert "추임새" in note
+
+
+def test_violations_detect_tic():
+    report = Orch.detect_convergence(_tic_turns("ㅉㅉ", 6), ["새 질문이야"])
+    assert Orch.convergence_violations("새 대답이긴 한데 ㅉㅉ 또 썼다", report)
+    assert Orch.convergence_violations("이번엔 추임새 없이 말함", report) == []
+
+
+def test_mask_removes_tokens_anywhere_in_line():
+    # Tics land mid-line and on non-final line ends — masking must remove the
+    # flagged token at ANY position, not just turn-initial/final.
+    out = Orch.mask_attractor_tokens("에어컨 의미가 없잖아 ㄷㄷ\nㄷㄷ 손흥민 걱정은 ㄹㅇ 맞말", ("ㄷㄷ", "ㄹㅇ"))
+    assert "ㄷㄷ" not in out and "ㄹㅇ" not in out
+    assert "에어컨 의미가 없잖아" in out and "손흥민 걱정은 맞말" in out
+
+
+def test_chat_prompt_masks_and_names_flagged_tic(monkeypatch):
+    import bot
+
+    fake = _FakeAPI([""])
+    monkeypatch.setattr(bot, "_call_api", fake)
+    cid = "C_tic"
+    bot.memory.clear_channel(cid)
+    openers = ["오", "야", "근데", "그건", "헉", "흠"]
+    for i in range(6):
+        bot.memory.add_message(cid, "Harry", f"질문 {i}번이야 어떻게 생각해")
+        bot.memory.add_message(cid, bot.DISPLAY_NAME, f"{openers[i]} 답변 {i}번 ㅉㅉ", is_bot=True)
+    bot.memory.add_message(cid, "Harry", "마지막 새 질문")
+    bot.state.convergence_streaks.pop(cid, None)
+    bot.generate_chat_response(cid, "casual")
+    p = fake.prompts[0]
+    assert "추임새" in p  # tic named in the dynamic note
+    assert "답변 4번 ㅉㅉ" not in p  # masked out of the rendered context
+    assert "답변 4번" in p  # content itself survives
