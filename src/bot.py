@@ -103,15 +103,26 @@ class ChannelMemory:
         self.max_messages = max_messages
         self.session_timeout = session_timeout
 
-    def add_message(self, channel_id: str, sender: str, text: str, is_bot: bool = False):
+    def add_message(self, channel_id: str, sender: str, text: str, is_bot: bool = False,
+                    ephemeral: bool = False):
+        """ephemeral=True marks filler the bot posted but that must never become
+        a persona example in the generation context (static interim lines like
+        '잠시만 검색좀 ㄱㄱ' — repeated verbatim across conversations, they
+        homogenize the buffer and feed the style attractor)."""
         self.history[channel_id].append({
             "role": DISPLAY_NAME if is_bot else "user",
             "sender": sender if not is_bot else DISPLAY_NAME,
             "text": text,
             "ts": time.time(),
+            "ephemeral": ephemeral,
         })
         if len(self.history[channel_id]) > self.max_messages:
             self.history[channel_id] = self.history[channel_id][-self.max_messages:]
+        if not is_bot:
+            # A new human message can change the topic — drop the cached RAG
+            # system prompt so chunk selection tracks the live conversation
+            # (it used to stay stale for up to 300s across human turns).
+            self.cached_prompts.pop(channel_id, None)
 
     def get_conversation(self, channel_id: str) -> str:
         msgs = self.history.get(channel_id, [])
@@ -140,6 +151,60 @@ class ChannelMemory:
         if not recent:
             return ""
         return "\n".join(f"[{m['sender']}] {m['text']}" for m in recent)
+
+    def recent_bot_turns(self, channel_id: str, n: int = 16) -> list[str]:
+        """The bot's recent full turns (multi-line text intact, ephemeral filler
+        excluded) — input for the convergence detector."""
+        cutoff = time.time() - self.session_timeout
+        recent = [m for m in self.history.get(channel_id, []) if m["ts"] > cutoff]
+        return [
+            m["text"] for m in recent
+            if m["role"] != "user" and not m.get("ephemeral")
+        ][-n:]
+
+    def recent_human_turns(self, channel_id: str, n: int = 12) -> list[str]:
+        """Recent human messages — the self-calibrating baseline for the topic
+        detector (a topic humans keep feeding is a live gag, not a loop)."""
+        cutoff = time.time() - self.session_timeout
+        recent = [m for m in self.history.get(channel_id, []) if m["ts"] > cutoff]
+        return [m["text"] for m in recent if m["role"] == "user"][-n:]
+
+    def get_conversation_for_generation(
+        self, channel_id: str, max_bot_turns: int = 8, mask_tokens: tuple | list = (),
+    ) -> str:
+        """Conversation rendering for the generation prompt with the feedback
+        gain reduced: ALL human messages, but only the most recent
+        `max_bot_turns` bot turns (older self-output is pure induction fuel),
+        no ephemeral filler, no trailing bot turn (the self-continue edge stays
+        cut), and flagged attractor tokens masked out of the bot's own lines.
+        Memory itself is untouched — this only shapes what the model re-reads."""
+        cutoff = time.time() - self.session_timeout
+        recent = [
+            m for m in self.history.get(channel_id, [])
+            if m["ts"] > cutoff and not m.get("ephemeral")
+        ]
+        kept: list[dict] = []
+        bot_count = 0
+        for m in reversed(recent):
+            if m["role"] == "user":
+                kept.append(m)
+            elif bot_count < max_bot_turns:
+                kept.append(m)
+                bot_count += 1
+        kept.reverse()
+        if kept and kept[-1]["role"] != "user":
+            kept = kept[:-1]
+        if not kept:
+            return ""
+        lines = []
+        for m in kept:
+            text = m["text"]
+            if m["role"] != "user" and mask_tokens:
+                text = ConversationSessionOrchestrator.mask_attractor_tokens(text, mask_tokens)
+                if not text.strip():
+                    continue
+            lines.append(f"[{m['sender']}] {text}")
+        return "\n".join(lines)
 
     def recent_bot_lines(self, channel_id: str, last_n_msgs: int = 4) -> list[str]:
         """Individual lines the bot recently said (within the session), used to
@@ -190,8 +255,20 @@ class BotState:
     monitored_channels: set = set()
     pending_drafts: dict = {}
     last_chat_ts: dict = {}  # channel_id -> ts of the latest human chat message
+    convergence_streaks: dict = {}  # channel_id -> consecutive flagged-turn count
 
 state = BotState()
+
+def _update_convergence_streak(channel_id: str, report: dict) -> int:
+    """Consecutive turns the convergence detector has flagged this channel.
+    Streak 1 = soft prompt nudge only; streak >= 2 (the nudge was ignored) is
+    when post-generation enforcement kicks in — the hysteresis that stops a
+    naturally clustered signature from oscillating on/off."""
+    if ConversationSessionOrchestrator.has_convergence_flags(report):
+        state.convergence_streaks[channel_id] = state.convergence_streaks.get(channel_id, 0) + 1
+    else:
+        state.convergence_streaks[channel_id] = 0
+    return state.convergence_streaks[channel_id]
 
 def _ts_float(ts: str) -> float:
     try:
@@ -301,17 +378,8 @@ def switch_model(new_model_id: str) -> bool:
     return True
 
 # ─── Question Classification ─────────────────────────────────────
-
-RESEARCH_KEYWORDS = re.compile(
-    r"(시세|시가|종가|주가|얼마|몇\s?달러|몇\s?원|환율|금리|금값"
-    r"|나스닥|코스피|코스닥|다우|S&P|s&p|비트코인|이더리움|BTC|ETH|솔라나"
-    r"|뉴스|소식|최근|최신|요즘|오늘|어제|이번\s?주|실적|발표"
-    r"|날씨|기온|비\s?오|미세먼지"
-    r"|찾아봐|검색해|알아봐|조사해|확인해|서치|search"
-    r"|출시|업데이트|패치|언제\s?나|런칭|발매"
-    r"|경기|스코어|순위|몇\s?대\s?몇|이겼|졌)"
-    r"", re.IGNORECASE
-)
+# The keyword regex lives in ConversationSessionOrchestrator (the authoritative
+# copy) — a dead duplicate here once let a fix land in the wrong file.
 
 def classify_question(text: str) -> str:
     return ConversationSessionOrchestrator.classify_question(text)
@@ -444,15 +512,30 @@ def _call_api(prompt: str, timeout_ms: int, session_id: str | None = None) -> st
 
 _call_api._last_session_id = None
 
+def _detect_channel_convergence(channel_id: str) -> tuple[dict, int, list]:
+    """Run the convergence detector over this channel's live memory and update
+    the per-channel streak. Returns (report, streak, mask_tokens)."""
+    report = ConversationSessionOrchestrator.detect_convergence(
+        memory.recent_bot_turns(channel_id, 2 * ConversationSessionOrchestrator.TOPIC_WINDOW),
+        memory.recent_human_turns(channel_id, ConversationSessionOrchestrator.TOPIC_HUMAN_WINDOW),
+    )
+    streak = _update_convergence_streak(channel_id, report)
+    mask = [t for t in (report["opener"], report["closer"]) if t]
+    if ConversationSessionOrchestrator.has_convergence_flags(report):
+        logger.info(
+            f"  🌀 Convergence flags (streak {streak}): opener={report['opener']} "
+            f"closer={report['closer']} topics={report['topics']} lines={report['line_count']}"
+        )
+    return report, streak, mask
+
+
 def generate_chat_response(channel_id: str, channel_tone: str) -> str:
-    # Exclude a trailing bot turn so the model never continues its own last line.
-    conversation = memory.get_conversation_exclude_last_bot(channel_id)
-    if not conversation:
-        return ""
-
-    system_prompt = _build_system_prompt(channel_id, channel_tone)
-
     if PERSONA_TYPE == "coder":
+        # Exclude a trailing bot turn so the model never continues its own last line.
+        conversation = memory.get_conversation_exclude_last_bot(channel_id)
+        if not conversation:
+            return ""
+        system_prompt = _build_system_prompt(channel_id, channel_tone)
         prompt = (
             f"{system_prompt}\n\n"
             f"---\n\n"
@@ -461,32 +544,66 @@ def generate_chat_response(channel_id: str, channel_tone: str) -> str:
             f"위 대화에 자연스럽게 대답해. 코딩 관련 질문이면 코드로 답하고, "
             f"일반 대화면 짧게 한국어로 대답해. 할 말 없으면 [SKIP]만."
         )
-    else:
-        prompt = (
-            f"{system_prompt}\n\n"
-            f"---\n\n"
-            f"아래는 Slack 대화야. [{DISPLAY_NAME}]은 네가 이전에 한 말이야:\n\n"
-            f"{conversation}\n\n"
-            f"위 대화의 마지막 메시지에 {DISPLAY_NAME}으로서 반응해. 코드나 개발 도움이 아니라 일상 대화야. "
-            f"한국어 반말로. 보통은 짧게(한두 줄), 설명할 게 많으면 필요한 만큼 더 써도 돼. "
-            f"이미 한 말을 반복하거나 대화를 요약·나열하지 마. 마지막 메시지에 대한 새로운 반응만 해. "
-            f"네가 한 말에 스스로 ㅋ 붙이지 마(ㅋㅋㅋ는 상대가 진짜 웃길 때만). "
-            f"매번 ㅋ로 시작하거나 ㄷㄷ로 끝내는 똑같은 형식 말고, 반응을 매번 다양하게 바꿔. "
-            f"앙·웅 같은 애교는 친구들한텐 쓰지 마(여친 채연한테만 쓰는 말투야). "
-            f"할 말 없거나 같은 말이 반복될 것 같으면 [SKIP]만.\n\n"
-            f"도구 사용 없이 바로 대답해."
-        )
+        return _call_api(prompt, timeout_ms=30000)
 
-    return _call_api(prompt, timeout_ms=30000)
-
-def generate_research_response(channel_id: str, channel_tone: str) -> str:
-    conversation = memory.get_conversation_exclude_last_bot(channel_id)
+    # Persona path — closed-loop convergence guard. The detector measures
+    # whatever pattern the bot's own recent output converged on (opener, topic,
+    # structure — content-agnostic, no hardcoded tokens), the rendered context
+    # is capped/masked to cut the in-context induction fuel, and a dynamic note
+    # names the live pattern. Enforcement (one retry) only after the soft nudge
+    # was ignored (streak >= 2).
+    report, streak, mask = _detect_channel_convergence(channel_id)
+    conversation = memory.get_conversation_for_generation(
+        channel_id, max_bot_turns=8, mask_tokens=mask
+    )
     if not conversation:
         return ""
 
     system_prompt = _build_system_prompt(channel_id, channel_tone)
+    note = ConversationSessionOrchestrator.render_convergence_note(report, streak)
+    prompt = (
+        f"{system_prompt}\n\n"
+        f"---\n\n"
+        f"아래는 Slack 대화야. [{DISPLAY_NAME}]은 네가 이전에 한 말이야:\n\n"
+        f"{conversation}\n\n"
+        f"위 대화의 마지막 메시지에 {DISPLAY_NAME}으로서 반응해. 코드나 개발 도움이 아니라 일상 대화야. "
+        f"한국어 반말로. 보통은 짧게(한두 줄), 설명할 게 많으면 필요한 만큼 더 써도 돼. "
+        f"이미 한 말을 반복하거나 대화를 요약·나열하지 마. 마지막 메시지에 대한 새로운 반응만 해. "
+        f"네가 한 말에 스스로 ㅋ 붙이지 마(ㅋㅋㅋ는 상대가 진짜 웃길 때만). "
+        f"시작하는 말, 줄 수, 화제를 매번 다양하게 바꿔 — 직전 답변들과 같은 형식을 쓰지 마. "
+        f"앙·웅 같은 애교는 친구들한텐 쓰지 마(여친 채연한테만 쓰는 말투야). "
+        f"할 말 없거나 같은 말이 반복될 것 같으면 [SKIP]만."
+        + (f"\n\n{note}" if note else "")
+        + "\n\n도구 사용 없이 바로 대답해."
+    )
 
+    response = _call_api(prompt, timeout_ms=30000)
+    if response and streak >= 2:
+        violations = ConversationSessionOrchestrator.convergence_violations(response, report)
+        if violations:
+            logger.info(
+                f"  🌀 Pattern persisted after nudge ({'; '.join(violations)}); regenerating once"
+            )
+            retry_prompt = (
+                prompt
+                + "\n\n방금 만든 답변이 또 같은 패턴이었어("
+                + ", ".join(violations)
+                + "). 이번엔 반드시 다르게 써."
+            )
+            # One retry only. Empty/[SKIP] retry → silence (never revert to the
+            # flagged original). The deterministic opener strip below guarantees
+            # the visible streak breaks even if the model disobeys twice.
+            response = _call_api(retry_prompt, timeout_ms=30000)
+            if response:
+                response = ConversationSessionOrchestrator.strip_flagged_opener(response, report)
+    return response
+
+def generate_research_response(channel_id: str, channel_tone: str) -> str:
     if PERSONA_TYPE == "coder":
+        conversation = memory.get_conversation_exclude_last_bot(channel_id)
+        if not conversation:
+            return ""
+        system_prompt = _build_system_prompt(channel_id, channel_tone)
         prompt = (
             f"{system_prompt}\n\n"
             f"---\n\n"
@@ -495,21 +612,35 @@ def generate_research_response(channel_id: str, channel_tone: str) -> str:
             f"위 대화의 마지막 질문에 대해 대답해.\n"
             f"WebSearch 도구를 사용해서 최신 정보를 검색한 후 답변해."
         )
-    else:
-        prompt = (
-            f"{system_prompt}\n\n"
-            f"---\n\n"
-            f"아래는 Slack 대화야. [{DISPLAY_NAME}]은 네가 이전에 한 말이야:\n\n"
-            f"{conversation}\n\n"
-            f"위 대화의 마지막 질문에 대해 {DISPLAY_NAME}으로서 대답해.\n\n"
-            f"중요 지시사항:\n"
-            f"1. WebSearch 도구를 사용해서 최신 정보를 검색해.\n"
-            f"2. 검색 결과를 {DISPLAY_NAME} 말투로 자연스럽게 전달해 (짧은 한국어 반말).\n"
-            f"3. 숫자/데이터는 정확하게, 하지만 말투는 캐주얼하게.\n"
-            f"4. 출처 URL은 붙이지 마. 친구한테 말하듯이.\n"
-            f"5. 이미 한 말은 반복하지 마.\n"
-            f"6. 할 말 없으면 [SKIP]만."
-        )
+        return _call_api(prompt, timeout_ms=120000)
+
+    # Persona path: same convergence guard as chat (research replies converge on
+    # the identical opener/skeleton), but no retry — these calls already take
+    # 13-120s and the next chat turn keeps the pressure.
+    report, streak, mask = _detect_channel_convergence(channel_id)
+    conversation = memory.get_conversation_for_generation(
+        channel_id, max_bot_turns=8, mask_tokens=mask
+    )
+    if not conversation:
+        return ""
+
+    system_prompt = _build_system_prompt(channel_id, channel_tone)
+    note = ConversationSessionOrchestrator.render_convergence_note(report, streak)
+    prompt = (
+        f"{system_prompt}\n\n"
+        f"---\n\n"
+        f"아래는 Slack 대화야. [{DISPLAY_NAME}]은 네가 이전에 한 말이야:\n\n"
+        f"{conversation}\n\n"
+        f"위 대화의 마지막 질문에 대해 {DISPLAY_NAME}으로서 대답해.\n\n"
+        f"중요 지시사항:\n"
+        f"1. WebSearch 도구를 사용해서 최신 정보를 검색해.\n"
+        f"2. 검색 결과를 {DISPLAY_NAME} 말투로 자연스럽게 전달해 (짧은 한국어 반말).\n"
+        f"3. 숫자/데이터는 정확하게, 하지만 말투는 캐주얼하게.\n"
+        f"4. 출처 URL은 붙이지 마. 친구한테 말하듯이.\n"
+        f"5. 이미 한 말은 반복하지 마.\n"
+        f"6. 할 말 없으면 [SKIP]만."
+        + (f"\n\n{note}" if note else "")
+    )
 
     return _call_api(prompt, timeout_ms=120000)
 
@@ -670,7 +801,7 @@ def handle_dev_message(client, channel_id: str, text: str, thread_ts: str = None
     # Send interim message
     interim = generate_interim_message(channel_id, "casual")
     client.chat_postMessage(channel=channel_id, text=interim, thread_ts=thread_ts)
-    memory.add_message(channel_id, DISPLAY_NAME, interim, is_bot=True)
+    memory.add_message(channel_id, DISPLAY_NAME, interim, is_bot=True, ephemeral=True)
 
     def _do_dev_work():
         prompt = (
@@ -1848,7 +1979,7 @@ def handle_message(event, client, logger):
             interim = generate_interim_message(channel_id, tone)
             logger.info(f"  📤 Sending interim: {interim}")
             client.chat_postMessage(channel=channel_id, text=interim, thread_ts=reply_ts)
-            memory.add_message(channel_id, DISPLAY_NAME, interim, is_bot=True)
+            memory.add_message(channel_id, DISPLAY_NAME, interim, is_bot=True, ephemeral=True)
 
             def _do_research():
                 response = generate_research_response(channel_id, tone)
@@ -1928,7 +2059,7 @@ def handle_mention(event, client):
     if question_type == "research" and state.mode != "draft":
         interim = generate_interim_message(channel_id, tone)
         client.chat_postMessage(channel=channel_id, text=interim, thread_ts=thread_ts)
-        memory.add_message(channel_id, DISPLAY_NAME, interim, is_bot=True)
+        memory.add_message(channel_id, DISPLAY_NAME, interim, is_bot=True, ephemeral=True)
 
         def _do_research():
             response = generate_research_response(channel_id, tone)
