@@ -206,6 +206,22 @@ class ChannelMemory:
             lines.append(f"[{m['sender']}] {text}")
         return "\n".join(lines)
 
+    def unanswered_human_count(self, channel_id: str) -> int:
+        """Trailing human messages since the bot's last real (non-ephemeral)
+        turn — the unanswered burst the next reply must cover in one go.
+        Interim filler ('잠시만 검색좀 ㄱㄱ') is not an answer."""
+        cutoff = time.time() - self.session_timeout
+        recent = [
+            m for m in self.history.get(channel_id, [])
+            if m["ts"] > cutoff and not m.get("ephemeral")
+        ]
+        n = 0
+        for m in reversed(recent):
+            if m["role"] != "user":
+                break
+            n += 1
+        return n
+
     def recent_bot_lines(self, channel_id: str, last_n_msgs: int = 4) -> list[str]:
         """Individual lines the bot recently said (within the session), used to
         suppress verbatim/near-verbatim self-repetition before sending."""
@@ -561,14 +577,29 @@ def generate_chat_response(channel_id: str, channel_tone: str) -> str:
 
     system_prompt = _build_system_prompt(channel_id, channel_tone)
     note = ConversationSessionOrchestrator.render_convergence_note(report, streak)
+    # Burst merge: Bolt handles each message in its own thread and supersession
+    # keeps only the newest handler — that surviving reply must cover the WHOLE
+    # unanswered tail, not just the last message (users read dropped content as
+    # the bot ignoring them).
+    tail_n = memory.unanswered_human_count(channel_id)
+    if tail_n >= 2:
+        focus = (
+            f"위 대화에서 네 마지막 답변 이후에 메시지 {tail_n}개가 한꺼번에 왔어. "
+            f"마지막 것만 고르지 말고 {tail_n}개를 다 읽고 하나도 빼먹지 말고 한 번에 반응해"
+            f"(여러 명이면 각자에게 줄을 나눠 답해도 돼). "
+        )
+        fresh_rule = "아직 답 안 한 메시지들에 대한 새로운 반응만 해. "
+    else:
+        focus = f"위 대화의 마지막 메시지에 {DISPLAY_NAME}으로서 반응해. "
+        fresh_rule = "마지막 메시지에 대한 새로운 반응만 해. "
     prompt = (
         f"{system_prompt}\n\n"
         f"---\n\n"
         f"아래는 Slack 대화야. [{DISPLAY_NAME}]은 네가 이전에 한 말이야:\n\n"
         f"{conversation}\n\n"
-        f"위 대화의 마지막 메시지에 {DISPLAY_NAME}으로서 반응해. 코드나 개발 도움이 아니라 일상 대화야. "
+        f"{focus}코드나 개발 도움이 아니라 일상 대화야. "
         f"한국어 반말로. 보통은 짧게(한두 줄), 설명할 게 많으면 필요한 만큼 더 써도 돼. "
-        f"이미 한 말을 반복하거나 대화를 요약·나열하지 마. 마지막 메시지에 대한 새로운 반응만 해. "
+        f"이미 한 말을 반복하거나 대화를 요약·나열하지 마. {fresh_rule}"
         f"네가 한 말에 스스로 ㅋ 붙이지 마(ㅋㅋㅋ는 상대가 진짜 웃길 때만). "
         f"시작하는 말, 줄 수, 화제를 매번 다양하게 바꿔 — 직전 답변들과 같은 형식을 쓰지 마. "
         f"앙·웅 같은 애교는 친구들한텐 쓰지 마(여친 채연한테만 쓰는 말투야). "
@@ -626,12 +657,20 @@ def generate_research_response(channel_id: str, channel_tone: str) -> str:
 
     system_prompt = _build_system_prompt(channel_id, channel_tone)
     note = ConversationSessionOrchestrator.render_convergence_note(report, streak)
+    tail_n = memory.unanswered_human_count(channel_id)
+    if tail_n >= 2:
+        focus = (
+            f"위 대화에서 네 마지막 답변 이후에 온 메시지 {tail_n}개(질문 포함)에 대해 "
+            f"{DISPLAY_NAME}으로서 한 번에 대답해. 하나도 빼먹지 마."
+        )
+    else:
+        focus = f"위 대화의 마지막 질문에 대해 {DISPLAY_NAME}으로서 대답해."
     prompt = (
         f"{system_prompt}\n\n"
         f"---\n\n"
         f"아래는 Slack 대화야. [{DISPLAY_NAME}]은 네가 이전에 한 말이야:\n\n"
         f"{conversation}\n\n"
-        f"위 대화의 마지막 질문에 대해 {DISPLAY_NAME}으로서 대답해.\n\n"
+        f"{focus}\n\n"
         f"중요 지시사항:\n"
         f"1. WebSearch 도구를 사용해서 최신 정보를 검색해.\n"
         f"2. 검색 결과를 {DISPLAY_NAME} 말투로 자연스럽게 전달해 (짧은 한국어 반말).\n"
@@ -2005,6 +2044,12 @@ def handle_message(event, client, logger):
     # Quick chat path
     my_ts = event.get("ts", "")
     _mark_chat_message(channel_id, my_ts)
+    # A newer message already arrived before we even started — its handler will
+    # answer the whole unanswered burst in one merged reply; don't burn a stale
+    # generation that would only be dropped at the supersession gate below.
+    if not is_test and _is_chat_superseded(channel_id, my_ts):
+        logger.info("  ↷ Newer message already arrived; deferring to its handler (burst merge)")
+        return
     response = generate_chat_response(channel_id, tone)
 
     if not response:

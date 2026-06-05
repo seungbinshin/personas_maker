@@ -450,3 +450,101 @@ def test_research_prompt_also_gets_note_and_mask(monkeypatch):
     p = fake.prompts[0]
     assert "[반복" in p
     assert "[승빈] 쩝" not in p
+
+
+# ─── burst merge: answer ALL unanswered messages, not just the last ──
+
+
+def test_unanswered_human_count_counts_trailing_humans():
+    import bot
+
+    cid = "C_tail"
+    bot.memory.clear_channel(cid)
+    bot.memory.add_message(cid, "Harry", "첫 질문")
+    bot.memory.add_message(cid, bot.DISPLAY_NAME, "첫 답변", is_bot=True)
+    bot.memory.add_message(cid, "Harry", "둘째 질문")
+    bot.memory.add_message(cid, "준희", "셋째 질문")
+    assert bot.memory.unanswered_human_count(cid) == 2
+
+
+def test_unanswered_count_spans_ephemeral_interim():
+    import bot
+
+    cid = "C_tail_eph"
+    bot.memory.clear_channel(cid)
+    bot.memory.add_message(cid, "Harry", "비트코인 얼마야")
+    bot.memory.add_message(cid, bot.DISPLAY_NAME, "잠시만 검색좀 ㄱㄱ", is_bot=True, ephemeral=True)
+    bot.memory.add_message(cid, "Harry", "빨리 좀")
+    # the interim filler is not an answer — both human messages are unanswered
+    assert bot.memory.unanswered_human_count(cid) == 2
+
+
+def test_chat_prompt_single_message_keeps_last_message_focus(monkeypatch):
+    import bot
+
+    fake = _FakeAPI([""])
+    monkeypatch.setattr(bot, "_call_api", fake)
+    cid = "C_single"
+    bot.memory.clear_channel(cid)
+    bot.memory.add_message(cid, "Harry", "뭐해")
+    bot.generate_chat_response(cid, "casual")
+    assert "마지막 메시지에" in fake.prompts[0]
+    assert "한꺼번에 왔어" not in fake.prompts[0]
+
+
+def test_chat_prompt_merges_concurrent_burst(monkeypatch):
+    import bot
+
+    fake = _FakeAPI([""])
+    monkeypatch.setattr(bot, "_call_api", fake)
+    cid = "C_burst"
+    bot.memory.clear_channel(cid)
+    bot.memory.add_message(cid, "Harry", "첫 질문이야")
+    bot.memory.add_message(cid, bot.DISPLAY_NAME, "첫 답변", is_bot=True)
+    bot.memory.add_message(cid, "Harry", "음란봇 모드는 없나")
+    bot.memory.add_message(cid, "준희", "ㅋㅋㅋㅋㅋ")
+    bot.generate_chat_response(cid, "casual")
+    p = fake.prompts[0]
+    assert "2개" in p  # tells the model how many messages are unanswered
+    assert "빼먹지" in p  # …and to cover all of them in one reply
+    assert "마지막 메시지에 대한 새로운 반응만" not in p
+
+
+def test_research_prompt_merges_concurrent_burst(monkeypatch):
+    import bot
+
+    fake = _FakeAPI(["검색 결과"])
+    monkeypatch.setattr(bot, "_call_api", fake)
+    cid = "C_burst_r"
+    bot.memory.clear_channel(cid)
+    bot.memory.add_message(cid, "Harry", "비트코인 얼마야")
+    bot.memory.add_message(cid, "준희", "이더리움도")
+    bot.generate_research_response(cid, "casual")
+    assert "2개" in fake.prompts[0]
+
+
+def test_superseded_handler_skips_generation_entirely(monkeypatch):
+    import bot
+
+    calls = []
+    monkeypatch.setattr(bot, "generate_chat_response", lambda *a: calls.append(a) or "")
+
+    class _Client:
+        def users_info(self, user):
+            raise RuntimeError("no slack in tests")
+
+        def conversations_history(self, channel, limit):
+            raise RuntimeError("no slack in tests")
+
+        def chat_postMessage(self, **kw):
+            pass
+
+    cid = "C_precheck"
+    bot.memory.clear_channel(cid)
+    bot.memory.add_message(cid, "Harry", "이전 대화")  # non-empty → no cold sync
+    bot.state.mode = "auto"
+    bot.state.last_chat_ts.clear()
+    bot._mark_chat_message(cid, "100.200")  # a newer message already arrived
+    event = {"channel": cid, "user": "UOTHER", "text": "안녕", "ts": "100.100"}
+    bot.handle_message(event, _Client(), bot.logger)
+    assert calls == []  # stale handler never burns an LLM call
