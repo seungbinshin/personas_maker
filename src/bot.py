@@ -393,6 +393,26 @@ def switch_model(new_model_id: str) -> bool:
     logger.warning("API health check timed out after model switch")
     return True
 
+# ─── Sender name cache ───────────────────────────────────────────
+# users_info is a ~300ms Slack API round trip and ran on EVERY message before
+# generation even started. Display names are stable — cache them per uid.
+
+_sender_name_cache: dict[str, str] = {}
+
+def _get_sender_name(client, user_id: str) -> str:
+    cached = _sender_name_cache.get(user_id)
+    if cached:
+        return cached
+    try:
+        user_info = client.users_info(user=user_id)
+        name = user_info["user"]["profile"].get("display_name") or user_info["user"]["real_name"]
+    except Exception:
+        return user_id  # graceful fallback, not cached — retry next message
+    if name:
+        _sender_name_cache[user_id] = name
+        return name
+    return user_id
+
 # ─── Question Classification ─────────────────────────────────────
 # The keyword regex lives in ConversationSessionOrchestrator (the authoritative
 # copy) — a dead duplicate here once let a fix land in the wrong file.
@@ -462,11 +482,7 @@ def sync_from_slack(client, channel_id: str, limit: int = 15):
             if not text:
                 continue
             is_bot = bool(msg.get("bot_id"))
-            try:
-                user_info = client.users_info(user=uid)
-                name = user_info["user"]["profile"].get("display_name") or user_info["user"]["real_name"]
-            except Exception:
-                name = uid
+            name = _get_sender_name(client, uid)
             memory.add_message(channel_id, name, text, is_bot=is_bot)
     except Exception as e:
         logger.error(f"Failed to sync from Slack: {e}")
@@ -1839,12 +1855,7 @@ def handle_message(event, client, logger):
     text = event.get("text", "")
     channel_id = event["channel"]
 
-    try:
-        user_info = client.users_info(user=user_id)
-        sender_name = user_info["user"]["profile"].get("display_name") or user_info["user"]["real_name"]
-    except Exception:
-        sender_name = user_id
-
+    sender_name = _get_sender_name(client, user_id)
     memory.add_message(channel_id, sender_name, text)
 
     is_test = False
@@ -2082,11 +2093,7 @@ def handle_mention(event, client):
 
     user_id = event.get("user", "")
     text = event.get("text", "")
-    try:
-        user_info = client.users_info(user=user_id)
-        sender_name = user_info["user"]["profile"].get("display_name") or user_info["user"]["real_name"]
-    except Exception:
-        sender_name = user_id
+    sender_name = _get_sender_name(client, user_id)
     memory.add_message(channel_id, sender_name, text)
 
     sync_from_slack(client, channel_id)

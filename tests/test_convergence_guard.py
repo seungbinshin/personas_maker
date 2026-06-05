@@ -548,3 +548,43 @@ def test_superseded_handler_skips_generation_entirely(monkeypatch):
     event = {"channel": cid, "user": "UOTHER", "text": "안녕", "ts": "100.100"}
     bot.handle_message(event, _Client(), bot.logger)
     assert calls == []  # stale handler never burns an LLM call
+
+
+# ─── sender-name cache: drop the ~300ms users_info call per message ──
+
+
+def test_sender_name_cached_after_first_lookup():
+    import bot
+
+    class _CountingClient:
+        def __init__(self):
+            self.calls = 0
+
+        def users_info(self, user):
+            self.calls += 1
+            return {"user": {"profile": {"display_name": "해리"}, "real_name": "Harry"}}
+
+    client = _CountingClient()
+    bot._sender_name_cache.clear()
+    assert bot._get_sender_name(client, "U_CACHE1") == "해리"
+    assert bot._get_sender_name(client, "U_CACHE1") == "해리"
+    assert client.calls == 1  # second lookup is served from cache
+
+
+def test_sender_name_falls_back_to_uid_and_does_not_cache_failure():
+    import bot
+
+    class _FlakyClient:
+        def __init__(self):
+            self.calls = 0
+
+        def users_info(self, user):
+            self.calls += 1
+            if self.calls == 1:
+                raise RuntimeError("slack down")
+            return {"user": {"profile": {"display_name": "준희"}, "real_name": "Junhee"}}
+
+    client = _FlakyClient()
+    bot._sender_name_cache.clear()
+    assert bot._get_sender_name(client, "U_CACHE2") == "U_CACHE2"  # graceful fallback
+    assert bot._get_sender_name(client, "U_CACHE2") == "준희"  # failure was not cached
