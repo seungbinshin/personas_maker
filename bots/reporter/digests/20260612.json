@@ -1,0 +1,34 @@
+{
+  "date": "2026-06-12",
+  "digest": {
+    "date": "2026-06-12",
+    "sections": [
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Investors Brace for a 'Long Grind' as Iran War Escalation Dims Hopes of Early End",
+            "summary": "미 중부사령부의 이란 군사목표 타격과 테헤란의 보복으로 확전 우려가 커지며 시장은 휴전이 아닌 장기전 시나리오를 반영하기 시작했다. 유가는 약 2% 올라 배럴당 100달러 아래에 머물렀고, 아시아 증시는 전반적으로 하락했다. 피치는 미·이란 전쟁을 이유로 글로벌 국가신용 전망을 '악화'로 하향했다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/amp/2026/06/11/iran-war-us-trump-strikes-centcom-oil-investors.html",
+            "published_date": "2026-06-11",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "구글 TPU v8가 HBM을 버리고 실리콘 포토닉스 기반 DRAM 풀로 전환할 수 있다는 미확인 추측. 사실이면 'HBM 프리미엄'이 흔들릴 수 있다는 평. (미확인)",
+        "source": "@GenAI_is_real (X)",
+        "source_url": "https://x.com/GenAI_is_real/status/2018492653437104325"
+      },
+      {
+        "snippet": "인텔 차세대 CPU '서펀트 레이크(Serpent Lake)'가 엔비디아와 공동 개발한 첫 칩이라는 유출설. (미확인)",
+        "source": "PC Gamer",
+        "source_url": "https://www.pcgamer.com/hardware/processors/intels-serpent-lake-is-rumoured-to-be-its-first-chip-developed-in-collaboration-with-nvidia/"
+      }
+    ]
+  },
+  "published_at": "2026-06-12T02:47:46.275736+09:00"
+}
