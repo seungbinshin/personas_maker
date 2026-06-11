@@ -25,7 +25,7 @@
     "publish_channel": "C0AK1BCQHHP",
     "status_channel": "C0AJLC3FS7Q",
     "scope_file": "scopes/hyperaccel.json",
-    "num_ideas": 3,
+    "num_ideas": 1,
     "max_parallel": 3,
     "max_intern_feedback_rounds": 3,
     "reviewer_accept_threshold": 7,

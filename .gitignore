@@ -43,6 +43,7 @@ node_modules/
 # ── Process & log files ──
 .persona.*.pids
 .persona.*.last_restart
+.persona.*.disabled
 .persona.*.log
 .*-api.log
 .*-bot.log

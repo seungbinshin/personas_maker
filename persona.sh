@@ -32,6 +32,9 @@ pid_file()  { echo "$SCRIPT_DIR/.persona.${1}.pids"; }
 api_log()   { echo "$SCRIPT_DIR/.${1}-api.log"; }
 bot_log()   { echo "$SCRIPT_DIR/.${1}-bot.log"; }
 restart_marker() { echo "$SCRIPT_DIR/.persona.${1}.last_restart"; }
+# Manual-stop sentinel: `stop` drops this so the watchdog won't resurrect the
+# bot; `start`/`restart` clears it to hand the bot back to the watchdog.
+disabled_marker() { echo "$SCRIPT_DIR/.persona.${1}.disabled"; }
 
 # Watchdog tuning (override via env)
 WATCHDOG_WINDOW_MIN=${WATCHDOG_WINDOW_MIN:-5}      # look-back window in minutes
@@ -88,6 +91,15 @@ do_start_bot() {
     if [[ ! -f "$bot_dir/.env" ]]; then
         log_err "No .env found for bot '$name'"
         return 1
+    fi
+
+    # An explicit start/restart re-enables watchdog management: clear any
+    # manual-stop sentinel left by a prior `stop`.
+    local dm
+    dm=$(disabled_marker "$name")
+    if [[ -f "$dm" ]]; then
+        rm -f "$dm"
+        log_info "[$name] cleared watchdog-disabled flag (will be auto-managed again)"
     fi
 
     read_bot_pids "$name"
@@ -202,12 +214,25 @@ do_status_bot() {
     else
         log_err "    Bot: not running"
     fi
+
+    if [[ -f "$(disabled_marker "$name")" ]]; then
+        log_warn "    Watchdog: DISABLED (manual stop; run 'start'/'restart' to re-enable)"
+    fi
 }
 
 # ─── Watchdog: detect broken-loop and auto-restart ──────────────
 
 do_watchdog_bot() {
     local name="$1"
+
+    # Honor an explicit manual stop. `persona.sh stop <name>` drops a .disabled
+    # sentinel; while it exists the watchdog leaves the bot down (no cold-start,
+    # no error-restart). `start`/`restart` removes it. Silent skip — logging here
+    # would spam the watchdog log every interval.
+    if [[ -f "$(disabled_marker "$name")" ]]; then
+        return 0
+    fi
+
     local b_log
     b_log=$(bot_log "$name")
     [[ -f "$b_log" ]] || return 0
@@ -326,6 +351,11 @@ case "$cmd" in
         fi
         for bot in $(resolve_bots "$target"); do
             do_stop_bot "$bot"
+            # Drop the manual-stop sentinel so the watchdog won't revive it.
+            # Only the CLI `stop` does this; the watchdog's own error-restart
+            # path calls do_stop_bot directly and must NOT disable.
+            : > "$(disabled_marker "$bot")"
+            log_info "[$bot] watchdog disabled until next start/restart"
         done
         ;;
 
@@ -382,7 +412,7 @@ case "$cmd" in
         echo ""
         echo "Commands:"
         echo "  start <name|all>    Start bot(s) and their API server(s)"
-        echo "  stop <name|all>     Stop bot(s)"
+        echo "  stop <name|all>     Stop bot(s); watchdog won't revive until start/restart"
         echo "  restart <name|all>  Restart bot(s)"
         echo "  status              Show status of all bots"
         echo "  list                List available bots"
