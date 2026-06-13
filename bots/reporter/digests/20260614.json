@@ -1,0 +1,42 @@
+{
+  "date": "2026-06-14",
+  "digest": {
+    "date": "2026-06-14",
+    "sections": [
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Trump Says He Canceled Iran Strikes; Oil Falls ~4% on Peace-Deal Hopes",
+            "summary": "트럼프 대통령이 대이란 공습을 취소하고 전쟁 종식 및 교역로 재개를 위한 양해각서(MOU)에 근접했다고 밝혔다. 휴전 기대감에 WTI는 84.23달러로 약 4% 급락했고, 증시는 혼조세를 보였다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-june-12-2026",
+            "published_date": "2026-06-13",
+            "credibility": "major_media"
+          },
+          {
+            "title": "SpaceX Makes Market Debut in What Could Be the Largest IPO in History",
+            "summary": "SpaceX가 약 1.75조 달러 규모를 노리는 사상 최대 IPO로 증시에 데뷔했다. 개인 투자자 주문만 1000억 달러를 넘어서며 AI·첨단기술·데이터센터 인프라로 향하는 자금 쏠림을 단적으로 보여줬다.",
+            "source": "TheStreet",
+            "source_url": "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-june-12-2026",
+            "published_date": "2026-06-13",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "[미확인] 구글이 CoWoS 패키징 capacity 확보 경쟁에서 엔비디아에 밀려 자체 AI 가속기 TPU 생산 목표를 기존 400만 개에서 100만 개 줄였다는 X 주장. 사실이면 TPU 공급 차질이 우려됨.",
+        "source": "@zephyr_z9 (X)",
+        "source_url": "https://x.com/zephyr_z9/status/2006691080075694462"
+      },
+      {
+        "snippet": "[미확인] AMD Zen 6 'Powderhorn' B0 실리콘에서 경미한 문제가 발견돼 출시가 지연될 수 있으며, Zen 6와 인텔 Nova Lake 모두 CES 2027로 밀릴 수 있다는 유출설.",
+        "source": "Tom's Hardware (leak)",
+        "source_url": "https://www.tomshardware.com/pc-components/cpus/amd-zen-6-and-intel-nova-lake-cpus-reportedly-arriving-late-delayed-to-ces-2027-next-gen-chips-rocked-by-industry-turmoil"
+      }
+    ]
+  },
+  "published_at": "2026-06-14T02:50:00.110084+09:00"
+}
