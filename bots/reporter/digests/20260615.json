@@ -1,0 +1,34 @@
+{
+  "date": "2026-06-15",
+  "digest": {
+    "date": "2026-06-15",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "2026 IEEE/JSAP Symposium on VLSI Technology & Circuits Opens in Honolulu",
+            "summary": "세계 최대 반도체 학회 중 하나인 IEEE/JSAP VLSI 심포지엄이 6월 14~18일 하와이 호놀룰루에서 'VLSI 혁신을 통한 AI 프런티어 진전'을 주제로 개막했다. AI·엣지 컴퓨팅용 차세대 공정·회로 기술 논문이 대거 발표될 예정이다.",
+            "source": "VLSI Symposium / IEEE",
+            "source_url": "https://www.vlsisymposium.org/",
+            "published_date": "2026-06-14",
+            "credibility": "official"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "[미확인] 일론 머스크가 X에서 테슬라 차세대 AI6 칩이 '효율 기록을 깰 것'이라고 주장. AI5는 이미 테이프아웃돼 2027년 말 양산 예정이라는 언급도 나왔다.",
+        "source": "@elonmusk (X) / Not a Tesla App",
+        "source_url": "https://www.notateslaapp.com/news/4283/musk-says-tesla-ai6-chip-will-break-efficiency-records"
+      },
+      {
+        "snippet": "[미확인] 유출자 HXL(@9550pro 추정)이 X에서 인텔 차세대 'Nova Lake' CPU가 AMD Zen 6 대비 세대간 IPC 향상폭에서 앞설 수 있다고 주장. 단 클럭은 Zen 6가 더 높을 것이라는 관측.",
+        "source": "HXL (X) / Notebookcheck",
+        "source_url": "https://www.notebookcheck.net/Zen-6-is-done-Intel-s-return-to-top-with-Nova-Lake-looks-possible-with-more-IPC-uplift-vs-Zen-6.1266976.0.html"
+      }
+    ]
+  },
+  "published_at": "2026-06-15T02:50:28.313616+09:00"
+}
