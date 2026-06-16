@@ -1,0 +1,58 @@
+{
+  "date": "2026-06-17",
+  "digest": {
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "TSMC Teams With Ibiden, Innolux to Validate Glass Substrates for CoPoS Advanced Packaging",
+            "summary": "TSMC가 차세대 패키징 기술 CoPoS에 유리(글래스) 기판을 적용하기 위해 ABF 기판 업체 이비덴, 패널 업체 이노룩스와 공동 검증에 착수했다. 웨이퍼에서 패널 단위 공정으로 전환해 휨·열팽창·전력 무결성을 개선하는 것이 목표다. 양산은 2~3년 뒤로 전망된다.",
+            "source": "DigiTimes",
+            "source_url": "https://www.digitimes.com/news/a20260616PD217/tsmc-innolux-ibiden-packaging-cowos.html",
+            "published_date": "2026-06-16",
+            "credibility": "major_media"
+          },
+          {
+            "title": "AMD and Rackspace Sign Definitive Agreement for Phased Deployment of 30 MW of AMD AI Compute",
+            "summary": "AMD와 랙스페이스가 글로벌 데이터센터에 초기 30MW 규모의 AMD AI 컴퓨팅을 단계적으로 배치하는 정식 계약을 체결했다. 5월 MOU를 구체화한 것으로, Instinct MI355X·MI350P GPU와 EPYC CPU가 2026년 말~2028년 배치된다. AMD를 실리콘 계층 전략 파트너로 확정했다.",
+            "source": "AMD Newsroom",
+            "source_url": "https://www.amd.com/en/newsroom/press-releases/2026-6-16-amd-and-rackspace-technology-sign-definitive.html",
+            "published_date": "2026-06-16",
+            "credibility": "official"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Bank of Japan Hikes Rates to 1%, Highest Since 1995",
+            "summary": "일본은행이 기준금리를 0.75%에서 1%로 인상했다. 1995년 이후 처음으로 1% 수준에 도달한 것으로, 엔화 약세와 누적된 인플레이션 압력에 대응한 결정이다. 표결은 7대 1, 닛케이는 소폭 상승하고 엔화는 달러당 160엔대로 강세를 보였다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/06/16/boj-rate-hike-historic-inflation.html",
+            "published_date": "2026-06-16",
+            "credibility": "major_media"
+          },
+          {
+            "title": "China's Industrial Output Rises 4.5% in May but Retail Sales Contract",
+            "summary": "중국의 5월 산업생산은 전년 대비 4.5% 늘며 시장 예상(4.3%)을 웃돌았다. 반면 소매판매는 0.6% 감소해 2022년 12월 이후 첫 월간 감소를 기록했고, 1~5월 고정자산투자도 4.1% 줄었다. 생산은 개선됐지만 내수 부진이 두드러진 혼조세다.",
+            "source": "Business Standard",
+            "source_url": "https://www.business-standard.com/world-news/china-s-industrial-output-rises-4-5-in-may-but-retail-sales-contract-126061600185_1.html",
+            "published_date": "2026-06-16",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "[미확인] X 사용자 @Gotou_kai3발 유출로, AMD Zen 6 '올림픽 리지(Olympic Ridge)' 데스크톱 CPU가 내장 그래픽(iGPU)을 제거하는 대신 NPU를 탑재할 것이라는 추측. AM5 소켓 유지, 2027년 출시 전망. (미확인)",
+        "source": "@Gotou_kai3 (via VideoCardz)",
+        "source_url": "https://videocardz.com/newz/amd-zen-6-olympic-ridge-desktop-cpus-rumored-to-add-npu-and-drop-igpu"
+      }
+    ]
+  },
+  "published_at": "2026-06-17T02:51:22.278023+09:00"
+}
