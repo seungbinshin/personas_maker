@@ -1,0 +1,66 @@
+{
+  "date": "2026-06-19",
+  "digest": {
+    "date": "2026-06-19",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "SK hynix Ships 12-Layer HBM4E Samples to Major Customers",
+            "summary": "SK하이닉스가 12단 차세대 HBM4E 샘플을 주요 고객사에 출하했다고 서울에서 발표했다. 핀당 최대 16Gbps 속도와 48GB 용량을 제공하며 전력 효율은 HBM4 대비 20%, 열 저항은 17% 개선됐다. 앞서 샘플을 출하한 삼성전자와의 차세대 메모리 주도권 경쟁이 본격화됐다.",
+            "source": "SK hynix Newsroom",
+            "source_url": "https://news.skhynix.com/12-layer-hbm4e-sample/",
+            "published_date": "2026-06-18",
+            "credibility": "official"
+          },
+          {
+            "title": "Samsung Foundry Booming as TSMC Struggles With Demand — Bags Nvidia, Tesla, Qualcomm",
+            "summary": "삼성 파운드리가 TSMC의 선단 공정(2nm 이하) 캐파 부족 속에 엔비디아·테슬라·퀄컴·구글·AMD 등을 신규 고객으로 확보하며 급성장 중이라고 보도됐다. 테슬라 차세대 A16 칩은 삼성 텍사스 공장에서 독점 생산될 전망이다. 그동안 TSMC에 의존하던 기업들이 공급망 리스크 분산에 나선 모습이다.",
+            "source": "TechSpot",
+            "source_url": "https://www.techspot.com/news/112800-samsung-foundry-booming-tsmc-struggles-demand-bags-nvidia.html",
+            "published_date": "2026-06-18",
+            "credibility": "major_media"
+          },
+          {
+            "title": "U.S. Holds Off Blacklisting China's DeepSeek, CXMT and 100+ Firms Deemed Security Risks",
+            "summary": "미국이 안보 위험으로 지목된 AI 스타트업 딥시크, 최대 메모리 업체 CXMT 등 100여 개 중국 기업의 무역 블랙리스트(Entity List) 등재를 보류했다. 작년 부처 간 위원회가 승인했으나 상무부가 명단을 공표하지 않은 상태다. 트럼프 행정부가 베이징과의 무역 휴전 유지를 위해 외교적 고려를 한 것으로 풀이된다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/06/17/us-deepseek-blacklist-cxmt-national-security-risks-.html",
+            "published_date": "2026-06-18",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Fed Holds Rates Steady, Signals Possible Hike Later This Year at Warsh's First Meeting",
+            "summary": "연준이 기준금리를 3.50~3.75%로 동결하며 12대 0 만장일치로 결정했다. 점도표상 2026년 말 금리 중앙값이 3.4%에서 3.8%로 상향돼 연내 최소 한 차례 인상 가능성을 시사했다. 케빈 워시 신임 의장 체제의 첫 FOMC였으며 중동 분쟁발 에너지 물가 상승이 변수로 지목됐다.",
+            "source": "CNBC",
+            "source_url": "https://www.cnbc.com/2026/06/17/fed-interest-rate-decision-june-2026.html",
+            "published_date": "2026-06-18",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Bank of England Holds Base Rate at 3.75%",
+            "summary": "영란은행 통화정책위원회가 6월 18일 기준금리를 3.75%로 동결했다. 5월 CPI가 2.8%로 둔화됐지만 여전히 목표치 2%를 웃돌아 추가 인하를 정당화하기 어려웠다. 중동 분쟁에 따른 에너지 리스크로 하반기 물가 재상승 가능성도 경계 요인으로 꼽혔다.",
+            "source": "CryptoBriefing",
+            "source_url": "https://cryptobriefing.com/bank-of-england-holds-interest-rates-june-2026/",
+            "published_date": "2026-06-18",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "[미확인] 엔비디아 Rubin·Rubin Ultra가 수율·휨(warpage) 문제로 설계/스펙 변경 중이며, Micron·SK하이닉스 베이스 다이 품질 이슈로 Rubin Ultra HBM4E를 16단에서 12단으로 하향한다는 루머. AMD MI500은 2H 2027 출시로 거론.",
+        "source": "wccftech (leaker rumors aggregation)",
+        "source_url": "https://wccftech.com/nvidia-rubin-rubin-ultra-platforms-facing-design-spec-issues-amd-mi500-positioned-for-2h-2027/"
+      }
+    ]
+  },
+  "published_at": "2026-06-19T02:50:02.729423+09:00"
+}
