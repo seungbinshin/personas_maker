@@ -1,0 +1,29 @@
+{
+  "date": "2026-06-22",
+  "digest": {
+    "date": "2026-06-22",
+    "sections": [
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "Oil Markets Brace for Shock as Hormuz Closure Risk Returns",
+            "summary": "호르무즈 재봉쇄 우려로 유가 급등 위험이 다시 부각됐다. 일부 애널리스트는 배럴당 200달러 가능성까지 거론하며, 170달러 수준이면 인플레이션·성장 충격이 두 배로 커지는 스태그플레이션 위험을 경고했다. 중앙은행 정책 경로에도 변수가 됐다.",
+            "source": "Bloomberg",
+            "source_url": "https://www.bloomberg.com/graphics/2026-iran-war-hormuz-closure-oil-shock/",
+            "published_date": "2026-06-21",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": [
+      {
+        "snippet": "인텔의 첫 엔비디아 협업 칩으로 알려진 'Serpent Lake' 유출설. TSMC N3P 기반 차세대 Rubin GPU 기술에 인텔 Titan Lake 세대 CPU 기술을 결합한다는 내용.",
+        "source": "PCGamer (leak)",
+        "source_url": "https://www.pcgamer.com/hardware/processors/intels-serpent-lake-is-rumoured-to-be-its-first-chip-developed-in-collaboration-with-nvidia/"
+      }
+    ]
+  },
+  "published_at": "2026-06-22T08:44:31.561936+09:00"
+}
