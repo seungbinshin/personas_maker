@@ -81,3 +81,27 @@ def test_resolver_returning_same_url_does_not_retry():
 
     assert result.success is False
     assert len(calls) == 1
+
+
+def test_gsapi_uses_responses_gateway_field_names():
+    client = ClaudeRuntimeClient(
+        api_url="http://127.0.0.1:8081",
+        api_key="k",
+        provider="gsapi",
+    )
+    captured = {}
+
+    def fake_post(_url, **kwargs):
+        captured.update(kwargs["json"])
+        return _make_response({"success": True, "output": "ok", "durationMs": 10})
+
+    with patch("tools.claude_runtime.requests.post", side_effect=fake_post):
+        result = client.run(LLMRunRequest(
+            prompt="hi", effort="medium", cwd="/private/project", allow_file_write=True,
+        ))
+
+    assert result.success is True
+    assert captured["reasoningEffort"] == "medium"
+    assert "effort" not in captured
+    assert "cwd" not in captured
+    assert "allowFileWrite" not in captured

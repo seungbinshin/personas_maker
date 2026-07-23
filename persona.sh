@@ -36,6 +36,53 @@ restart_marker() { echo "$SCRIPT_DIR/.persona.${1}.last_restart"; }
 # bot; `start`/`restart` clears it to hand the bot back to the watchdog.
 disabled_marker() { echo "$SCRIPT_DIR/.persona.${1}.disabled"; }
 
+bot_llm_provider() {
+    python3 -c "import json; print(json.load(open('$1/config.json')).get('llm', {}).get('provider', 'ccapi'))" 2>/dev/null || echo "ccapi"
+}
+
+bot_llm_url() {
+    python3 -c "import json; print(json.load(open('$1/config.json')).get('llm', {}).get('url', ''))" 2>/dev/null
+}
+
+ensure_llm_gateway() {
+    local name="$1"
+    local bot_dir="$2"
+    local provider url
+    provider=$(bot_llm_provider "$bot_dir")
+
+    if [[ "$provider" == "gsapi" ]]; then
+        url=$(bot_llm_url "$bot_dir")
+        url=${url:-${GSAPI_URL:-http://127.0.0.1:8081}}
+        local http_code
+        http_code=$(curl -s -o /dev/null -w "%{http_code}" "$url/health" 2>/dev/null || echo "000")
+        if [[ "$http_code" != "200" ]]; then
+            log_err "[$name] gsapi is not healthy at $url (status $http_code)."
+            log_err "[$name] Start ../gpt-service-api on that URL, then retry."
+            return 1
+        fi
+        log_ok "[$name] gsapi healthy at $url"
+        return 0
+    fi
+
+    if [[ "$provider" != "ccapi" ]]; then
+        log_err "[$name] unknown llm.provider '$provider' (use ccapi or gsapi)"
+        return 1
+    fi
+
+    if ! command -v ccapi >/dev/null 2>&1; then
+        log_err "[$name] 'ccapi' not in PATH. Install: ln -sf ~/.local/share/claude-code-api/bin/ccapi ~/.local/bin/ccapi"
+        return 1
+    fi
+    local ccapi_url
+    if ! ccapi_url=$(ccapi ensure 2>&1); then
+        log_err "[$name] ccapi ensure failed:"
+        echo "$ccapi_url"
+        log_err "[$name] If not yet installed, run: ccapi install"
+        return 1
+    fi
+    log_ok "[$name] ccapi healthy at $ccapi_url"
+}
+
 # Watchdog tuning (override via env)
 WATCHDOG_WINDOW_MIN=${WATCHDOG_WINDOW_MIN:-5}      # look-back window in minutes
 WATCHDOG_ERROR_THRESHOLD=${WATCHDOG_ERROR_THRESHOLD:-20}  # restart if [ERROR] count exceeds this
@@ -112,20 +159,9 @@ do_start_bot() {
     local b_log
     b_log=$(bot_log "$name")
 
-    # ─ Ensure global claude-code-api server is healthy (managed by launchd) ─
-    if ! command -v ccapi >/dev/null 2>&1; then
-        log_err "[$name] 'ccapi' not in PATH. Install: ln -sf ~/.local/share/claude-code-api/bin/ccapi ~/.local/bin/ccapi"
-        return 1
-    fi
-    local ccapi_url
-    if ! ccapi_url=$(ccapi ensure 2>&1); then
-        log_err "[$name] ccapi ensure failed:"
-        echo "$ccapi_url"
-        log_err "[$name] If not yet installed, run: ccapi install"
-        return 1
-    fi
-    log_ok "[$name] claude-code-api healthy at $ccapi_url"
-    API_PID="global"
+    # ─ Ensure configured LLM gateway is healthy ─
+    ensure_llm_gateway "$name" "$bot_dir" || return 1
+    API_PID="external"
 
     # ─ Start bot ─
     echo "[$name] Starting bot..."
@@ -151,7 +187,7 @@ EOF
 
     echo ""
     log_ok "[$name] All services started"
-    echo "  API: global (managed by launchd; logs: ccapi logs)"
+    echo "  LLM gateway: $(bot_llm_provider "$bot_dir")"
     echo "  Bot log: $b_log"
 }
 
@@ -194,18 +230,26 @@ do_status_bot() {
 
     echo -e "  ${CYAN}$name${NC} ($display_name, $persona_type)"
 
-    # API — global ccapi server (managed by launchd)
-    local ccapi_url http_code
-    if command -v ccapi >/dev/null 2>&1 && ccapi_url=$(ccapi url 2>/dev/null); then
-        http_code=$(curl -s -o /dev/null -w "%{http_code}" "$ccapi_url/health" 2>/dev/null || echo "000")
-        case "$http_code" in
-            200) log_ok    "    API: running ($ccapi_url, healthy)" ;;
-            503) log_warn  "    API: running ($ccapi_url, warming up)" ;;
-            000) log_err   "    API: not reachable at $ccapi_url" ;;
-            *)   log_warn  "    API: running ($ccapi_url, status $http_code)" ;;
-        esac
+    # API — selected per bot, so reporter can use gsapi while another bot uses ccapi.
+    local provider gateway_url http_code
+    provider=$(bot_llm_provider "$bot_dir")
+    if [[ "$provider" == "gsapi" ]]; then
+        gateway_url=$(bot_llm_url "$bot_dir")
+        gateway_url=${gateway_url:-${GSAPI_URL:-http://127.0.0.1:8081}}
+    elif command -v ccapi >/dev/null 2>&1 && gateway_url=$(ccapi url 2>/dev/null); then
+        :
     else
         log_err "    API: ccapi not installed (run: ccapi install)"
+        gateway_url=""
+    fi
+    if [[ -n "$gateway_url" ]]; then
+        http_code=$(curl -s -o /dev/null -w "%{http_code}" "$gateway_url/health" 2>/dev/null || echo "000")
+        case "$http_code" in
+            200) log_ok    "    API: $provider running ($gateway_url, healthy)" ;;
+            503) log_warn  "    API: $provider running ($gateway_url, warming up)" ;;
+            000) log_err   "    API: $provider not reachable at $gateway_url" ;;
+            *)   log_warn  "    API: $provider running ($gateway_url, status $http_code)" ;;
+        esac
     fi
 
     # Bot

@@ -30,13 +30,13 @@ All dates in output must be in KST (UTC+9). Convert foreign article dates to KST
 TASK: Use WebSearch to find the latest news, then return a structured JSON digest.
 
 Search strategy (use WebSearch multiple times):
-1. Search each keyword group below for news published within the LAST 48 HOURS ONLY:
+1. Search each keyword group below for news published within the LAST {lookback_hours} HOURS ONLY:
 {search_queries_block}
-2. Also search for major economy/market news (global macro, geopolitics, trade policy) from the last 48 hours.
-3. Also search X/Twitter for rumors and unverified scoops related to the keywords from the last 48 hours.
+2. Also search for major economy/market news (global macro, geopolitics, trade policy) from the same period.
+3. Also search X/Twitter for rumors and unverified scoops related to the keywords from the same period.
 
-CRITICAL TIME FILTER: Only include articles published within the last 48 hours.
-Skip any article older than 48 hours even if it appears in search results.
+CRITICAL TIME FILTER: Only include articles published within the last {lookback_hours} hours.
+Skip any article older than that even if it appears in search results.
 When searching, add "today" or "2026" to queries to bias toward recent results.
 
 CATEGORIES — classify every article into exactly one:

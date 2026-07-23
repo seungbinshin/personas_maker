@@ -1,4 +1,4 @@
-"""Shared client for claude-code-api."""
+"""Shared client for ccapi and gsapi's compatible ``/run`` endpoints."""
 
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ class ClaudeRuntimeClient:
         heartbeat_callback: Callable[[str, str | None, str], None] | None = None,
         url_resolver: Callable[[], str] | None = None,
         default_effort: str | None = None,
+        provider: str = "ccapi",
     ):
         self.api_url = api_url.rstrip("/")
         self.api_key = api_key
@@ -37,6 +38,9 @@ class ClaudeRuntimeClient:
         # (session-less) request. Stateful sessions are excluded because each
         # request would otherwise force a session rebuild and lose chat context.
         self.default_effort = default_effort
+        if provider not in {"ccapi", "gsapi"}:
+            raise ValueError(f"Unsupported LLM provider: {provider}")
+        self.provider = provider
 
     def _post_run(self, body: dict, http_timeout: int) -> requests.Response:
         return requests.post(
@@ -98,18 +102,20 @@ class ClaudeRuntimeClient:
             }
             if request.session_id:
                 body["sessionId"] = request.session_id
-            if request.cwd:
+            if request.cwd and self.provider == "ccapi":
                 body["cwd"] = request.cwd
             if request.model:
                 body["model"] = request.model
-            if request.allow_file_write:
+            if request.allow_file_write and self.provider == "ccapi":
                 body["allowFileWrite"] = True
             # Effort applies to one-shot calls only. Skip for stateful sessions:
             # passing it would mark the request as an "override" server-side and
             # rebuild the session each turn, dropping conversation history.
             effort = request.effort or self.default_effort
             if effort and not request.session_id:
-                body["effort"] = effort
+                # gpt-service-api deliberately exposes the OpenAI Responses
+                # API field name, while ccapi retains its historical contract.
+                body["reasoningEffort" if self.provider == "gsapi" else "effort"] = effort
 
             resp = self._post_run_with_refresh(body, http_timeout)
             resp.raise_for_status()
@@ -126,7 +132,7 @@ class ClaudeRuntimeClient:
                 raw=data,
             )
         except Exception as exc:
-            logger.error("claude-code-api request failed: %s", exc)
+            logger.error("%s request failed: %s", self.provider, exc)
             return LLMRunResult(success=False, output="", raw={"error": str(exc)})
         finally:
             stop_event.set()
@@ -238,4 +244,3 @@ Previous output:
         if not repaired_result.success:
             return None
         return parse_json_response(repaired_result.output)
-

@@ -54,8 +54,9 @@ class HAExpertPipeline(BasePipeline):
         discourse_knowledge: Any = None,
         confluence_knowledge: Any = None,
         url_resolver: Callable[[], str] | None = None,
+        provider: str = "ccapi",
     ):
-        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver)
+        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver, provider=provider)
         self.ha_config = bot_config.get("ha_expert", {})
         self.publish_channel = self.ha_config.get("publish_channel", "")
         self.status_channel = (

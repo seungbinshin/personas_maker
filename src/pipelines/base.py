@@ -23,6 +23,7 @@ class BasePipeline:
         api_key: str,
         bot_dir: Path,
         url_resolver: Callable[[], str] | None = None,
+        provider: str = "ccapi",
     ):
         self.config = bot_config
         self.slack = slack_client
@@ -37,6 +38,7 @@ class BasePipeline:
             api_key=api_key,
             heartbeat_callback=self._post_heartbeat,
             url_resolver=url_resolver,
+            provider=provider,
         )
         self._status_channel = bot_config.get(
             bot_config.get("persona_type", ""), {}
