@@ -66,8 +66,8 @@ class ChatSession:
 class ResearchPipeline(BasePipeline):
     """Orchestrates sequential research with researcher-intern feedback loop."""
 
-    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path, url_resolver=None):
-        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver)
+    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path, url_resolver=None, provider: str = "ccapi"):
+        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver, provider=provider)
         self.research_config = bot_config.get("research", {})
         # Apply an effort level (e.g. "max") to all one-shot investigation calls.
         # Stateful chat sessions are excluded automatically by ClaudeRuntimeClient.

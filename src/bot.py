@@ -29,6 +29,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from skills.conversation.session_orchestrator import ConversationSessionOrchestrator
 from skills.types import LLMRunRequest
 from tools.claude_runtime import ClaudeRuntimeClient
+from llm_service import resolve_llm_service
 from tools.pdf_extract import extract_pdf_text
 
 # Load bot-specific .env
@@ -50,14 +51,20 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(f"bot-{BOT_NAME}")
 app: App | None = None
 
-# claude-code-api settings
-from claude_api_client import base_url as _ccapi_base_url
-CLAUDE_API_URL = os.environ.get("CLAUDE_API_URL") or _ccapi_base_url()
-CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY", "sk-secondme-key-12345")
+# LLM gateway settings.  Legacy variable names remain below because several
+# pipeline constructors use them, but they now point to the selected service.
+LLM_SERVICE = resolve_llm_service(BOT_CONFIG)
+CLAUDE_API_URL = LLM_SERVICE.url
+CLAUDE_API_KEY = LLM_SERVICE.api_key
 API_ENV_PATH = Path(
     os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
 ) / "claude-code-api" / ".env"
-RUNTIME_CLIENT = ClaudeRuntimeClient(CLAUDE_API_URL, CLAUDE_API_KEY, url_resolver=_ccapi_base_url)
+RUNTIME_CLIENT = ClaudeRuntimeClient(
+    CLAUDE_API_URL,
+    CLAUDE_API_KEY,
+    url_resolver=LLM_SERVICE.url_resolver,
+    provider=LLM_SERVICE.provider,
+)
 
 VALID_MODELS = {
     "sonnet": os.environ.get("CLAUDE_SONNET_MODEL", "claude-sonnet-4-6"),
@@ -333,6 +340,8 @@ def get_channel_tone(channel_id: str) -> str:
     return state.channel_tones.get(channel_id, "casual")
 
 def get_current_model() -> str:
+    if LLM_SERVICE.provider == "gsapi":
+        return DEFAULT_MODEL
     try:
         for line in API_ENV_PATH.read_text().splitlines():
             if line.startswith("CLAUDE_MODEL="):
@@ -349,6 +358,9 @@ def get_model_short_name(full_name: str) -> str:
 
 def switch_model(new_model_id: str) -> bool:
     """Update CLAUDE_MODEL in the global ccapi .env and kickstart the launchd service."""
+    if LLM_SERVICE.provider != "ccapi":
+        logger.warning("Model switching is unavailable for %s; set GPT_MODEL on gsapi instead", LLM_SERVICE.provider)
+        return False
     env_content = API_ENV_PATH.read_text()
     lines = env_content.splitlines()
     updated = False
@@ -375,7 +387,7 @@ def switch_model(new_model_id: str) -> bool:
     for _ in range(20):
         time.sleep(1)
         try:
-            new_url = _ccapi_base_url()
+            new_url = LLM_SERVICE.url_resolver() if LLM_SERVICE.url_resolver else CLAUDE_API_URL
             r = requests.get(f"{new_url}/health", timeout=2)
             if r.status_code == 200:
                 CLAUDE_API_URL = new_url
@@ -2166,18 +2178,18 @@ if __name__ == "__main__":
     logger.info(f"Bot '{DISPLAY_NAME}' ({PERSONA_TYPE}) starting in '{state.mode}' mode...")
     logger.info(f"Bot dir: {BOT_DIR}")
     logger.info(f"Owner: {OWNER_USER_ID}")
-    logger.info(f"API: {CLAUDE_API_URL}")
+    logger.info(f"LLM gateway: {LLM_SERVICE.provider} at {CLAUDE_API_URL}")
     logger.info(f"Core identity: {len(CORE_IDENTITY)} chars")
     if PERSONA_TYPE == "persona":
         logger.info(f"RAG persona retrieval + conversation memory enabled")
     elif PERSONA_TYPE == "coder":
         logger.info(f"Coder mode: dev sessions + team pipeline enabled")
         from pipelines.coder_pipeline import CoderPipeline
-        _pipeline = CoderPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
+        _pipeline = CoderPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=LLM_SERVICE.url_resolver, provider=LLM_SERVICE.provider)
     elif PERSONA_TYPE == "reporter":
         logger.info(f"Reporter mode: initializing pipeline + scheduler")
         from pipelines.reporter_pipeline import ReporterPipeline
-        _pipeline = ReporterPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
+        _pipeline = ReporterPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=LLM_SERVICE.url_resolver, provider=LLM_SERVICE.provider)
 
         schedule_config = BOT_CONFIG.get("schedule", {})
         digest_time = schedule_config.get("digest_time", "02:45")
@@ -2196,7 +2208,7 @@ if __name__ == "__main__":
     elif PERSONA_TYPE == "research_pipeline":
         logger.info(f"Research pipeline mode: initializing pipeline + scheduler")
         from pipelines.research_pipeline import ResearchPipeline
-        _pipeline = ResearchPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=_ccapi_base_url)
+        _pipeline = ResearchPipeline(BOT_CONFIG, app.client, CLAUDE_API_URL, CLAUDE_API_KEY, BOT_DIR, url_resolver=LLM_SERVICE.url_resolver, provider=LLM_SERVICE.provider)
 
         # HA-Expert pipeline shares the same bot process and reuses ResearchPipeline's RAG.
         # No `global` needed — we're at module level (inside `if __name__ == "__main__":`).
@@ -2209,7 +2221,8 @@ if __name__ == "__main__":
             BOT_DIR,
             discourse_knowledge=getattr(_pipeline, "discourse_knowledge", None),
             confluence_knowledge=getattr(_pipeline, "confluence_knowledge", None),
-            url_resolver=_ccapi_base_url,
+            url_resolver=LLM_SERVICE.url_resolver,
+            provider=LLM_SERVICE.provider,
         )
         logger.info("HA-Expert pipeline initialized")
 

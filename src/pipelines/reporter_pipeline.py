@@ -22,12 +22,13 @@ logger = logging.getLogger(__name__)
 class ReporterPipeline(BasePipeline):
     """Orchestrates news collection and HTML newspaper publication."""
 
-    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path, url_resolver=None):
-        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver)
+    def __init__(self, bot_config: dict, slack_client, api_url: str, api_key: str, bot_dir: Path, url_resolver=None, provider: str = "ccapi"):
+        super().__init__(bot_config, slack_client, api_url, api_key, bot_dir, url_resolver=url_resolver, provider=provider)
         self.reporter_config = bot_config.get("reporter", {})
         self.publish_channel = self.reporter_config.get("publish_channel", "")
         self.status_channel = self.reporter_config.get("status_channel", "")
         self.search_queries = self.reporter_config.get("search_queries", [])
+        self.lookback_hours = int(self.reporter_config.get("lookback_hours", 168))
         self.digests_dir = bot_dir / "digests"
         self.digests_dir.mkdir(exist_ok=True)
 
@@ -94,6 +95,7 @@ class ReporterPipeline(BasePipeline):
             date=date,
             search_queries_block=queries_block,
             previous_titles=previous_titles or "(none — first run)",
+            lookback_hours=self.lookback_hours,
         )
 
         _, parsed = self.runtime.run_json(
@@ -114,8 +116,9 @@ class ReporterPipeline(BasePipeline):
         if "date" not in parsed:
             parsed["date"] = date
 
-        # Hard filter: remove articles older than 48 hours
-        parsed = self._filter_by_freshness(parsed, hours=48)
+        # Keep the configured weekly window even if the model returns stale
+        # search results.  The default is seven days for the reporter persona.
+        parsed = self._filter_by_freshness(parsed, hours=self.lookback_hours)
 
         return parsed
 

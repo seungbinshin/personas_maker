@@ -1,0 +1,76 @@
+{
+  "date": "2026-07-23",
+  "digest": {
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "category": "technology",
+        "articles": [
+          {
+            "title": "TSMC 2026 Q2 Quarterly Results",
+            "summary": "TSMC는 2분기 매출 402억 달러를 기록했고 3분기 매출 가이던스를 446억~458억 달러로 제시했다. AI용 첨단 공정 수요가 유지되는 가운데, 고객사의 2nm·첨단 패키징 확보 경쟁이 공급망의 핵심 변수로 남았다.",
+            "source": "TSMC Investor Relations",
+            "source_url": "https://investor.tsmc.com/english/quarterly-results/2026/q2",
+            "published_date": "2026-07-16",
+            "credibility": "official"
+          },
+          {
+            "title": "TSMC pledges another $100 billion to expand US chipmaking capacity",
+            "summary": "TSMC는 애리조나 첨단 반도체 생산 확대에 추가 1,000억 달러를 투자하겠다고 밝혔다. 2nm 이하 공정과 미국 내 공급망 확대가 목표로, AI 가속기 생산의 지역 다변화와 지정학 리스크 관리에 영향을 줄 전망이다.",
+            "source": "Associated Press",
+            "source_url": "https://apnews.com/article/ba05b1b952257d371acb9d070e7914ff",
+            "published_date": "2026-07-16",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Microsoft will deploy AMD's Helios rack-scale AI accelerator at scale on Azure",
+            "summary": "마이크로소프트는 AMD Helios 랙스케일 AI 시스템을 Azure와 자사 데이터센터에 대규모 배치하기로 했다. MI455X·EPYC Venice·네트워킹·ROCm을 묶은 전력 단위 공급 계약은 엔비디아 외 대안 가속기 생태계의 실수요 검증 신호다.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/tech-industry/artificial-intelligence/microsoft-will-deploy-amds-helios-rack-scale-ai-accelerator-at-scale-on-azure-radeon-instinct-mi455x-and-epyc-venice-power-will-be-available-through-redmonds-cloud-infrastructure",
+            "published_date": "2026-07-20",
+            "credibility": "major_media"
+          },
+          {
+            "title": "Intel and Google Cloud expand enterprise AI collaboration",
+            "summary": "인텔과 Google Cloud는 Gemini Enterprise 배치를 포함하는 다년 협력을 확대했다. 이번 발표는 AI 인프라 경쟁이 GPU 공급뿐 아니라 기업용 데이터·클라우드 운영 전환까지 넓어지고 있음을 보여준다.",
+            "source": "Intel Newsroom",
+            "source_url": "https://newsroom.intel.com/artificial-intelligence/intel-google-cloud-announce-collaboration-to-accelerate-intel-ai-enabled-enterprise-transformation",
+            "published_date": "2026-07-16",
+            "credibility": "official"
+          },
+          {
+            "title": "ASML raises 2026 forecast and expands capacity on AI chip demand",
+            "summary": "ASML은 AI 반도체 수요를 근거로 2026년 전망을 상향하고 생산능력 확대 계획을 밝혔다. 노광 장비 공급이 앞단의 병목으로 남는 만큼, 이 결정은 파운드리의 첨단 노드 증설 속도를 가늠할 선행지표다.",
+            "source": "Reuters via Euronext",
+            "source_url": "https://live.euronext.com/en/financial-news/asml-raises-2026-forecast-expands-capacity-ai-chip-demand",
+            "published_date": "2026-07-15",
+            "credibility": "major_media"
+          },
+          {
+            "title": "SK Group says memory prices are abnormally high amid AI demand",
+            "summary": "SK그룹은 메모리 가격이 비정상적으로 높은 수준이라고 진단하며 증설 가능성을 언급했다. HBM 중심의 생산 배분이 범용 DRAM 공급과 가격에도 영향을 주고 있어, AI 서버 BOM과 메모리 조달 리스크를 함께 봐야 한다.",
+            "source": "Tom's Hardware",
+            "source_url": "https://www.tomshardware.com/tech-industry/policy/memory-chip-boss-admits-ram-prices-are-abnormally-high-sk-group-chairman-considering-building-a-semiconductor-plant-in-the-us-to-expand-supply-calm-chipflation",
+            "published_date": "2026-07-19",
+            "credibility": "major_media"
+          }
+        ]
+      },
+      {
+        "category": "economy",
+        "articles": [
+          {
+            "title": "South Korea exports rise 52.3% in first 20 days of July; semiconductor shipments nearly triple",
+            "summary": "한국의 7월 1~20일 수출은 전년 동기 대비 52.3% 증가했고, 반도체 수출은 AI 수요를 배경으로 약 세 배 수준까지 늘었다. 메모리·AI 서버 투자 사이클이 실물 수출 지표에도 강하게 반영되고 있다는 신호다.",
+            "source": "Yonhap News Agency",
+            "source_url": "https://en.yna.co.kr/view/AEN20260721001951320?section=economy-finance%2Feconomy",
+            "published_date": "2026-07-21",
+            "credibility": "major_media"
+          }
+        ]
+      }
+    ],
+    "rumors": []
+  },
+  "published_at": "2026-07-23T09:00:00+09:00"
+}

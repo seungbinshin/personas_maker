@@ -1,6 +1,6 @@
 # personas_maker
 
-Config-driven multi-persona Slack bot framework powered by Claude.
+Config-driven multi-persona Slack bot framework powered by either Claude Code API (`ccapi`) or the sibling GPT service API (`gsapi`).
 Define a persona in `bots/<name>/config.json`, and the shared runtime handles the rest — scheduling, LLM calls, Slack integration.
 
 ## Currently included personas
@@ -52,7 +52,7 @@ personas_maker/
 - Python 3.12+
 - Node.js 20+ / pnpm
 - Slack app with Socket Mode enabled
-- Anthropic API key (Claude Pro subscription for claude-code-api)
+- A healthy `ccapi` or `gsapi` gateway
 
 ### 1. Clone and install
 
@@ -74,20 +74,41 @@ cd ..
 ### 2. Configure credentials
 
 ```bash
-# Root .env (for claude-code-api)
-cp .env.example .env
-# Fill in ANTHROPIC_API_KEY
-
 # Bot-specific config & credentials
 cp bots/reporter/config.example.json bots/reporter/config.json
-cp bots/reporter/config.example.json bots/reporter/.env  # Use .env.example format
+cp bots/reporter/.env.example bots/reporter/.env
 ```
 
 Each bot needs:
 - `config.json` — persona type, schedule, channels, search queries
 - `.env` — Slack tokens (`SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`), API port, model
 
-See `.env.example` and `config.example.json` for the full structure.
+See `bots/reporter/.env.example` and `config.example.json` for the full structure.
+
+### Select an LLM gateway
+
+Set the bot's `llm.provider` to `ccapi` or `gsapi`. The included reporter uses
+`ccapi` by default, preserving its WebSearch-enabled collection flow. `ccapi` discovers its
+launchd-managed URL as before. `gsapi` uses its configured URL (default
+`http://127.0.0.1:8081`) and requires `GSAPI_API_KEY` in the bot `.env`.
+
+```json
+"llm": { "provider": "gsapi", "url": "http://127.0.0.1:8081" }
+```
+
+Start the sibling service separately before starting a `gsapi` bot:
+
+```bash
+cd ../gpt-service-api
+cp .env.example .env  # set OPENAI_API_KEY, API_KEYS, and PORT=8081
+pnpm dev
+```
+
+`persona.sh start reporter` checks the selected gateway's `/health` endpoint
+before launching the Slack process. The reporter is enabled as a weekly Monday
+08:00 KST digest and covers the prior 168 hours. Before switching this persona
+to gsapi, enable an approved web-search tool in that service; the current
+gateway intentionally accepts text-only Responses API requests.
 
 ### 3. Slack app setup
 
@@ -140,7 +161,7 @@ The `persona_type` field determines which pipeline handles the bot:
 The reporter bot runs on a configurable schedule and:
 
 1. **Gathers** news via WebSearch (multiple keyword groups)
-2. **Filters** articles to the last 48 hours only (hard cutoff in code)
+2. **Filters** articles to the configured period (168 hours / one week by default, hard cutoff in code)
 3. **Deduplicates** against the last 7 days of published digests
 4. **Formats** results as a styled HTML newspaper
 5. **Publishes** the HTML to Slack and archives it locally
